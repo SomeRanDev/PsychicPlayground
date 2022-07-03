@@ -3,12 +3,16 @@
 var $plugins =
 [
 {"name":"PP_Start","status":true,"description":"","parameters":{}},
+{"name":"external/Vector2","status":true,"description":"","parameters":{}},
 {"name":"---","status":true,"description":"","parameters":{}},
 {"name":"managers/DataManager","status":true,"description":"","parameters":{}},
 {"name":"managers/ImageManager","status":true,"description":"","parameters":{}},
 {"name":"managers/SpriteManager","status":true,"description":"","parameters":{}},
+{"name":"managers/InputManager","status":true,"description":"","parameters":{}},
 {"name":"---","status":true,"description":"","parameters":{}},
 {"name":"scenes/Scene_Map","status":true,"description":"","parameters":{}},
+{"name":"---","status":true,"description":"","parameters":{}},
+{"name":"objects/Object_Map","status":true,"description":"","parameters":{}},
 {"name":"---","status":true,"description":"","parameters":{}},
 {"name":"sprites/DirectionalSprite","status":true,"description":"","parameters":{}},
 {"name":"sprites/PlayerSprite","status":true,"description":"","parameters":{}},

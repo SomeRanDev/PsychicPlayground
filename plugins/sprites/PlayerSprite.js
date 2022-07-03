@@ -16,6 +16,8 @@ class PlayerSprite extends Sprite {
 		this.setAnimation(this.idle);
 
 		this._timeCount = 0;
+
+		this.frameDelay = 16;
 	}
 
 	setDirection(dir) {
@@ -34,24 +36,43 @@ class PlayerSprite extends Sprite {
 				this.currentAni.setDirection(this.direction);
 				this.currentAni.setAnimationFrame(0);
 			}
+			return true;
 		}
+		return false;
 	}
 
 	setIdle() {
-		this.setAnimation(this.idle);
+		if(this.setAnimation(this.idle)) {
+			this._timeCount = 0;
+			this.currentAni.backAndForth = false;
+			this.setFrameDelay(16);
+		}
 	}
 
 	setWalk() {
-		this.setAnimation(this.idle);
+		if(this.setAnimation(this.walk)) {
+			this._timeCount = 0;
+			this.currentAni.backAndForth = true;
+			this.setFrameDelay(8);
+		}		
+	}
+
+	setFrameDelay(delay) {
+		this.frameDelay = delay;
 	}
 
 	update() {
 		this._timeCount++;
-		if(this._timeCount >= 16) {
+		if(this._timeCount >= this.frameDelay) {
 			this._timeCount = 0;
 			if(this.currentAni) {
 				this.currentAni.incrementAnimation();
 			}
 		}
+
+		this.x = $ppPlayer.position.x;
+		this.y = $ppPlayer.position.y;
+
+		//this.scale.set(1, 1.0 + (Math.sin(PP.Time / 15) * 0.05));
 	}
 }

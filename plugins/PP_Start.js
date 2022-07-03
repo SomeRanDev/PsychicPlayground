@@ -1,5 +1,5 @@
-const TS = 48;
-const TS2 = 24;
+const TS = 32;
+const TS2 = 16;
 
 var PP = {};
 
@@ -8,7 +8,7 @@ PP.Time = 0;
 
 PP.GlobalKeys = Object.keys(globalThis).length;
 
-PP.CameraSmoothing = 0.04;
+PP.CameraSmoothing = 0.1;
 
 PP.AddToHistory = function(func, className, name) {
 	if(func) {

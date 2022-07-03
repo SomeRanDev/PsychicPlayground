@@ -14,7 +14,10 @@ class DirectionalSprite extends Sprite {
 		texture.smooth = false;
 		texture.addLoadListener(this.onReady.bind(this));
 
+		this.anchor.set(0.5, 1);
 		this.scale.set(2);
+
+		this.backAndForth = false;
 	}
 
 	onReady() {
@@ -24,20 +27,29 @@ class DirectionalSprite extends Sprite {
 	}
 
 	refresh() {
-		const index = (this._frameCount * this._directionIndex) + this._currentFrame;
+		var frame = this._currentFrame;
+		if(this.backAndForth && this._currentFrame >= this._frameCount) {
+			frame = Math.abs(this._frameCount - this._currentFrame) + 1;
+		}
+		const index = (this._frameCount * this._directionIndex) + frame;
 		this.setFrame(this._frameWidth * index, 0, this._frameWidth, this._frameHeight);
+		this.scale.set(this._mirror ? -2 : 2, 2);
 	}
 
 	setAnimationFrame(frame) {
-		if(frame >= 0 && frame < this._frameCount) {
+		if(frame >= 0 && frame < this.maxFrame()) {
 			this._currentFrame = frame;
 			this.refresh();
 		}
 	}
 
+	maxFrame() {
+		return this.backAndForth ? ((this._frameCount * 2) - 2) : this._frameCount;
+	}
+
 	incrementAnimation() {
 		this._currentFrame++;
-		if(this._currentFrame >= this._frameCount) {
+		if(this._currentFrame >= this.maxFrame()) {
 			this._currentFrame = 0;
 		}
 		this.refresh();
