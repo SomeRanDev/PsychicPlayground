@@ -4,7 +4,7 @@ class Player {
 		SpriteManager.addEntity(this);
 
 		this.position = new Vector2(0, 0);
-		this.speed = 2;
+		this.speed = 3;//2;
 
 		this.TURN_RATE = 9.0;
 

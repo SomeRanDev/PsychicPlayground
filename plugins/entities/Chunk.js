@@ -21,28 +21,48 @@ class Chunk {
 		this.middleLayer = new Sprite();
 		this.baseSprite.addChild(this.middleLayer);
 
-		this.setPosition(chunkX, chunkY);
 		SpriteManager.addChunk(this.baseSprite);
-		this.generateAllTiles();
+		this.setPosition(chunkX, chunkY);
 	}
 
 	setPosition(chunkX, chunkY) {
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
 		this.baseSprite.move(this.chunkX * GenerationManager.TILE_WIDTH * GenerationManager.TILES_X, this.chunkY * GenerationManager.TILE_HEIGHT * GenerationManager.TILES_Y);
+		this.generateAllTiles();
+	}
+
+	update() {
+		this.generateSomeTiles();
 	}
 
 	generateAllTiles() {
-		for(let x = 0; x < GenerationManager.TILES_X; x++) {
+		this._generatedTiles = 0;
+		this._maxTiles = (GenerationManager.TILES_X * GenerationManager.TILES_Y);
+		this.generateSomeTiles();
+		/*for(let x = 0; x < GenerationManager.TILES_X; x++) {
 			for(let y = 0; y < GenerationManager.TILES_Y; y++) {
 				this.generateTile(x, y);
 			}
-		}
+		}*/
+		/*
 		if(this.refreshTiles.length > 0) {
 			for(const tile of this.refreshTiles) {
 				this.generateTile(tile[0], tile[1], false);
 			}
 			this.refreshTiles = [];
+		}*/
+	}
+
+	generateSomeTiles() {
+		if(this._generatedTiles < this._maxTiles) {
+			const newMax = Math.max(this._maxTiles, this._generatedTiles + 1);
+			while(this._generatedTiles < newMax) {
+				const x = this._generatedTiles % GenerationManager.TILES_X;
+				const y = Math.floor(this._generatedTiles / GenerationManager.TILES_X);
+				this.generateTile(x, y);
+				this._generatedTiles++;
+			}
 		}
 	}
 
@@ -95,7 +115,9 @@ class Chunk {
 	setupSprite(spr, tile) {
 		spr.visible = tile !== 255;
 
-		if(tile === 255) return;
+		if(tile === 255) {
+			return false;
+		}
 		
 		const isAuto = tile < 200;
 		const tileData = Chunk.TileRef[isAuto ? Math.floor(tile / 13) : tile];

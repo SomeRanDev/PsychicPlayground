@@ -8,6 +8,10 @@ modify_Scene_Map = class {
 		PP.Scene_Map.initialize.apply(this, arguments);
 		this._isPaused = false;
 
+		this._chunks = [];
+		this._freeChunks = [];
+		this._chunkExists = {};
+
 		this._targetCameraX = null;
 		this._targetCameraY = null;
 	}
@@ -27,6 +31,7 @@ modify_Scene_Map = class {
 	updatePPPlayer() {
 		$ppPlayer.update();
 		this.updateCameraPos();
+		this.updateChunks();
 	}
 
 	setCameraTargetXY(x, y) {
@@ -62,19 +67,78 @@ modify_Scene_Map = class {
 	}
 
 	minCameraX() {
-		return -9999;
+		return ((GenerationManager.CHUNKS_X - 1) / -2) * GenerationManager.CHUNK_SIZE_X;
 	}
 
 	minCameraY() {
-		return -9999;
+		return ((GenerationManager.CHUNKS_Y - 1) / -2) * GenerationManager.CHUNK_SIZE_Y;
 	}
 
 	maxCameraX() {
-		return (9999 * TS * this._spriteset._tilemap.scale.x) - Graphics.width;
+		return (((GenerationManager.CHUNKS_X - 1) / 2) * GenerationManager.CHUNK_SIZE_X) - Graphics.width;
 	}
 
 	maxCameraY() {
-		return (9999 * TS * this._spriteset._tilemap.scale.y) - Graphics.height;
+		return (((GenerationManager.CHUNKS_Y - 1) / 2) * GenerationManager.CHUNK_SIZE_Y) - Graphics.height;
+	}
+
+	updateChunks() {
+		const minX = Math.floor(this.PPCameraX / GenerationManager.CHUNK_SIZE_X);
+		const minY = Math.floor(this.PPCameraY / GenerationManager.CHUNK_SIZE_Y);
+		const maxX = minX + 6;
+		const maxY = minY + 4;
+
+		if(this._lastMinX !== minX || this._lastMinY !== minY || this._lastMaxX !== maxX || this._lastMaxY !== maxY) {
+			this._lastMinX = minX;
+			this._lastMinY = minY;
+			this._lastMaxX = maxX;
+			this._lastMaxY = maxY;
+
+			for(let i = 0; i < this._chunks.length; i++) {
+				const c = this._chunks[i];
+				if(c) {
+					if(c.chunkX < minX || c.chunkX > maxX || c.chunkY < minY || c.chunkY > maxY) {
+						this._chunks[i] = null;
+						this._chunkExists[c.chunkX + " - " + c.chunkY] = false;
+						this._freeChunks.push(c);
+					}
+				}
+				
+			}
+			
+			for(let x = minX; x <= maxX; x++) {
+				for(let y = minY; y <= maxY; y++) {
+					const key = x + " - " + y;
+					if(!this._chunkExists[key]) {
+						this.addChunk(this.getChunk(x, y));
+						this._chunkExists[key] = true;
+					}
+				}
+			}
+		}
+
+		for(const c of this._chunks) {
+			c.update();
+		}
+	}
+
+	addChunk(c) {
+		for(let i = 0; i < this._chunks.length; i++) {
+			if(this._chunks[i] === null) {
+				this._chunks[i] = c;
+				return;
+			}
+		}
+		this._chunks.push(c);
+	}
+
+	getChunk(x, y) {
+		if(this._freeChunks.length > 0) {
+			const result = this._freeChunks.pop();
+			result.setPosition(x, y);
+			return result;
+		}
+		return new Chunk(x, y);
 	}
 
 	updatePause() {

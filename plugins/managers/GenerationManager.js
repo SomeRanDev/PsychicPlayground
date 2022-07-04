@@ -58,11 +58,14 @@ class GenerationManager {
 	static AllTileData = [];
 	static RefreshTile = false;
 
-	static CHUNKS_X = 20;
-	static CHUNKS_Y = 20;
+	static CHUNKS_X = 128;
+	static CHUNKS_Y = 128;
 
-	static TILES_X = 16;
-	static TILES_Y = 16;
+	static CHUNK_SIZE_X = 4 * 32;
+	static CHUNK_SIZE_Y = 4 * 32;
+
+	static TILES_X = 4;
+	static TILES_Y = 4;
 
 	static TILE_WIDTH = 32;
 	static TILE_HEIGHT = 32;
@@ -70,29 +73,30 @@ class GenerationManager {
 	static start() {
 		noise.seed(Math.random());
 
-		this.OFFSET_X = (this.CHUNKS_X / 2) * this.TILES_X;
-		this.OFFSET_Y = (this.CHUNKS_Y / 2) * this.TILES_Y;
+		this.OFFSET_X = (this.CHUNKS_X / 2);
+		this.OFFSET_Y = (this.CHUNKS_Y / 2);
 
 		this.GLOBAL_WIDTH = this.CHUNKS_X * this.TILES_X;
 	}
 
 	static getTile(chunkX, chunkY, x, y) {
-		const globalX = (chunkX * this.TILES_X) + x + this.OFFSET_X;
-		const globalY = (chunkY * this.TILES_Y) + y + this.OFFSET_Y;
+		const globalX = ((chunkX + this.OFFSET_X) * this.TILES_X) + x;
+		const globalY = ((chunkY + this.OFFSET_Y) * this.TILES_Y) + y;
 		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
 		return this.getTileGlobal(globalX, globalY, globalIndex);
 	}
 
 	static getTileGlobal(globalX, globalY, globalIndex) {
-		if(!this.AllTileData.includes(globalIndex)) {
+		if(typeof this.AllTileData[globalIndex] !== "number") {
 			this.AllTileData[globalIndex] = this._generateTile(globalX, globalY, globalIndex);
 		}
 		return this.AllTileData[globalIndex];
 	}
 
 	static _generateTile(globalX, globalY, globalIndex) {
-		return(this._generateTileRaw(globalX, globalY, globalIndex, this._getMiddleTileType.bind(this)) << 8) |
-			this._generateTileRaw(globalX, globalY, globalIndex, this._getLowerTileType.bind(this));
+		const mid = this._generateTileRaw(globalX, globalY, globalIndex, this._getMiddleTileType.bind(this));
+		const low = this._generateTileRaw(globalX, globalY, globalIndex, this._getLowerTileType.bind(this));
+		return (mid << 8) | low;
 	}
 
 	static _getMiddleTileType(globalX, globalY) {

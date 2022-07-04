@@ -83,13 +83,9 @@ modify_Spriteset_Map = class {
 	roundCameraPosition() {
 		if(Math.abs(this._tilemap.x - Math.round(this._tilemap.x)) < 0.1) {
 			this._tilemap.x = Math.round(this._tilemap.x);
-		} else {
-			this._tilemap.x = Math.floor(this._tilemap.x * 100) / 100;
 		}
 		if(Math.abs(this._tilemap.y - Math.round(this._tilemap.y)) < 0.1) {
 			this._tilemap.y = Math.round(this._tilemap.y);
-		} else {
-			this._tilemap.y = Math.floor(this._tilemap.y * 100) / 100;
 		}
 	}
 
