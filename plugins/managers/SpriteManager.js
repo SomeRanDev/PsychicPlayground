@@ -13,15 +13,7 @@ modify_Spriteset_Map = class {
 		this._tilemap.addChild(this._ppLayer);
 	}
 
-	createCharacters() {
-		PP.Spriteset_Map.createCharacters.apply(this, arguments);
-
-		for(const sprite of this._characterSprites) {
-			this._tilemap.removeChild(sprite);
-		}
-		this._characterSprites = [];
-
-		this.createPPLayer();
+	createPPEntities() {
 		this._ppEntities = [];
 		for(let i = 0; i < SpriteManager.entities.length; i++) {
 			const e = SpriteManager.entities[i];
@@ -31,53 +23,73 @@ modify_Spriteset_Map = class {
 		}
 	}
 
+	createCharacters() {
+		PP.Spriteset_Map.createCharacters.apply(this, arguments);
+		this.clearChildrenSprites();
+		this.createPPLayer();
+		this.createChunksLayer();
+		this.createPPEntities();
+	}
+
+	clearChildrenSprites() {
+		for(const sprite of this._characterSprites) {
+			this._tilemap.removeChild(sprite);
+		}
+		this._characterSprites = [];
+	}
+
+	createChunksLayer() {
+		this._chunkLayer = new Sprite();
+		this._ppLayer.addChild(this._chunkLayer);
+	}
+
 	//==============================
 	// Camera stuff
 	//==============================
-	lerp(a, b, x) {
-		if(Math.abs(a - b) < 0.1) return b;
-		return a + (b - a) * x;
-	}
-
 	canMoveCamera() {
 		return true;
 	}
 
 	setCameraPos(x, y, force) {
-		let newX = -x;
-		const newY = -y;
-		
-		// Will I ever need this??
-		/*if(!force && !$gameMap.canMoveCameraX()) {
-			newX = this._cameraTargetX;
-		}*/
-
-
 		if(this._tilemap) {
-			if(this._cameraTargetX !== newX || this._cameraTargetY !== newY) {
-				this._cameraTargetX = newX;
-				this._cameraTargetY = newY;
-				if(force) {
-					this._tilemap.x = this._cameraTargetX;
-					this._tilemap.y = this._cameraTargetY;
-				}
-			}
-
+			this.updateCameraPosition(-x, -y, force);
 			if(!force) {
-				if(this._tilemap.x !== this._cameraTargetX) {
-					this._tilemap.x = this.lerp(this._tilemap.x, this._cameraTargetX, PP.CameraSmoothing);
-				}
-				if(this._tilemap.y !== this._cameraTargetY) {
-					this._tilemap.y = this.lerp(this._tilemap.y, this._cameraTargetY, PP.CameraSmoothing);
-				}
+				this.moveCameraTowardsTarget();
 			}
+			this.roundCameraPosition();
+		}
+	}
 
-			if(Math.abs(this._tilemap.x - Math.round(this._tilemap.x)) < 0.1) {
-				this._tilemap.x = Math.round(this._tilemap.x);
+	updateCameraPosition(x, y, force) {
+		if(this._cameraTargetX !== x || this._cameraTargetY !== y) {
+			this._cameraTargetX = x;
+			this._cameraTargetY = y;
+			if(force) {
+				this._tilemap.x = this._cameraTargetX;
+				this._tilemap.y = this._cameraTargetY;
 			}
-			if(Math.abs(this._tilemap.y - Math.round(this._tilemap.y)) < 0.1) {
-				this._tilemap.y = Math.round(this._tilemap.y);
-			}
+		}
+	}
+
+	moveCameraTowardsTarget() {
+		if(this._tilemap.x !== this._cameraTargetX) {
+			this._tilemap.x = PP.lerp(this._tilemap.x, this._cameraTargetX, PP.CameraSmoothing);
+		}
+		if(this._tilemap.y !== this._cameraTargetY) {
+			this._tilemap.y = PP.lerp(this._tilemap.y, this._cameraTargetY, PP.CameraSmoothing);
+		}
+	}
+
+	roundCameraPosition() {
+		if(Math.abs(this._tilemap.x - Math.round(this._tilemap.x)) < 0.1) {
+			this._tilemap.x = Math.round(this._tilemap.x);
+		} else {
+			this._tilemap.x = Math.floor(this._tilemap.x * 100) / 100;
+		}
+		if(Math.abs(this._tilemap.y - Math.round(this._tilemap.y)) < 0.1) {
+			this._tilemap.y = Math.round(this._tilemap.y);
+		} else {
+			this._tilemap.y = Math.floor(this._tilemap.y * 100) / 100;
 		}
 	}
 
@@ -91,5 +103,19 @@ class SpriteManager {
 
 	static addEntity(e) {
 		this.entities.push(e);
+	}
+
+	static addChunk(c) {
+		if(SceneManager._scene?._spriteset?._chunkLayer) {
+			const layer = SceneManager._scene._spriteset._chunkLayer;
+			layer.addChild(c);
+		}
+	}
+
+	static removeChunk(c) {
+		if(SceneManager._scene?._spriteset?._chunkLayer) {
+			const layer = SceneManager._scene._spriteset._chunkLayer;
+			layer.removeChild(c);
+		}
 	}
 }
