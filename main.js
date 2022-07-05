@@ -131,12 +131,17 @@ class Main {
     }
 
     isPathRandomized() {
-        // [Note] We cannot save the game properly when Gatekeeper Path
-        //   Randomization is in effect.
-        return (
-            typeof process === "object" &&
-            process.mainModule.filename.startsWith("/private/var")
-        );
+        // https://hackmd.io/@Mirai/rpg_maker_electron_win_eng
+        if (Utils.isElectronjs()) {
+            return (__filename.startsWith("/private/var"));
+        } else {
+            // [Note] We cannot save the game properly when Gatekeeper Path
+            //   Randomization is in effect.
+            return (
+                typeof process === "object" &&
+                process.mainModule.filename.startsWith("/private/var")
+            );
+        }
     }
 
     initEffekseerRuntime() {

@@ -83,10 +83,10 @@ modify_Scene_Map = class {
 	}
 
 	updateChunks() {
-		const minX = Math.floor(this.PPCameraX / GenerationManager.CHUNK_SIZE_X);
-		const minY = Math.floor(this.PPCameraY / GenerationManager.CHUNK_SIZE_Y);
-		const maxX = minX + 6;
-		const maxY = minY + 4;
+		const minX = Math.floor(this.PPCameraX / GenerationManager.CHUNK_SIZE_X) - 2;
+		const minY = Math.floor(this.PPCameraY / GenerationManager.CHUNK_SIZE_Y) - 2;
+		const maxX = minX + 6 + 4;
+		const maxY = minY + 4 + 4;
 
 		if(this._lastMinX !== minX || this._lastMinY !== minY || this._lastMaxX !== maxX || this._lastMaxY !== maxY) {
 			this._lastMinX = minX;
@@ -103,8 +103,9 @@ modify_Scene_Map = class {
 						this._freeChunks.push(c);
 					}
 				}
-				
 			}
+
+			console.time();
 			
 			for(let x = minX; x <= maxX; x++) {
 				for(let y = minY; y <= maxY; y++) {
@@ -115,10 +116,12 @@ modify_Scene_Map = class {
 					}
 				}
 			}
+
+			console.timeEnd();
 		}
 
 		for(const c of this._chunks) {
-			c.update();
+			if(c !== null) c.update();
 		}
 	}
 

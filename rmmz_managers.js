@@ -755,10 +755,16 @@ StorageManager.fsWriteFile = function(path, data) {
     fs.writeFileSync(path, data);
 };
 
-StorageManager.fileDirectoryPath = function() {
+// https://hackmd.io/@Mirai/rpg_maker_electron_win_eng
+StorageManager.fileDirectoryPath = function () {
     const path = require("path");
-    const base = path.dirname(process.mainModule.filename);
-    return path.join(base, "save/");
+    if (Utils.isElectronjs()) {
+        const base = path.dirname(__filename);
+        return Utils.isOptionValid('test') ? path.join(base, "save/") : path.join(base, '../../save/');
+    } else {
+        const base = path.dirname(process.mainModule.filename);
+        return path.join(base, "save/");
+    }
 };
 
 StorageManager.filePath = function(saveName) {
@@ -2003,15 +2009,26 @@ SceneManager.onKeyDown = function(event) {
     }
 };
 
-SceneManager.reloadGame = function() {
-    if (Utils.isNwjs()) {
-        chrome.runtime.reload();
+// https://hackmd.io/@Mirai/rpg_maker_electron_win_eng
+SceneManager.reloadGame = function () {
+    if (Utils.isElectronjs()) {
+        location.reload();
+    } else {
+        if (Utils.isNwjs()) {
+            chrome.runtime.reload();
+        }
     }
 };
 
-SceneManager.showDevTools = function() {
-    if (Utils.isNwjs() && Utils.isOptionValid("test")) {
-        nw.Window.get().showDevTools();
+SceneManager.showDevTools = function () {
+    if (Utils.isElectronjs()) {
+        if (Utils.isOptionValid("test")) {
+            require('electron').ipcRenderer.send('openDevTools');
+        }
+    } else {
+        if (Utils.isNwjs() && Utils.isOptionValid("test")) {
+            nw.Window.get().showDevTools();
+        }
     }
 };
 

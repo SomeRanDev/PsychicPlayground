@@ -223,13 +223,20 @@ Utils.checkRMVersion = function(version) {
  * @param {string} name - The option name.
  * @returns {boolean} True if the option is in the query string.
  */
-Utils.isOptionValid = function(name) {
+Utils.isOptionValid = function (name) {
     const args = location.search.slice(1);
     if (args.split("&").includes(name)) {
         return true;
     }
-    if (this.isNwjs() && nw.App.argv.length > 0) {
-        return nw.App.argv[0].split("&").includes(name);
+    // https://hackmd.io/@Mirai/rpg_maker_electron_win_eng
+    if (this.isElectronjs()) {
+        if (process.argv.length > 0) {
+            return process.argv[0].split("&").includes(name);
+        }
+    } else {
+        if (this.isNwjs() && nw.App.argv.length > 0) {
+            return nw.App.argv[0].split("&").includes(name);
+        }
     }
     return false;
 };
@@ -241,6 +248,11 @@ Utils.isOptionValid = function(name) {
  */
 Utils.isNwjs = function() {
     return typeof require === "function" && typeof process === "object";
+};
+
+// https://hackmd.io/@Mirai/rpg_maker_electron_win_eng
+Utils.isElectronjs = function () {
+    return window && window.process && window.process.versions && window.process.versions['electron'];
 };
 
 /**

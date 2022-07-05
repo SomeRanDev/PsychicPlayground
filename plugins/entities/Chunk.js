@@ -5,10 +5,20 @@ class Chunk {
 		200: { name: "Sand", type: 0 }
 	}
 
+	static BlockRef = {
+		0: { name: "RedWall", type: 1 }
+	}
+
 	static TextureRef = {};
 
+	blockSprites = [];
 	tileSprites = [];
 	underTileSprites = [];
+
+	unusedBlockSprites = [];
+	unusedTileSprites = [];
+	unusedUnderTileSprites = [];
+
 	refreshTiles = [];
 
 	constructor(chunkX, chunkY) {
@@ -21,6 +31,9 @@ class Chunk {
 		this.middleLayer = new Sprite();
 		this.baseSprite.addChild(this.middleLayer);
 
+		this.blockLayer = new Sprite();
+		this.baseSprite.addChild(this.blockLayer);
+
 		SpriteManager.addChunk(this.baseSprite);
 		this.setPosition(chunkX, chunkY);
 	}
@@ -29,6 +42,13 @@ class Chunk {
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
 		this.baseSprite.move(this.chunkX * GenerationManager.TILE_WIDTH * GenerationManager.TILES_X, this.chunkY * GenerationManager.TILE_HEIGHT * GenerationManager.TILES_Y);
+		
+		//this.unusedTileSprites = this.tileSprites.concat(this.unusedTileSprites);
+		//this.tileSprites = [];
+
+		this.unusedUnderTileSprites = this.underTileSprites.concat(this.unusedUnderTileSprites);
+		this.underTileSprites = [];
+
 		this.generateAllTiles();
 	}
 
@@ -39,7 +59,8 @@ class Chunk {
 	generateAllTiles() {
 		this._generatedTiles = 0;
 		this._maxTiles = (GenerationManager.TILES_X * GenerationManager.TILES_Y);
-		this.generateSomeTiles();
+		//this.generateSomeTiles();
+
 		/*for(let x = 0; x < GenerationManager.TILES_X; x++) {
 			for(let y = 0; y < GenerationManager.TILES_Y; y++) {
 				this.generateTile(x, y);
@@ -56,7 +77,7 @@ class Chunk {
 
 	generateSomeTiles() {
 		if(this._generatedTiles < this._maxTiles) {
-			const newMax = Math.max(this._maxTiles, this._generatedTiles + 1);
+			const newMax = Math.min(this._maxTiles, this._generatedTiles + 1);
 			while(this._generatedTiles < newMax) {
 				const x = this._generatedTiles % GenerationManager.TILES_X;
 				const y = Math.floor(this._generatedTiles / GenerationManager.TILES_X);
@@ -68,51 +89,76 @@ class Chunk {
 
 	generateTile(x, y, allowRefresh = true) {
 		let tile = GenerationManager.getTile(this.chunkX, this.chunkY, x, y);
-		if(allowRefresh && GenerationManager.RefreshTile) {
-			this.refreshTiles.push([x, y]);
-		}
-		if(!this.setupSprite(this.getSprite(x, y), (tile >> 8) & 255)) {
-			this.setupSprite(this.getUnderSprite(x, y), tile & 255);
+		//if(allowRefresh && GenerationManager.RefreshTile) {
+		//	this.refreshTiles.push([x, y]);
+		//}
+
+		//if(!this.setupSprite(this.getBlockSprite(x, y), (tile >> 24) & 255, true)) {
+			if(!this.setupSprite(this.getSprite(x, y), (tile >> 8) & 255)) {
+				this.setupSprite(this.getUnderSprite(x, y), tile & 255);
+			} else {
+				this.hideUnderSprite(x, y);
+			}
+		//} else {
+		//	this.hideUnderAndMidSprite(x, y);
+		//}
+	}
+
+
+	getSpriteEx(x, y, collection, layer, unused) {
+		//const i = (y * GenerationManager.TILES_X) + x;
+		let spr;
+		if(unused.length === 0) {
+			spr = new Sprite();
+			layer.addChild(spr);
+			collection.push(spr);
 		} else {
-			this.hideUnderSprite(x, y);
-		}
-	}
-
-	getSprite(x, y) {
-		const i = (y * GenerationManager.TILES_X) + x;
-		if(!this.tileSprites[i]) {
-			this.tileSprites[i] = new Sprite();
-			this.middleLayer.addChild(this.tileSprites[i]);
+			spr = unused.pop();
+			layer.addChild(spr);
+			collection.push(spr);
 		}
 
-		const spr = this.tileSprites[i];
+		//const spr = collection[i];
 		spr.anchor.set(0.5);
 		spr.move(x * 16, y * 16);
 		return spr;
 	}
 
-	getUnderSprite(x, y) {
+	getSpriteEx2(x, y, collection, layer, unused) {
 		const i = (y * GenerationManager.TILES_X) + x;
-		if(!this.underTileSprites[i]) {
-			this.underTileSprites[i] = new Sprite();
-			this.lowerLayer.addChild(this.underTileSprites[i]);
+		let spr;
+		if(!collection[i]) {
+			spr = collection[i] = new Sprite();
+			layer.addChild(spr);
+		} else {
+			spr = collection[i];
 		}
 
-		const spr = this.underTileSprites[i];
+		//const spr = collection[i];
 		spr.anchor.set(0.5);
 		spr.move(x * 16, y * 16);
 		return spr;
 	}
 
-	hideUnderSprite(x, y) {
+	getBlockSprite(x, y) { return this.getSpriteEx(x, y, this.blockSprites, this.blockLayer, this.unusedBlockSprites); }
+	getSprite(x, y) { return this.getSpriteEx2(x, y, this.tileSprites, this.middleLayer, this.unusedTileSprites); }
+	getUnderSprite(x, y) { return this.getSpriteEx(x, y, this.underTileSprites, this.lowerLayer, this.unusedUnderTileSprites); }
+
+	hideSprite(x, y, collection) {
 		const i = (y * GenerationManager.TILES_X) + x;
-		if(this.underTileSprites[i]) {
-			this.underTileSprites[i].visible = false;
+		if(collection[i]) {
+			collection[i].visible = false;
 		}
+	}
+
+	hideUnderSprite(x, y) { this.hideSprite(x, y, this.underTileSprites); }
+	hideUnderAndMidSprite(x, y) {
+		this.hideSprite(x, y, this.tileSprites);
+		this.hideSprite(x, y, this.underTileSprites);
 	}
 
 	// return true = don't render below
-	setupSprite(spr, tile) {
+	setupSprite(spr, tile, isBlock = false) {
 		spr.visible = tile !== 255;
 
 		if(tile === 255) {
@@ -120,7 +166,13 @@ class Chunk {
 		}
 		
 		const isAuto = tile < 200;
-		const tileData = Chunk.TileRef[isAuto ? Math.floor(tile / 13) : tile];
+
+		if(isAuto && (tile % 13) === 4) {
+			spr.visible = tile !== 255;
+			return true;
+		}
+
+		const tileData = (isBlock ? Chunk.BlockRef : Chunk.TileRef)[isAuto ? Math.floor(tile / 13) : tile];
 		if(!tileData) {
 			console.warn("TILE DATA INVALID??\nisAuto: " + isAuto + ", raw tile: " + tile + ", tile: " + (isAuto ? Math.floor(tile / 13) : tile));
 		}

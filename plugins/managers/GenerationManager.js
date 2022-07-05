@@ -61,11 +61,11 @@ class GenerationManager {
 	static CHUNKS_X = 128;
 	static CHUNKS_Y = 128;
 
-	static CHUNK_SIZE_X = 4 * 32;
-	static CHUNK_SIZE_Y = 4 * 32;
+	static CHUNK_SIZE_X = 8 * 32;
+	static CHUNK_SIZE_Y = 8 * 32;
 
-	static TILES_X = 4;
-	static TILES_Y = 4;
+	static TILES_X = 8;
+	static TILES_Y = 8;
 
 	static TILE_WIDTH = 32;
 	static TILE_HEIGHT = 32;
@@ -77,6 +77,19 @@ class GenerationManager {
 		this.OFFSET_Y = (this.CHUNKS_Y / 2);
 
 		this.GLOBAL_WIDTH = this.CHUNKS_X * this.TILES_X;
+	}
+
+	static generateEverything() {
+		for(let i = 0; i < GenerationManager.CHUNKS_X; i++) {
+			for(let j = 0; j < GenerationManager.CHUNKS_Y; j++) {
+				for(let ii = 0; ii < this.TILES_X; ii++) {
+					for(let jj = 0; jj < this.TILES_Y; jj++) {
+						this.getTile(i, j, ii, jj);
+					}
+				}
+			}
+			console.log(i + " / " + this.CHUNKS_X);
+		}
 	}
 
 	static getTile(chunkX, chunkY, x, y) {
@@ -94,9 +107,26 @@ class GenerationManager {
 	}
 
 	static _generateTile(globalX, globalY, globalIndex) {
+		const block = this._generateTileRaw(globalX, globalY, globalIndex, this._getBlockTileType.bind(this));
 		const mid = this._generateTileRaw(globalX, globalY, globalIndex, this._getMiddleTileType.bind(this));
 		const low = this._generateTileRaw(globalX, globalY, globalIndex, this._getLowerTileType.bind(this));
-		return (mid << 8) | low;
+		return (block << 24) | (mid << 8) | low;
+	}
+
+	static _getBlockTileType(globalX, globalY) {
+		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
+		if(this.AllTileData.includes(globalIndex)) {
+			const result = ((this.AllTileData[globalIndex] >> 24) & 8);
+			return Math.floor(result / 13);
+		}
+
+		let tileType = 255;
+		if(noise.perlin2(globalX * 0.2, globalY * 0.2) >= -0.2) {
+			tileType = 255;
+		} else {
+			tileType = 0;
+		}
+		return tileType;
 	}
 
 	static _getMiddleTileType(globalX, globalY) {
