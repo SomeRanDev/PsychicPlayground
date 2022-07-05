@@ -1972,7 +1972,8 @@ SceneManager.terminate = function() {
     }
 };
 
-SceneManager.onError = function(event) {
+SceneManager.onError = function(event, script) {
+    if(!script || !script.endsWith(".js")) return;
     console.error(event.message);
     console.error(event.filename, event.lineno);
     try {

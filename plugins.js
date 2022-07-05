@@ -21,6 +21,8 @@ var $plugins =
 {"name":"---","status":true,"description":"","parameters":{}},
 {"name":"entities/Player","status":true,"description":"","parameters":{}},
 {"name":"entities/Chunk","status":true,"description":"","parameters":{}},
+{"name":"entities/Wall","status":true,"description":"","parameters":{}},
+{"name":"entities/ObjectPool","status":true,"description":"","parameters":{}},
 {"name":"---","status":true,"description":"","parameters":{}},
 {"name":"other/DisableDefault","status":true,"description":"","parameters":{}},
 {"name":"---","status":true,"description":"","parameters":{}},

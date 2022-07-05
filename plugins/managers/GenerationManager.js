@@ -33,12 +33,6 @@ AutotilePos = [
 	(U | UL | L | DL | D | DR | R),
 	(L | DL | D | DR | R | UR | U),
 
-	(U | UL | L),
-	(R | UR | U),
-	(D | DL | L),
-	(R | DR | D),
-	
-
 	(U | UL | L | D),
 	(R | UR | U | D),
 	(D | DL | L | U),
@@ -55,11 +49,12 @@ AutotilePos = [
 class GenerationManager {
 	static chunkData = {};
 
-	static AllTileData = [];
+	static AllTileData;
+	static HasTileData;
 	static RefreshTile = false;
 
-	static CHUNKS_X = 128;
-	static CHUNKS_Y = 128;
+	static CHUNKS_X = 64;
+	static CHUNKS_Y = 64;
 
 	static CHUNK_SIZE_X = 8 * 32;
 	static CHUNK_SIZE_Y = 8 * 32;
@@ -71,12 +66,23 @@ class GenerationManager {
 	static TILE_HEIGHT = 32;
 
 	static start() {
-		noise.seed(Math.random());
+		this.hyperFastNoise = require("./js/nativelibs/HyperFastNoise.node");
+		this.hyperFastNoise.SetupNoise(Math.floor(Math.random() * 100000));
+
+		//noise.seed(Math.random());
 
 		this.OFFSET_X = (this.CHUNKS_X / 2);
 		this.OFFSET_Y = (this.CHUNKS_Y / 2);
 
 		this.GLOBAL_WIDTH = this.CHUNKS_X * this.TILES_X;
+
+		this.HasTileData = new Int8Array(this.CHUNKS_X * this.CHUNKS_Y * this.TILES_X * this.TILES_Y);
+		this.AllTileData = new Int32Array(this.CHUNKS_X * this.CHUNKS_Y * this.TILES_X * this.TILES_Y);
+	}
+
+	static getPerlinNoise(x, y, index) {
+		return this.hyperFastNoise.GetPerlinNoise(x, y, index);
+		//return noise.perlin2(x * 0.2, y * 0.2);
 	}
 
 	static generateEverything() {
@@ -88,7 +94,6 @@ class GenerationManager {
 					}
 				}
 			}
-			console.log(i + " / " + this.CHUNKS_X);
 		}
 	}
 
@@ -99,45 +104,58 @@ class GenerationManager {
 		return this.getTileGlobal(globalX, globalY, globalIndex);
 	}
 
+	static hasData(index) {
+		return this.HasTileData[index] === 1;
+	}
+
+	static getData(index) {
+		return this.AllTileData[index];
+	}
+
+	static setData(index, data) {
+		this.AllTileData[index] = data;
+		this.HasTileData[index] = 1;
+	}
+
 	static getTileGlobal(globalX, globalY, globalIndex) {
-		if(typeof this.AllTileData[globalIndex] !== "number") {
-			this.AllTileData[globalIndex] = this._generateTile(globalX, globalY, globalIndex);
+		if(!this.hasData(globalIndex)) {
+			this.setData(globalIndex, this._generateTile(globalX, globalY, globalIndex));
 		}
-		return this.AllTileData[globalIndex];
+		return this.getData(globalIndex);
 	}
 
 	static _generateTile(globalX, globalY, globalIndex) {
-		const block = this._generateTileRaw(globalX, globalY, globalIndex, this._getBlockTileType.bind(this));
-		const mid = this._generateTileRaw(globalX, globalY, globalIndex, this._getMiddleTileType.bind(this));
-		const low = this._generateTileRaw(globalX, globalY, globalIndex, this._getLowerTileType.bind(this));
+		const block = this._getBlockTileType(globalX, globalY, globalIndex);
+
+		const midTile = this._getMiddleTileType(globalX, globalY);
+		const mid = this._generateTileRaw(midTile, globalX, globalY, globalIndex, this._getMiddleTileType.bind(this));
+
+		const lowTile = this._getLowerTileType(globalX, globalY);
+		const low = this._generateTileRaw(lowTile, globalX, globalY, globalIndex, this._getLowerTileType.bind(this));
 		return (block << 24) | (mid << 8) | low;
 	}
 
-	static _getBlockTileType(globalX, globalY) {
-		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
-		if(this.AllTileData.includes(globalIndex)) {
-			const result = ((this.AllTileData[globalIndex] >> 24) & 8);
+	static _getBlockTileType(globalX, globalY, globalIndex) {
+		if(this.hasData(globalIndex)) {
+			const result = ((this.getData(globalIndex) >> 24) & 255);
 			return Math.floor(result / 13);
 		}
 
-		let tileType = 255;
-		if(noise.perlin2(globalX * 0.2, globalY * 0.2) >= -0.2) {
-			tileType = 255;
-		} else {
-			tileType = 0;
+		if(this.getPerlinNoise((globalX * 20) + 2000, (globalY * 20) + 2000, globalIndex) >= 0.4) {
+			return 0;
 		}
-		return tileType;
+		return 255;
 	}
 
 	static _getMiddleTileType(globalX, globalY) {
 		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
-		if(this.AllTileData.includes(globalIndex)) {
-			const result = ((this.AllTileData[globalIndex] >> 8) & 8);
+		if(this.hasData(globalIndex)) {
+			const result = ((this.getData(globalIndex) >> 8) & 255);
 			return result > 200 ? result : Math.floor(result / 13);
 		}
 
 		let tileType = 255;
-		if(noise.perlin2(globalX * 0.2, globalY * 0.2) >= 0.5) {
+		if(this.getPerlinNoise(globalX * 20, globalY * 20, globalIndex) >= 0.6) {
 			tileType = 255;
 		} else {
 			tileType = 0;
@@ -149,10 +167,10 @@ class GenerationManager {
 		return 200;
 	}
 
-	static _generateTileRaw(globalX, globalY, globalIndex, getTileTypeFunc) {
-		const tileType = getTileTypeFunc(globalX, globalY, globalIndex);
+	static _generateTileRaw(tileType, globalX, globalY, globalIndex, getTileTypeFunc) {
+		//const tileType = getTileTypeFunc(globalX, globalY, globalIndex);
 		let result = tileType;
-		if(typeof tileType === "number" && tileType < 200) {
+		if(tileType < 200) {
 			let surrond = 0;
 			if(getTileTypeFunc(globalX, globalY - 1) === tileType) surrond |= 1;
 			if(getTileTypeFunc(globalX, globalY + 1) === tileType) surrond |= 2;

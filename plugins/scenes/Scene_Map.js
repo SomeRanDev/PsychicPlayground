@@ -104,8 +104,6 @@ modify_Scene_Map = class {
 					}
 				}
 			}
-
-			console.time();
 			
 			for(let x = minX; x <= maxX; x++) {
 				for(let y = minY; y <= maxY; y++) {
@@ -116,8 +114,6 @@ modify_Scene_Map = class {
 					}
 				}
 			}
-
-			console.timeEnd();
 		}
 
 		for(const c of this._chunks) {

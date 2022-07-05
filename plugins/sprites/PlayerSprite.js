@@ -3,6 +3,8 @@ class PlayerSprite extends Sprite {
 	constructor() {
 		super();
 
+		this.anchor.set(0.5, 1);
+
 		this.idle = new DirectionalSprite(ImageManager.lPlayer("PlayerIdle"), 3);
 		this.walk = new DirectionalSprite(ImageManager.lPlayer("PlayerWalk"), 3);
 

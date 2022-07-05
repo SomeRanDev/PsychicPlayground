@@ -17,9 +17,28 @@ modify_Spriteset_Map = class {
 		this._ppEntities = [];
 		for(let i = 0; i < SpriteManager.entities.length; i++) {
 			const e = SpriteManager.entities[i];
-			const spr = e.makeSprite();
-			this._ppEntities.push(spr);
-			this._ppLayer.addChild(spr);
+			this.createPPEntity(e);
+		}
+	}
+
+	createPPEntity(e) {
+		const spr = e.makeSprite();
+		spr.z = 0;
+		this._ppEntities.push(spr);
+		this._ppLayer.addChild(spr);
+	}
+
+	_sortPPChildren() {
+		this._ppLayer.children.sort(this._comparePPChildOrder.bind(this));
+	}
+
+	_comparePPChildOrder(a, b) {
+		if (a.z !== b.z) {
+			return a.z - b.z;
+		} else if (a.y !== b.y) {
+			return a.y - b.y;
+		} else {
+			return a.spriteId - b.spriteId;
 		}
 	}
 
@@ -40,7 +59,13 @@ modify_Spriteset_Map = class {
 
 	createChunksLayer() {
 		this._chunkLayer = new Sprite();
+		this._chunkLayer.z = -100;
 		this._ppLayer.addChild(this._chunkLayer);
+	}
+
+	update() {
+		PP.Spriteset_Map.update.apply(this, arguments);
+		this._sortPPChildren();
 	}
 
 	//==============================
@@ -99,6 +124,10 @@ class SpriteManager {
 
 	static addEntity(e) {
 		this.entities.push(e);
+
+		if(SceneManager._scene?._spriteset?._ppEntities) {
+			SceneManager._scene._spriteset.createPPEntity(e);
+		}
 	}
 
 	static addChunk(c) {

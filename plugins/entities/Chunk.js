@@ -6,20 +6,20 @@ class Chunk {
 	}
 
 	static BlockRef = {
-		0: { name: "RedWall", type: 1 }
+		0: { name: "RedWall" }
 	}
 
 	static TextureRef = {};
 
-	blockSprites = [];
 	tileSprites = [];
 	underTileSprites = [];
 
-	unusedBlockSprites = [];
 	unusedTileSprites = [];
 	unusedUnderTileSprites = [];
 
 	refreshTiles = [];
+
+	blocks = [];
 
 	constructor(chunkX, chunkY) {
 		this.baseSprite = new Sprite();
@@ -42,12 +42,19 @@ class Chunk {
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
 		this.baseSprite.move(this.chunkX * GenerationManager.TILE_WIDTH * GenerationManager.TILES_X, this.chunkY * GenerationManager.TILE_HEIGHT * GenerationManager.TILES_Y);
+
+		this.refreshTiles = [];
 		
 		//this.unusedTileSprites = this.tileSprites.concat(this.unusedTileSprites);
 		//this.tileSprites = [];
 
 		this.unusedUnderTileSprites = this.underTileSprites.concat(this.unusedUnderTileSprites);
 		this.underTileSprites = [];
+
+		for(const block of this.blocks) {
+			WallObjectPool.removeObject(block);
+		}
+		this.blocks = [];
 
 		this.generateAllTiles();
 	}
@@ -77,7 +84,7 @@ class Chunk {
 
 	generateSomeTiles() {
 		if(this._generatedTiles < this._maxTiles) {
-			const newMax = Math.min(this._maxTiles, this._generatedTiles + 1);
+			const newMax = Math.min(this._maxTiles, this._generatedTiles + 10);
 			while(this._generatedTiles < newMax) {
 				const x = this._generatedTiles % GenerationManager.TILES_X;
 				const y = Math.floor(this._generatedTiles / GenerationManager.TILES_X);
@@ -85,25 +92,46 @@ class Chunk {
 				this._generatedTiles++;
 			}
 		}
+		/*else if(this.refreshTiles.length > 0) {
+			for(const tile of this.refreshTiles) {
+				this.generateTile(tile[0], tile[1], false);
+			}
+			this.refreshTiles = [];
+		}
+		*/
 	}
 
 	generateTile(x, y, allowRefresh = true) {
 		let tile = GenerationManager.getTile(this.chunkX, this.chunkY, x, y);
-		//if(allowRefresh && GenerationManager.RefreshTile) {
-		//	this.refreshTiles.push([x, y]);
-		//}
+		if(allowRefresh && GenerationManager.RefreshTile) {
+			this.refreshTiles.push([x, y]);
+			GenerationManager.RefreshTile = false;
+		}
 
-		//if(!this.setupSprite(this.getBlockSprite(x, y), (tile >> 24) & 255, true)) {
+		if(!this.setupBlock(x, y, (tile >> 24) & 255)) {
 			if(!this.setupSprite(this.getSprite(x, y), (tile >> 8) & 255)) {
 				this.setupSprite(this.getUnderSprite(x, y), tile & 255);
 			} else {
 				this.hideUnderSprite(x, y);
 			}
-		//} else {
-		//	this.hideUnderAndMidSprite(x, y);
-		//}
+		} else {
+			this.hideUnderAndMidSprite(x, y);
+		}
 	}
 
+	setupBlock(x, y, blockId) {
+		if(blockId === 255) {
+			return false;
+		}
+
+		const blockData = Chunk.BlockRef[blockId];
+		const block = WallObjectPool.getObject(blockData.name);
+		this.blocks.push(block);
+
+		block.setPosition(this.baseSprite.x + (32 * x), this.baseSprite.y + (32 * y));
+
+		return true;
+	}
 
 	getSpriteEx(x, y, collection, layer, unused) {
 		//const i = (y * GenerationManager.TILES_X) + x;
@@ -140,7 +168,7 @@ class Chunk {
 		return spr;
 	}
 
-	getBlockSprite(x, y) { return this.getSpriteEx(x, y, this.blockSprites, this.blockLayer, this.unusedBlockSprites); }
+	//getBlockSprite(x, y) { return this.getSpriteEx(x, y, this.blockSprites, this.blockLayer, this.unusedBlockSprites); }
 	getSprite(x, y) { return this.getSpriteEx2(x, y, this.tileSprites, this.middleLayer, this.unusedTileSprites); }
 	getUnderSprite(x, y) { return this.getSpriteEx(x, y, this.underTileSprites, this.lowerLayer, this.unusedUnderTileSprites); }
 
@@ -167,17 +195,24 @@ class Chunk {
 		
 		const isAuto = tile < 200;
 
+		/*
 		if(isAuto && (tile % 13) === 4) {
 			spr.visible = tile !== 255;
 			return true;
 		}
+		*/
 
-		const tileData = (isBlock ? Chunk.BlockRef : Chunk.TileRef)[isAuto ? Math.floor(tile / 13) : tile];
+		const tileData = Chunk.TileRef[isAuto ? Math.floor(tile / 13) : tile];
 		if(!tileData) {
 			console.warn("TILE DATA INVALID??\nisAuto: " + isAuto + ", raw tile: " + tile + ", tile: " + (isAuto ? Math.floor(tile / 13) : tile));
 		}
 		const texture = this.getTexture(tileData.name);
 		spr.bitmap = texture;
+
+		const gx = (this.chunkX * GenerationManager.CHUNK_SIZE_X) + spr.x;
+		const gy = (this.chunkY * GenerationManager.CHUNK_SIZE_Y) + spr.y;
+		const tr = GenerationManager.hyperFastNoise.GetCellularNoise1(gx / 10, gy / 10);
+		spr.setHue(tr * 10);
 
 		if(isAuto) {
 			const autoType = tile % 13;
