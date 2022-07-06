@@ -71,10 +71,3 @@ PP.makeText = function(text, fontSize = 20, align = "center") {
 	Text.resolution = 2;
 	return Text;
 };
-
-PP.Bitmap_load = Bitmap.load;
-Bitmap.load = function() {
-	const result = PP.Bitmap_load.apply(this, arguments);
-	result.smooth = false;
-	return result;
-};
