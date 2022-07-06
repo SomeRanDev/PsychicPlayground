@@ -18,10 +18,10 @@ class Chunk {
 	}
 
 	static BlockRef = {
-		0: { name: "RedWall", hideTiles: false },
-		1: { name: "Tree", hideTiles: false },
-		2: { name: "TreeTrunk", hideTiles: false },
-		99: { name: "GodColumn", hideTiles: true }
+		0: { name: "RedWall", hideTiles: false, hitBox: [0.5, 0.5, 2, 1] },
+		1: { name: "Tree", hideTiles: false, hitBox: [1, 1, 1, 1] },
+		2: { name: "TreeTrunk", hideTiles: false, hitBox: [1, 1, 0, 1] },
+		99: { name: "GodColumn", hideTiles: true, hitBox: [0.5, 0.5, 2, 1] }
 	}
 
 	static TextureRef = {};
@@ -61,7 +61,7 @@ class Chunk {
 	setPosition(chunkX, chunkY) {
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
-		this.baseSprite.move(this.chunkX * GenerationManager.TILE_WIDTH * GenerationManager.TILES_X, this.chunkY * GenerationManager.TILE_HEIGHT * GenerationManager.TILES_Y);
+		this.baseSprite.move((this.chunkX * GenerationManager.CHUNK_SIZE_X) + 16, (this.chunkY * GenerationManager.CHUNK_SIZE_Y) + 16);
 
 		this.refreshTiles = [];
 		
@@ -86,6 +86,12 @@ class Chunk {
 
 	update() {
 		this.generateSomeTiles();
+		for(const block of this.blocks) {
+			block.update();
+		}
+	}
+
+	onMouseClick(x, y) {
 	}
 
 	generateAllTiles() {
@@ -109,7 +115,7 @@ class Chunk {
 
 	generateSomeTiles() {
 		if(this._generatedTiles < this._maxTiles) {
-			const newMax = Math.min(this._maxTiles, this._generatedTiles + 10);
+			const newMax = Math.min(this._maxTiles, this._generatedTiles + 4);
 			while(this._generatedTiles < newMax) {
 				const x = this._generatedTiles % GenerationManager.TILES_X;
 				const y = Math.floor(this._generatedTiles / GenerationManager.TILES_X);
@@ -160,7 +166,7 @@ class Chunk {
 		const block = WallObjectPool.getObject(name);
 		this.blocks.push(block);
 
-		block.setPosition(this.baseSprite.x + (32 * x), this.baseSprite.y + (32 * y));
+		block.setup(this.baseSprite.x + (32 * x), this.baseSprite.y + (32 * y), blockData.hitBox);
 
 		return !blockData.hideTiles;
 	}

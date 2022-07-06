@@ -48,6 +48,7 @@ modify_Spriteset_Map = class {
 		this.createPPLayer();
 		this.createChunksLayer();
 		this.createPPEntities();
+		this.createMapCursor();
 	}
 
 	clearChildrenSprites() {
@@ -61,6 +62,13 @@ modify_Spriteset_Map = class {
 		this._chunkLayer = new Sprite();
 		this._chunkLayer.z = -100;
 		this._ppLayer.addChild(this._chunkLayer);
+	}
+
+	createMapCursor() {
+		this._mapCursor = new MouseCursor();
+		this._mapCursor.z = -10;
+		this._mapCursor.scale.set(2);
+		this._ppLayer.addChild(this._mapCursor);
 	}
 
 	update() {

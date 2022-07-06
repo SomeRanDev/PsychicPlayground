@@ -14,6 +14,31 @@ Input.keyMapper[67] = "c";
 
 Input.gamepadMapper = {};
 
+TouchInput.__old__setupEventHandlers = TouchInput._setupEventHandlers;
+TouchInput._setupEventHandlers = function() {
+	/*const pf = { passive: false };
+	document.addEventListener("mousedown", this._onMouseDown.bind(this));
+	document.addEventListener("mousemove", this._onMouseMove.bind(this));
+	document.addEventListener("mouseup", this._onMouseUp.bind(this));
+	document.addEventListener("wheel", this._onWheel.bind(this), pf);
+	document.addEventListener("touchstart", this._onTouchStart.bind(this), pf);
+	document.addEventListener("touchmove", this._onTouchMove.bind(this), pf);
+	document.addEventListener("touchend", this._onTouchEnd.bind(this));
+	document.addEventListener("touchcancel", this._onTouchCancel.bind(this));
+	window.addEventListener("blur", this._onLostFocus.bind(this));*/
+
+	TouchInput.__old__setupEventHandlers.apply(this, arguments);
+	document.addEventListener("mouseleave", function() {
+		TouchInput.mouseInside = false;
+	});
+};
+
+TouchInput.__old_onMouseMove = TouchInput._onMouseMove;
+TouchInput._onMouseMove = function(event) {
+	TouchInput.__old_onMouseMove.apply(this, arguments);
+	TouchInput.mouseInside = true;
+};
+
 modify_Input = class {
 	static clear() {
 		PP.Input.clear.apply(this, arguments);

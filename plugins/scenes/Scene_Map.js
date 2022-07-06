@@ -43,8 +43,12 @@ modify_Scene_Map = class {
 		this._targetCameraX = this._targetCameraY = null;
 	}
 
+	canMoveCamera() {
+		return !this._selectedObject;
+	}
+
 	updateCameraPos(force = false) {
-		if(this._spriteset && this._spriteset.canMoveCamera()) {
+		if(this.canMoveCamera() && this._spriteset && this._spriteset.canMoveCamera()) {
 			const letsForce = false;//$gameTemp._isNewGame || ($gameMap._isTranferring && !$espGamePlayer._canControl) || force || this._spriteset._tilemap.scale.x > 1;
 			this._spriteset.setCameraPos(this.genCameraPosX(), this.genCameraPosY(), letsForce);
 			this.PPCameraX = -this._spriteset._tilemap.x;
@@ -82,7 +86,18 @@ modify_Scene_Map = class {
 		return (((GenerationManager.CHUNKS_Y - 1) / 2) * GenerationManager.CHUNK_SIZE_Y) - Graphics.height;
 	}
 
+	getChunkKey(x, y) {
+		return x + " - " + y;
+	}
+
 	updateChunks() {
+		this.updateLoadedChunks();
+		this.updateMouseMovement();
+		this.updateMouseCursor();
+		this.updateChunkBehavior();
+	}
+
+	updateLoadedChunks() {
 		const minX = Math.floor(this.PPCameraX / GenerationManager.CHUNK_SIZE_X) - 2;
 		const minY = Math.floor(this.PPCameraY / GenerationManager.CHUNK_SIZE_Y) - 2;
 		const maxX = minX + 6 + 4;
@@ -99,7 +114,7 @@ modify_Scene_Map = class {
 				if(c) {
 					if(c.chunkX < minX || c.chunkX > maxX || c.chunkY < minY || c.chunkY > maxY) {
 						this._chunks[i] = null;
-						this._chunkExists[c.chunkX + " - " + c.chunkY] = false;
+						this._chunkExists[this.getChunkKey(c.chunkX, c.chunkY)] = null;
 						this._freeChunks.push(c);
 					}
 				}
@@ -107,17 +122,73 @@ modify_Scene_Map = class {
 			
 			for(let x = minX; x <= maxX; x++) {
 				for(let y = minY; y <= maxY; y++) {
-					const key = x + " - " + y;
+					const key = this.getChunkKey(x, y);
 					if(!this._chunkExists[key]) {
-						this.addChunk(this.getChunk(x, y));
-						this._chunkExists[key] = true;
+						const c = this.getChunk(x, y);
+						this.addChunk(c);
+						this._chunkExists[key] = c;
 					}
 				}
 			}
 		}
+	}
 
+	updateMouseMovement() {
+		const touchPos = new Point(TouchInput.x, TouchInput.y);
+		const localPos = this._spriteset._tilemap.worldTransform.applyInverse(touchPos);
+
+		TouchInput.worldX = localPos.x;
+		TouchInput.worldY = localPos.y;
+
+		const cx = Math.floor(localPos.x / GenerationManager.CHUNK_SIZE_X);
+		const cy = Math.floor(localPos.y / GenerationManager.CHUNK_SIZE_Y);
+
+		if(TouchInput.isTriggered()) {
+			const chunk = this._chunkExists[this.getChunkKey(cx, cy)];
+			if(chunk !== null) {
+				const tileX = Math.floor((localPos.x - (cx * GenerationManager.CHUNK_SIZE_X)) / GenerationManager.TILE_WIDTH);
+				const tileY = Math.floor((localPos.y - (cy * GenerationManager.CHUNK_SIZE_Y)) / GenerationManager.TILE_HEIGHT);
+				chunk.onMouseClick(tileX, tileY);
+			}
+		}
+	}
+
+	updateMouseCursor() {
+		const globalTileX = Math.floor(TouchInput.worldX / GenerationManager.TILE_WIDTH);
+		const globalTileY = Math.floor(TouchInput.worldY / GenerationManager.TILE_HEIGHT);
+
+		if(this._spriteset._mapCursor) {
+			this._spriteset._mapCursor.setPos(globalTileX * 32, globalTileY * 32);
+		}
+	}
+
+	updateChunkBehavior() {
+		const oldSelection = this._selectedObject;
+
+		PP.selectedObjects = [];
 		for(const c of this._chunks) {
-			if(c !== null) c.update();
+			if(c !== null) {
+				c.update();
+			}
+		}
+
+		let finalObject = null;
+		for(const c of PP.selectedObjects) {
+			if(!finalObject || finalObject.y < c.y) {
+				finalObject = c;
+			}
+		}
+
+		if(oldSelection) {
+			oldSelection.setSelected(false);
+		}
+		if(finalObject) {
+			this._selectedObject = finalObject;
+			finalObject.setSelected(true);
+			this._spriteset._mapCursor.visible = false;
+		} else {
+			this._selectedObject = null;
+			this._spriteset._mapCursor.visible = TouchInput.mouseInside;
 		}
 	}
 

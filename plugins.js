@@ -23,6 +23,7 @@ var $plugins =
 {"name":"sprites/DirectionalSprite","status":true,"description":"","parameters":{}},
 {"name":"sprites/PlayerSprite","status":true,"description":"","parameters":{}},
 {"name":"sprites/Map","status":true,"description":"","parameters":{}},
+{"name":"sprites/MouseCursor","status":true,"description":"","parameters":{}},
 {"name":"---","status":true,"description":"","parameters":{}},
 {"name":"entities/Player","status":true,"description":"","parameters":{}},
 {"name":"entities/Chunk","status":true,"description":"","parameters":{}},
