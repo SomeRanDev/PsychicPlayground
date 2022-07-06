@@ -34,8 +34,8 @@ class Player {
 		if(isMoving) {
 			this.updateTargetDirection();
 
-			this.position.x += (this.speed * Input.InputVector.x);
-			this.position.y += (this.speed * Input.InputVector.y);
+			this.position.x = Math.round(CollisionManager.processMovementX(this.position.x, this.position.y, (this.speed * Input.InputVector.x)));
+			this.position.y = Math.round(CollisionManager.processMovementY(this.position.x, this.position.y, (this.speed * Input.InputVector.y)));
 		}
 
 		this.updateTurning(lastDirection);

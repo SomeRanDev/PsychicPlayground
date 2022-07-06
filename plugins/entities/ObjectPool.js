@@ -19,9 +19,10 @@ class ObjectPool {
 	}
 
 	removeObject(obj) {
-		obj.destroy();
+		obj.onPoolRemove();
 		this.objects.push(obj);
 	}
 }
 
 const WallObjectPool = new ObjectPool(Wall);
+const HeartObjectPool = new ObjectPool(Heart);

@@ -49,6 +49,7 @@ modify_Spriteset_Map = class {
 		this.createChunksLayer();
 		this.createPPEntities();
 		this.createMapCursor();
+		this.createUIContainer();
 	}
 
 	clearChildrenSprites() {
@@ -69,6 +70,13 @@ modify_Spriteset_Map = class {
 		this._mapCursor.z = -10;
 		this._mapCursor.scale.set(2);
 		this._ppLayer.addChild(this._mapCursor);
+	}
+
+	createUIContainer() {
+		this._uiContainer = new Sprite();
+		this._uiContainer.z = 9999;
+		this._ppLayer.addChild(this._uiContainer);
+		SpriteManager.uiContainer = this._uiContainer;
 	}
 
 	update() {
@@ -129,6 +137,8 @@ modify_Spriteset_Map = class {
 
 class SpriteManager {
 	static entities = [];
+
+	static uiContainer = null;
 
 	static addEntity(e) {
 		this.entities.push(e);

@@ -2,12 +2,20 @@
 class Wall {
 	constructor(url) {
 		this.init(url);
+
+		this.chunkParent = null;
+
 		this.x = 0;
 		this.y = 0;
+		this.realX = 0;
+		this.realY = 0;
+
 		this.hitBox = null;
 
 		this._selected = false;
 		this._pressed = false;
+
+		this._mined = false;
 
 		this._mineAnimation = 0;
 
@@ -22,15 +30,48 @@ class Wall {
 		}
 	}
 
-	destroy() {
+	onPoolRemove() {
 		this.baseSprite.visible = false;
+
+		if(this.heartContainer) {
+			this.heartContainer = null;
+		}
+
+		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
+		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
+		CollisionManager.clearCollision(this.globalX + width2, this.globalY + height2 + 1);
 	}
 
-	setup(globalX, globalY, hitBox) {
-		this.x = globalX;
-		this.y = globalY;
+	setup(chunk, localTileX, localTileY, hitBox, hp, res, hpIcon, globalX, globalY) {
+		this.chunkParent = chunk;
+
+		this.x = localTileX;
+		this.y = localTileY;
+		this.globalX = globalX;
+		this.globalY = globalY;
+		this.realX = chunk.baseSprite.x + (32 * localTileX);
+		this.realY = chunk.baseSprite.y + (32 * localTileY);
+
 		this.hitBox = hitBox ?? [0, 0, 0, 0];
-		this.baseSprite.move(globalX, globalY + 32);
+
+		this.realHitBox = PP.Int32ArrayOf(
+			(this.realX - (32 * this.hitBox[0])),
+			(this.realX + (32 * this.hitBox[1])),
+			(this.realY - (32 * this.hitBox[2])),
+			(this.realY + (32 * this.hitBox[3]))
+		);
+
+		this.hp = hp;
+		this.res = res;
+		this.hpIcon = hpIcon;
+
+		this.baseSprite.move(this.realX, this.realY + 32);
+
+		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
+		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
+		CollisionManager.registerCollision(globalX + width2, globalY + height2 + 1);
+
+		this._mined = false;
 	}
 
 	makeSprite() {
@@ -45,18 +86,34 @@ class Wall {
 	}
 
 	update() {
+		this.updateSelection();
+		this.updatePressed();
+		this.updatePressAnimation();
+		this.updateHeartContainer();
+	}
+
+	updateSelection() {
 		if(
-			(TouchInput.worldX > (this.x - (32 * this.hitBox[0]))) &&
-			(TouchInput.worldX < (this.x + (32 * this.hitBox[1]))) &&
-			(TouchInput.worldY > (this.y - (32 * this.hitBox[2]))) &&
-			(TouchInput.worldY < (this.y + (32 * this.hitBox[3])))
+			(TouchInput.worldX > this.realHitBox[0]) &&
+			(TouchInput.worldX < this.realHitBox[1]) &&
+			(TouchInput.worldY > this.realHitBox[2]) &&
+			(TouchInput.worldY < this.realHitBox[3])
 		) {
 			PP.selectedObjects.push(this);
 		}
+	}
 
+	updatePressed() {
+		if(this._selected) {
+			this.setPressed(TouchInput.isPressed());
+		}
+	}
+
+	updatePressAnimation() {
 		if(this._pressed || this._mineAnimation !== 0) {
 			if(this._mineAnimation >= 1) {
 				this._mineAnimation = 0;
+				this._mined = false;
 			} else if(this._mineAnimation < 1) {
 				this._mineAnimation += 0.06;
 				if(this._mineAnimation > 1) this._mineAnimation = 1;
@@ -66,6 +123,10 @@ class Wall {
 				const r = this._mineAnimation / 0.5;
 				this.baseSprite.scale.set(2 * (1 - (0.25 * r.cubicOut())),  2 * (1 + (0.25 * r.cubicOut())));
 			} else {
+				if(!this._mined) {
+					this.mine();
+					this._mined = true;
+				}
 				const r = (this._mineAnimation - 0.5) / 0.5;
 				this.baseSprite.scale.set(2 * (0.75 + (0.25 * r.cubicOut())),  2 * (1.25 - (0.25 * r.cubicOut())));
 			}
@@ -85,6 +146,57 @@ class Wall {
 	setPressed(s) {
 		if(this._pressed !== s) {
 			this._pressed = s;
+			if(s && this.heartContainer) {
+				this.heartContainer.alpha = 1;
+			}
+			//this.currentRealHitBox = s ? this.realReleaseHitBox : this.realHitBox;
+		}
+	}
+
+	mine() {
+		this.makeHearts();
+		this.hp -= 1;
+		this.heartContainer.children[this.hp].break();
+		if(this.hp <= 0) {
+			this.chunkParent.removeBlock(this);
+		}
+	}
+
+	makeHearts() {
+		if(!this.heartContainer) {
+			const spacingX = 18;
+			const spacingY = 18;
+			const heartsPerRow = 5;
+
+			this.heartContainer = new Sprite();
+
+			const count = this.hp;
+			const rows = Math.ceil(count / heartsPerRow);
+			this.heartContainer.move(this.baseSprite.x - ((Math.min(heartsPerRow, count) * spacingX) / 2), this.baseSprite.y - ((this.hitBox[2] + rows) * 32));
+			SpriteManager.uiContainer.addChild(this.heartContainer);
+
+			const heartContainer = this.heartContainer;
+
+			for(let i = 0; i < count; i++) {
+				const h = HeartObjectPool.getObject(this.hpIcon, this.onHeartAnimationComplete.bind(this, heartContainer));
+				this.heartContainer.addChild(h);
+				h.x = (i % 5) * spacingX;
+				h.y = (rows - Math.floor(i / heartsPerRow)) * spacingY;
+			}
+		}
+	}
+
+	onHeartAnimationComplete(heartContainer, self) {
+		HeartObjectPool.removeObject(self);
+		if(heartContainer.children.length <= 0) {
+			SpriteManager.uiContainer.removeChild(heartContainer);
+			heartContainer.destroy();
+		}
+	}
+
+	updateHeartContainer() {
+		if(!this._pressed && this.heartContainer) {
+			this.heartContainer.alpha -= 0.1;
 		}
 	}
 }

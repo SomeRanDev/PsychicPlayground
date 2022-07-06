@@ -18,10 +18,38 @@ class Chunk {
 	}
 
 	static BlockRef = {
-		0: { name: "RedWall", hideTiles: false, hitBox: [0.5, 0.5, 2, 1] },
-		1: { name: "Tree", hideTiles: false, hitBox: [1, 1, 1, 1] },
-		2: { name: "TreeTrunk", hideTiles: false, hitBox: [1, 1, 0, 1] },
-		99: { name: "GodColumn", hideTiles: true, hitBox: [0.5, 0.5, 2, 1] }
+		0: {
+			name: "RedWall",
+			hideTiles: false,
+			hitBox: [0.5, 0.5, 2, 1],
+			hp: 15,
+			res: 25,
+			hpIcon: "Rock"
+		},
+		1: {
+			name: "Tree",
+			hideTiles: false,
+			hitBox: [1, 1, 1, 1],
+			hp: 15,
+			res: 30,
+			hpIcon: "Stick"
+		},
+		2: {
+			name: "TreeTrunk",
+			hideTiles: false,
+			hitBox: [1, 1, 0, 1],
+			hp: 8,
+			res: 30,
+			hpIcon: "Stick"
+		},
+		99: {
+			name: "GodColumn",
+			hideTiles: true,
+			hitBox: [0.5, 0.5, 2, 1],
+			hp: 50,
+			res: 100,
+			hpIcon: "MetalHeart"
+		}
 	}
 
 	static TextureRef = {};
@@ -80,6 +108,14 @@ class Chunk {
 			WallObjectPool.removeObject(block);
 		}
 		this.blocks = [];
+
+		const startX = (this.chunkX * GenerationManager.TILES_X);
+		const startY = (this.chunkY * GenerationManager.TILES_Y);
+		for(let x = 0; x < GenerationManager.TILES_X; x++) {
+			for(let y = 0; y < GenerationManager.TILES_Y; y++) {
+				CollisionManager.clearCollision(startX + x, startY + y);
+			}
+		}
 
 		this.generateAllTiles();
 	}
@@ -166,9 +202,19 @@ class Chunk {
 		const block = WallObjectPool.getObject(name);
 		this.blocks.push(block);
 
-		block.setup(this.baseSprite.x + (32 * x), this.baseSprite.y + (32 * y), blockData.hitBox);
+		const globalX = (this.chunkX * GenerationManager.TILES_X) + x;
+		const globalY = (this.chunkY * GenerationManager.TILES_Y) + y;
+		block.setup(this, x, y, blockData.hitBox, blockData.hp ?? 10, blockData.res ?? 0, blockData.hpIcon, globalX, globalY);
 
 		return !blockData.hideTiles;
+	}
+
+	removeBlock(block) {
+		if(this.blocks.includes(block)) {
+			GenerationManager.setTileBlock(this.chunkX, this.chunkY, block.x, block.y, 255);
+			WallObjectPool.removeObject(block);
+			this.blocks.remove(block);
+		}
 	}
 
 	getSpriteFromPool(x, y, collection, layer, unused) {

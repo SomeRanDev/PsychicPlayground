@@ -1,0 +1,3 @@
+class BreakAndAbsorb extends Sprite {
+	
+}

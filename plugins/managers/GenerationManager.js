@@ -92,12 +92,21 @@ class GenerationManager {
 		this.GLOBAL_HEIGHT = this.CHUNKS_Y * this.TILES_Y;
 		this.JAIL_DISTANCE = (this.GLOBAL_WIDTH / 2) - (this.TILES_X * 2);
 
-		this.HasTileData = new Int8Array(this.CHUNKS_X * this.CHUNKS_Y * this.TILES_X * this.TILES_Y);
-		this.AllTileData = new Uint32Array(this.CHUNKS_X * this.CHUNKS_Y * this.TILES_X * this.TILES_Y);
+		this.MaxTiles = this.CHUNKS_X * this.CHUNKS_Y * this.TILES_X * this.TILES_Y;
+		this.HasTileData = new Int8Array(this.MaxTiles);
+		this.AllTileData = new Uint32Array(this.MaxTiles);
 
 		this.ReadRotation = Math.PI * 2 * Math.random();
 		this.GenerationMap = ImageManager.lGeneration("Map1")//PP.rotateBitmap(ImageManager.lGeneration("Map1"), 0);
 		this.GenerationMapPath = ImageManager.lGeneration("Map1Path")//PP.rotateBitmap(ImageManager.lGeneration("Map1Path"), 0);
+	}
+
+	static globalCoordsToIndex(globalX, globalY) {
+		return (globalY * this.GLOBAL_WIDTH) + globalX;
+	}
+
+	static globalIndexToCoords(globalIndex) {
+		return [ globalIndex % this.GLOBAL_WIDTH, Math.floor(globalIndex / this.GLOBAL_WIDTH) ];
 	}
 
 	static getPerlinNoise(x, y, index) {
@@ -199,6 +208,15 @@ class GenerationManager {
 		return this.getTileGlobal(globalX, globalY, globalIndex);
 	}
 
+	static setTileBlock(chunkX, chunkY, x, y, blockId) {
+		const globalX = ((chunkX + this.OFFSET_X) * this.TILES_X) + x;
+		const globalY = ((chunkY + this.OFFSET_Y) * this.TILES_Y) + y;
+		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
+		let data = this.getData(globalIndex);
+		data = (data | (255 << 24)) & (blockId << 24);
+		this.setData(globalIndex, data);
+	}
+
 	static hasData(index) {
 		return this.HasTileData[index] === 1;
 	}
@@ -249,7 +267,7 @@ class GenerationManager {
 	}
 
 	static _getUpperTileType(globalX, globalY, low, mid, block, total) {
-		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
+		const globalIndex = this.globalCoordsToIndex(globalX, globalY);
 		if(this.hasData(globalIndex)) {
 			const result = ((this.getData(globalIndex) >> 16) & 255);
 			return result > 200 ? result : Math.floor(result / 13);

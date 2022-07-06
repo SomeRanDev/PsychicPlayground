@@ -202,6 +202,7 @@ modify_Scene_Map = class {
 	}
 
 	updateMousePress() {
+		/*
 		if(TouchInput.isTriggered()) {
 			if(this._selectedObject) {
 				this._selectedObject.setPressed(true);
@@ -210,7 +211,7 @@ modify_Scene_Map = class {
 			if(this._selectedObject) {
 				this._selectedObject.setPressed(false);
 			}
-		}
+		}*/
 	}
 
 	addChunk(c) {
