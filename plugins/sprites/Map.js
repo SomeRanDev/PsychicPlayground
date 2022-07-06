@@ -5,6 +5,18 @@ class Map extends Sprite {
 		const b = new Bitmap(width, height);
 		b.smooth = true;
 		super(b);
+
+		this.cursor = new Sprite(ImageManager.loadPicture("PlayerCursor"));
+		this.cursor.anchor.set(0.5, 1);
+		this.addChild(this.cursor);
+	}
+
+	update() {
+		const globalWidth = GenerationManager.GLOBAL_WIDTH * 32;
+		const globalHeight = GenerationManager.GLOBAL_HEIGHT * 32;
+		const px = ($ppPlayer.position.x + globalWidth / 2) / (globalWidth);
+		const py = ($ppPlayer.position.y + globalHeight / 2) / (globalHeight);
+		this.cursor.move(px * this.width, py * this.height);
 	}
 
 	generate() {
@@ -15,39 +27,58 @@ class Map extends Sprite {
 			for(let y = 0; y < height; y++) {
 				const xRatio = x / width;
 				const yRatio = y / height;
-				//const setIndex = (y * (width * 4)) + (x * 4);
 
-				const tile = GenerationManager.getTileRatio(xRatio, yRatio);
+				let col = 0x000000;
+				let forceBlack = false;
 
-				let col = "#ffffff";
 				let alpha = 1;
-
-				const block = ((tile & 0xff000000) >> 24);
-				const topTile = ((tile & 0xff0000) >> 16);
-				const midTile = ((tile & 0x00ff00) >> 8);
-
-				// if mid tile is empty...
-				if(block === 99) {
-					col = 0x000000;
-				} else if(topTile === 220) {
-					col = 0xffffff;
-				} else if(midTile === 255) {
-					const lowTile = (tile & 0x0000ff);
-					if(lowTile === 200) {
-						col = 0xfdcbb0;
-					}
-				} else if(Math.floor(midTile / 13) === 0) {
-					col = 0xa884f3;
-				}
-
 				const dist = Math.sqrt(Math.pow(xRatio - 0.5, 2) + Math.pow(yRatio - 0.5, 2));
-				if(dist > 0.49) {
-					//alpha = (1 - (dist - 0.45 / 0.3));
-					//console.log(dist);
-					alpha = 0;//(0.8 - (dist - 0.5) * 5).clamp(0, 1);
-				} else if(dist > 0.48) {
-					col = 0x000000;
+				if(dist > 0.48) {
+					forceBlack = true;
+					alpha = ((0.51 - dist) / 0.3).clamp(0, 1);
+				}/* else if(dist > 0.47) {
+					forceBlack = true;
 					alpha = 1;
+				}*/
+
+				if(alpha <= 0) continue;
+
+				if(!forceBlack) {
+
+					const tile = GenerationManager.getTileRatio(xRatio, yRatio) >>> 0;
+
+					const block = ((tile & 0xff000000) >> 24);
+					const topTile = ((tile & 0xff0000) >> 16);
+					const midTile = ((tile & 0x00ff00) >> 8);
+
+					// if mid tile is empty...
+					if(block === 99) {
+						col = 0x000000;
+					/*} else if(block === 0) {
+						col = 0x9c805d;
+						this.bitmap.fillRect(x, y - 1, 1, 1, "#9c805d");
+						alpha = 0.7;
+					} */
+					} else if(block === 1 || block === 2) {
+						col = 0x57404e;
+						if(this.bitmap.getPixelNumber(x, y - 1) !== 0) {
+							this.bitmap.fillRect(x, y - 1, 1, 1, "rgba(111, 227, 163, " + alpha + ")");
+						}
+					} else if(topTile === 220) {
+						col = 0xffffff;
+					} else if(midTile === 255) {
+						const lowTile = (tile & 0x0000ff);
+						if(lowTile === 200) {
+							col = 0xe6cc8a;
+						}
+					} else if(Math.floor(midTile / 13) === 0) {
+						col = 0x78b392;
+					}
+
+				} else {
+
+					col = 0x000000;
+
 				}
 
 				const colStr = "rgba(" + ((col & 0xff0000) >> 16) + ", " + ((col & 0x00ff00) >> 8) + ", " + (col & 0x0000ff) + ", " + alpha + ")";
@@ -59,7 +90,9 @@ class Map extends Sprite {
 				imgData[setIndex + 3] = 255;
 				*/
 
-				this.bitmap.fillRect(x, y, 1, 1, colStr)
+				if(this.bitmap.getAlphaPixel(x, y) <= 0) {
+					this.bitmap.fillRect(x, y, 1, 1, colStr);
+				}
 			}
 		}
 

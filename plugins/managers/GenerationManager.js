@@ -93,10 +93,11 @@ class GenerationManager {
 		this.JAIL_DISTANCE = (this.GLOBAL_WIDTH / 2) - (this.TILES_X * 2);
 
 		this.HasTileData = new Int8Array(this.CHUNKS_X * this.CHUNKS_Y * this.TILES_X * this.TILES_Y);
-		this.AllTileData = new Int32Array(this.CHUNKS_X * this.CHUNKS_Y * this.TILES_X * this.TILES_Y);
+		this.AllTileData = new Uint32Array(this.CHUNKS_X * this.CHUNKS_Y * this.TILES_X * this.TILES_Y);
 
-		this.GenerationMap = ImageManager.lGeneration("Map1");
-		this.GenerationMapPath = ImageManager.lGeneration("Map1Path");
+		this.ReadRotation = Math.PI * 2 * Math.random();
+		this.GenerationMap = ImageManager.lGeneration("Map1")//PP.rotateBitmap(ImageManager.lGeneration("Map1"), 0);
+		this.GenerationMapPath = ImageManager.lGeneration("Map1Path")//PP.rotateBitmap(ImageManager.lGeneration("Map1Path"), 0);
 	}
 
 	static getPerlinNoise(x, y, index) {
@@ -117,7 +118,18 @@ class GenerationManager {
 	}
 
 	static GetPathAt(globalX, globalY) {
-		const pathCol = this.GenerationMapPath.getPixelAlphaFromRatio(globalX / this.GLOBAL_WIDTH, globalY / this.GLOBAL_HEIGHT);
+		const xRatio = 0.25 + (globalX / this.GLOBAL_WIDTH) * 0.5;
+		const yRatio = 0.25 + (globalY / this.GLOBAL_HEIGHT) * 0.5;
+
+		const dist = Math.sqrt(Math.pow(xRatio - 0.5, 2) + Math.pow(yRatio - 0.5, 2));
+		const angle = Math.atan2(xRatio - 0.5, yRatio - 0.5) + this.ReadRotation;
+
+		const newXRatio = (Math.cos(angle) * dist) + 0.5;
+		const newYRatio = (Math.sin(angle) * dist) + 0.5;
+		//console.log(xRatio, yRatio, angle * (180 / Math.PI));
+		//this.ReadRotation
+
+		const pathCol = this.GenerationMapPath.getPixelAlphaFromRatio(newXRatio, newYRatio);
 		//console.log(pathCol);
 		if(pathCol > 0) {
 			return true;
@@ -126,7 +138,16 @@ class GenerationManager {
 	}
 
 	static GetGenerationPoint(xRatio, yRatio) {
-		const col = this.GenerationMap.getPixelNumberFromRatio(xRatio, yRatio);
+		xRatio = 0.25 + (xRatio) * 0.5;
+		yRatio = 0.25 + (yRatio) * 0.5;
+
+		const dist = Math.sqrt(Math.pow(xRatio - 0.5, 2) + Math.pow(yRatio - 0.5, 2));
+		const angle = Math.atan2(xRatio - 0.5, yRatio - 0.5) + this.ReadRotation;
+
+		const newXRatio = (Math.cos(angle) * dist) + 0.5;
+		const newYRatio = (Math.sin(angle) * dist) + 0.5;
+
+		const col = this.GenerationMap.getPixelNumberFromRatio(newXRatio, newYRatio);
 		//const a = (col & 0xff000000) >> 24;
 		const r = (col & 0x00ff0000) >> 16;
 		const g = (col & 0x0000ff00) >> 8;

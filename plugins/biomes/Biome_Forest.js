@@ -26,7 +26,7 @@ class Biome_Forest extends Biome_Base {
 			return 255;
 		}
 
-		if(globalIndex % 2 === globalY % 2) {
+		if(globalIndex % 2 !== globalY % 2) {
 			return 255;
 		}
 

@@ -71,3 +71,31 @@ PP.makeText = function(text, fontSize = 20, align = "center") {
 	Text.resolution = 2;
 	return Text;
 };
+
+PP.rotateBitmap = function(bitmap, rotation) {
+	let renderer = PIXI.autoDetectRenderer();
+	let renderTexture = PIXI.RenderTexture.create({ width: bitmap.width, height: bitmap.height });
+	let sprite = new Sprite(bitmap);
+
+	sprite.position.x = bitmap.width / 2;
+	sprite.position.y = bitmap.height / 2;
+	sprite.anchor.x = 0.5;
+	sprite.anchor.y = 0.5;
+
+	sprite.rotation = rotation;
+
+	renderer.render(sprite, renderTexture);
+
+	const result = new Bitmap(bitmap.width, bitmap.height);
+	result.fillAll("#ffffff");
+	const canvas = renderer.extract.canvas(renderTexture);
+
+	result.context.drawImage(canvas, 0, 0);
+	result.baseTexture.update();
+
+	canvas.width = 0;
+	canvas.height = 0;
+	renderTexture.destroy({ destroyBase: true });
+
+	return result;
+};
