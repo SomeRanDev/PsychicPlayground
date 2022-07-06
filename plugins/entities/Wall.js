@@ -5,6 +5,12 @@ class Wall {
 		this.x = 0;
 		this.y = 0;
 		this.hitBox = null;
+
+		this._selected = false;
+		this._pressed = false;
+
+		this._mineAnimation = 0;
+
 		SpriteManager.addEntity(this);
 	}
 
@@ -47,9 +53,38 @@ class Wall {
 		) {
 			PP.selectedObjects.push(this);
 		}
+
+		if(this._pressed || this._mineAnimation !== 0) {
+			if(this._mineAnimation >= 1) {
+				this._mineAnimation = 0;
+			} else if(this._mineAnimation < 1) {
+				this._mineAnimation += 0.06;
+				if(this._mineAnimation > 1) this._mineAnimation = 1;
+			}
+
+			if(this._mineAnimation < 0.5) {
+				const r = this._mineAnimation / 0.5;
+				this.baseSprite.scale.set(2 * (1 - (0.25 * r.cubicOut())),  2 * (1 + (0.25 * r.cubicOut())));
+			} else {
+				const r = (this._mineAnimation - 0.5) / 0.5;
+				this.baseSprite.scale.set(2 * (0.75 + (0.25 * r.cubicOut())),  2 * (1.25 - (0.25 * r.cubicOut())));
+			}
+		}
 	}
 
 	setSelected(s) {
-		this.baseSprite.tint = s ? 0xdddddd : 0xffffff;
+		if(this._selected !== s) {
+			this._selected = s;
+			this.baseSprite.tint = s ? 0xdddddd : 0xffffff;
+			if(!s && this._pressed) {
+				this.setPressed(false);
+			}
+		}
+	}
+
+	setPressed(s) {
+		if(this._pressed !== s) {
+			this._pressed = s;
+		}
 	}
 }

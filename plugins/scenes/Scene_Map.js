@@ -44,7 +44,7 @@ modify_Scene_Map = class {
 	}
 
 	canMoveCamera() {
-		return !this._selectedObject;
+		return true;//!this._selectedObject || !this._selectedObject._pressed;
 	}
 
 	updateCameraPos(force = false) {
@@ -95,6 +95,7 @@ modify_Scene_Map = class {
 		this.updateMouseMovement();
 		this.updateMouseCursor();
 		this.updateChunkBehavior();
+		this.updateMousePress();
 	}
 
 	updateLoadedChunks() {
@@ -173,22 +174,42 @@ modify_Scene_Map = class {
 		}
 
 		let finalObject = null;
-		for(const c of PP.selectedObjects) {
-			if(!finalObject || finalObject.y < c.y) {
-				finalObject = c;
+		if(TouchInput.mouseInside) {
+			for(const c of PP.selectedObjects) {
+				if(!finalObject || finalObject.y < c.y) {
+					finalObject = c;
+				}
 			}
 		}
 
-		if(oldSelection) {
-			oldSelection.setSelected(false);
+		if(oldSelection !== finalObject) {
+			if(oldSelection) {
+				oldSelection.setSelected(false);
+			}
+			if(finalObject) {
+				this._selectedObject = finalObject;
+				finalObject.setSelected(true);
+			} else {
+				this._selectedObject = null;
+			}
 		}
+
 		if(finalObject) {
-			this._selectedObject = finalObject;
-			finalObject.setSelected(true);
 			this._spriteset._mapCursor.visible = false;
 		} else {
-			this._selectedObject = null;
 			this._spriteset._mapCursor.visible = TouchInput.mouseInside;
+		}
+	}
+
+	updateMousePress() {
+		if(TouchInput.isTriggered()) {
+			if(this._selectedObject) {
+				this._selectedObject.setPressed(true);
+			}
+		} else if(TouchInput.isReleased()) {
+			if(this._selectedObject) {
+				this._selectedObject.setPressed(false);
+			}
 		}
 	}
 

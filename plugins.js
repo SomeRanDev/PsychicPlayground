@@ -5,6 +5,7 @@ var $plugins =
 {"name":"PP_Start","status":true,"description":"","parameters":{}},
 {"name":"external/Vector2","status":true,"description":"","parameters":{}},
 {"name":"external/perlin","status":true,"description":"","parameters":{}},
+{"name":"external/Easing","status":true,"description":"","parameters":{}},
 {"name":"---","status":true,"description":"","parameters":{}},
 {"name":"biomes/Biome_Base","status":true,"description":"","parameters":{}},
 {"name":"biomes/Biome_Forest","status":true,"description":"","parameters":{}},
