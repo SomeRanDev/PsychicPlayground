@@ -48,6 +48,8 @@ modify_Spriteset_Map = class {
 			return a.z - b.z;
 		} else if (a.y !== b.y) {
 			return a.y - b.y;
+		} else if (a.x !== b.x) {
+			return a.x - b.x;
 		} else {
 			return a.spriteId - b.spriteId;
 		}

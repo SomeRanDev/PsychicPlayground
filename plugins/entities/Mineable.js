@@ -85,8 +85,9 @@ class Mineable {
 		let added = false;
 		const len = parent.children.length;
 		for(let i = startIndex; i < len; i++) {
-			if(parent.children[i].y > yThreshold) {
-				parent.addChildAt(this.baseSprite, i);
+			const c = parent.children[i];
+			if(c.z === 0 && c.y > yThreshold) {
+				parent.addChildAt(this.baseSprite, i - 1);
 				added = true;
 				break;
 			}
@@ -195,7 +196,7 @@ class Mineable {
 
 			const count = this.hp;
 			const rows = Math.ceil(count / heartsPerRow);
-			this.heartContainer.move(this.baseSprite.x - ((Math.min(heartsPerRow, count) * spacingX) / 2), this.baseSprite.y - ((this.hitBox[2] + rows + 1) * 32));
+			this.heartContainer.move(this.baseSprite.x - ((Math.min(heartsPerRow, count) * spacingX) / 2), this.baseSprite.y - ((rows + 1) * spacingY) - ((this.hitBox[2] + 1) * 32));
 			SpriteManager.addHud(this.heartContainer);
 
 			const heartContainer = this.heartContainer;

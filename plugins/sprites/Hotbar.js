@@ -9,7 +9,7 @@ class Hotbar extends Sprite {
 		];
 
 		this.anchor.set(0.5, 1);
-		this.move(Graphics.width / 2, Graphics.height - 20);
+		this.move(Graphics.width / 2, Graphics.height - 10);
 
 		SpriteManager.addUi(this);
 	}

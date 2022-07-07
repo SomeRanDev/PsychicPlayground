@@ -12,7 +12,7 @@ class Map extends Sprite {
 
 		SpriteManager.addUi(this);
 
-		this.generate();
+		//this.generate();
 	}
 
 	setScale(s) {
@@ -21,7 +21,7 @@ class Map extends Sprite {
 	}
 
 	setupCorner() {
-		this.move(680, 10);
+		this.move(680, 26);
 		this.tint = 0xeeeeee;
 		this.setScale(0.3);
 	}

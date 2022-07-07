@@ -37,6 +37,7 @@ var $plugins =
 {"name":"sprites/TextPopper","status":true,"description":"","parameters":{}},
 {"name":"sprites/Hotbar","status":true,"description":"","parameters":{}},
 {"name":"sprites/PlayerHealth","status":true,"description":"","parameters":{}},
+{"name":"sprites/Key","status":true,"description":"","parameters":{}},
 {"name":"---","status":false,"description":"","parameters":{}},
 {"name":"entities/Player","status":true,"description":"","parameters":{}},
 {"name":"entities/Chunk","status":true,"description":"","parameters":{}},

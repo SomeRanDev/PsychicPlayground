@@ -118,9 +118,9 @@ class Chunk {
 					let smallestY = 999999999;
 					let smallestYBlock = null;
 					for(let i = 0; i < this.blocks.length; i++) {
-						if(this.blocks[i].y < smallestY) {
+						if(this.blocks[i].realY < smallestY) {
 							smallestYBlock = this.blocks[i];
-							smallestY = smallestYBlock.y;
+							smallestY = smallestYBlock.realY;
 						}
 					}
 
@@ -182,7 +182,7 @@ class Chunk {
 		const globalY = (this.chunkY * GenerationManager.TILES_Y) + y;
 		block.setup(this, blockId, x, y, globalX, globalY);
 
-		return !blockData.hideTiles;
+		return true;
 	}
 
 	removeBlock(block) {

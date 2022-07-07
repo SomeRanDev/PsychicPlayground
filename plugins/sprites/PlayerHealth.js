@@ -54,9 +54,10 @@ class PlayerHealth extends Sprite {
 		const text = PP.makeText(textString, 18, align);
 		text.style.fill = 0xffffff;
 		text.style.strokeThickness = 4;
-		text.style.stroke = "rgba(55, 40, 64, 0.75)";
+		text.style.stroke = "rgba(55, 40, 64, 1)";
 		text.scale.set(1, 1);
 		text.alpha = 1;
+		text.resolution = 5;
 		return text;
 	}
 

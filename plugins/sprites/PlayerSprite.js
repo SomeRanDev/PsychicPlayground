@@ -29,6 +29,12 @@ class PlayerSprite extends Sprite {
 
 		this._map = new Map(256, 256);
 		this._map.setupCorner();
+
+		this._mapKey = new Key("M", "Map");
+		this._mapKey.move(Graphics.width - 80, 2);
+
+		this._invKey = new Key("E", "Inventory");
+		this._invKey.move(Graphics.width - 100, Graphics.height - 28);
 	}
 
 	refreshSpritePosition(startIndex = 0) {
@@ -110,7 +116,7 @@ class PlayerSprite extends Sprite {
 
 		//this.scale.set(1, 1.0 + (Math.sin(PP.Time / 15) * 0.05));
 
-		const tileY = Math.floor(this.y / GenerationManager.TILE_HEIGHT);
+		const tileY = Math.floor(this.y / 16);
 		if(this._lastYTile !== tileY) {
 			this._lastYTile = tileY;
 			this.refreshSpritePosition();
