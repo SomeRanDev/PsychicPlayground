@@ -20,6 +20,8 @@ class PlayerSprite extends Sprite {
 		this._timeCount = 0;
 
 		this.frameDelay = 16;
+
+		this._textPopper = new TextPopper(this, 0, -32);
 	}
 
 	setDirection(dir) {
@@ -75,6 +77,12 @@ class PlayerSprite extends Sprite {
 		this.x = $ppPlayer.position.x;
 		this.y = $ppPlayer.position.y;
 
+		this._textPopper.update();
+
 		//this.scale.set(1, 1.0 + (Math.sin(PP.Time / 15) * 0.05));
+	}
+
+	addText(text) {
+		this._textPopper.addText(text);
 	}
 }

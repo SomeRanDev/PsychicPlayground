@@ -24,6 +24,14 @@ class Player {
 	saveData() {
 	}
 
+	showPopup(text) {
+		this.sprite.addText(text);
+	}
+
+	gainMaterial(blockId) {
+		this.showPopup("+12 Wood");
+	}
+
 	cameraX() { return this.position.x; }
 	cameraY() { return this.position.y; }
 

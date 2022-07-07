@@ -64,7 +64,7 @@ PP.makeText = function(text, fontSize = 20, align = "center") {
 		fill: 0xffffff,
 		align: align,
 		stroke: "rgba(0, 0, 0, 0.75)",
-		strokeThickness: 4,
+		strokeThickness: 2,
 		lineJoin: "round"
 	});
 	Text.anchor.set(0.5, 1);

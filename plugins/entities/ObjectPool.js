@@ -24,5 +24,5 @@ class ObjectPool {
 	}
 }
 
-const WallObjectPool = new ObjectPool(Wall);
+const MineableObjectPool = new ObjectPool(Mineable);
 const HeartObjectPool = new ObjectPool(Heart);

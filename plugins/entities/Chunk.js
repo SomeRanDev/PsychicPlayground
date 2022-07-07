@@ -1,57 +1,5 @@
 
 class Chunk {
-	static TileRef = {
-		0: { name: "Grass" },
-		200: { name: "Sand", renderBelow: false },
-		201: { name: "Water", renderBelow: false },
-		210: { name: "Flowers1", renderBelow: false },
-		211: { name: "Flowers2", renderBelow: false },
-		212: { name: "Flowers3", renderBelow: false },
-		213: { name: "Flowers4", renderBelow: false },
-		214: { name: ["GrassDecor1", "GrassDecor2", "GrassDecor3", "GrassDecor4"], renderBelow: false },
-		215: { name: ["GrassRocks1", "GrassRocks2", "GrassRocks3", "GrassRocks4"], renderBelow: false },
-		216: { name: "GrassBigRock", renderBelow: true },
-		217: { name: ["SandDecor1", "SandDecor2", "SandDecor3"], renderBelow: false },
-		218: { name: ["SandRocks1", "SandRocks2", "SandRocks3", "SandRocks4"], renderBelow: false },
-		219: { name: ["SandSeaShell1", "SandSeaShell2", "SandSeaShell3"], renderBelow: false },
-		220: { name: "Path", renderBelow: true }
-	}
-
-	static BlockRef = {
-		0: {
-			name: "RedWall",
-			hideTiles: false,
-			hitBox: [0.5, 0.5, 2, 1],
-			hp: 15,
-			res: 25,
-			hpIcon: "Rock"
-		},
-		1: {
-			name: "Tree",
-			hideTiles: false,
-			hitBox: [1, 1, 1, 1],
-			hp: 15,
-			res: 30,
-			hpIcon: "Stick"
-		},
-		2: {
-			name: "TreeTrunk",
-			hideTiles: false,
-			hitBox: [1, 1, 0, 1],
-			hp: 8,
-			res: 30,
-			hpIcon: "Stick"
-		},
-		99: {
-			name: "GodColumn",
-			hideTiles: true,
-			hitBox: [0.5, 0.5, 2, 1],
-			hp: 50,
-			res: 100,
-			hpIcon: "MetalHeart"
-		}
-	}
-
 	static TextureRef = {};
 
 	tileSprites = [];
@@ -105,7 +53,7 @@ class Chunk {
 		this.upperTileSprites = [];
 
 		for(const block of this.blocks) {
-			WallObjectPool.removeObject(block);
+			MineableObjectPool.removeObject(block);
 		}
 		this.blocks = [];
 
@@ -197,14 +145,14 @@ class Chunk {
 			return true;
 		}
 
-		const blockData = Chunk.BlockRef[blockId];
+		const blockData = MineableTypes[blockId];
 		const name = Array.isArray(blockData.name) ? blockData.name[Math.floor(Math.random() * blockData.name.length)] : blockData.name;
-		const block = WallObjectPool.getObject(name);
+		const block = MineableObjectPool.getObject(name);
 		this.blocks.push(block);
 
 		const globalX = (this.chunkX * GenerationManager.TILES_X) + x;
 		const globalY = (this.chunkY * GenerationManager.TILES_Y) + y;
-		block.setup(this, x, y, blockData.hitBox, blockData.hp ?? 10, blockData.res ?? 0, blockData.hpIcon, globalX, globalY);
+		block.setup(this, blockId, x, y, globalX, globalY);
 
 		return !blockData.hideTiles;
 	}
@@ -212,7 +160,7 @@ class Chunk {
 	removeBlock(block) {
 		if(this.blocks.includes(block)) {
 			GenerationManager.setTileBlock(this.chunkX, this.chunkY, block.x, block.y, 255);
-			WallObjectPool.removeObject(block);
+			MineableObjectPool.removeObject(block);
 			this.blocks.remove(block);
 		}
 	}
@@ -289,7 +237,7 @@ class Chunk {
 		}
 		*/
 
-		const tileData = Chunk.TileRef[isAuto ? Math.floor(tile / 13) : tile];
+		const tileData = TileTypes[isAuto ? Math.floor(tile / 13) : tile];
 		if(!tileData) {
 			console.warn("TILE DATA INVALID??\nisAuto: " + isAuto + ", raw tile: " + tile + ", tile: " + (isAuto ? Math.floor(tile / 13) : tile));
 		}

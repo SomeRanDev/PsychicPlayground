@@ -11,6 +11,7 @@ modify_Spriteset_Map = class {
 	createPPLayer() {
 		this._ppLayer = new Sprite();
 		this._tilemap.addChild(this._ppLayer);
+		SpriteManager.ppLayer = this._ppLayer;
 	}
 
 	createPPEntities() {
@@ -77,12 +78,19 @@ modify_Spriteset_Map = class {
 		this._uiContainer.z = 9999;
 		this._ppLayer.addChild(this._uiContainer);
 		SpriteManager.uiContainer = this._uiContainer;
+		SpriteManager.processUiCache();
 	}
 
 	update() {
 		PP.Spriteset_Map.update.apply(this, arguments);
 		this._sortPPChildren();
 	}
+
+	destroy(options) {
+		PP.Spriteset_Map.destroy.apply(this, arguments);
+		SpriteManager.ppLayer = null;
+		SpriteManager.uiContainer = null;
+	};
 
 	//==============================
 	// Camera stuff
@@ -137,8 +145,24 @@ modify_Spriteset_Map = class {
 
 class SpriteManager {
 	static entities = [];
+	static uiCache = [];
 
 	static uiContainer = null;
+
+	static addUi(ui) {
+		if(!this.uiContainer) {
+			this.uiCache.push(ui);
+		} else {
+			this.uiContainer.addChild(ui);
+		}
+	}
+
+	static processUiCache() {
+		for(const ui of this.uiCache) {
+			this.uiContainer.addChild(ui);
+		}
+		this.uiCache = [];
+	}
 
 	static addEntity(e) {
 		this.entities.push(e);

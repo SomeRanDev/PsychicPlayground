@@ -176,7 +176,7 @@ modify_Scene_Map = class {
 		let finalObject = null;
 		if(TouchInput.mouseInside) {
 			for(const c of PP.selectedObjects) {
-				if(!finalObject || finalObject.y < c.y) {
+				if(!finalObject || (finalObject.realY < c.realY)) {
 					finalObject = c;
 				}
 			}

@@ -1,5 +1,5 @@
 
-class Wall {
+class Mineable {
 	constructor(url) {
 		this.init(url);
 
@@ -42,8 +42,9 @@ class Wall {
 		CollisionManager.clearCollision(this.globalX + width2, this.globalY + height2 + 1);
 	}
 
-	setup(chunk, localTileX, localTileY, hitBox, hp, res, hpIcon, globalX, globalY) {
+	setup(chunk, blockId, localTileX, localTileY, globalX, globalY) {
 		this.chunkParent = chunk;
+		this.blockId = blockId;
 
 		this.x = localTileX;
 		this.y = localTileY;
@@ -52,7 +53,9 @@ class Wall {
 		this.realX = chunk.baseSprite.x + (32 * localTileX);
 		this.realY = chunk.baseSprite.y + (32 * localTileY);
 
-		this.hitBox = hitBox ?? [0, 0, 0, 0];
+		const blockData = MineableTypes[blockId];
+
+		this.hitBox = blockData.hitBox ?? [0, 0, 0, 0];
 
 		this.realHitBox = PP.Int32ArrayOf(
 			(this.realX - (32 * this.hitBox[0])),
@@ -61,9 +64,9 @@ class Wall {
 			(this.realY + (32 * this.hitBox[3]))
 		);
 
-		this.hp = hp;
-		this.res = res;
-		this.hpIcon = hpIcon;
+		this.hp = blockData.hp ?? 5;
+		this.res = blockData.res ?? 0;
+		this.hpIcon = blockData.hpIcon ?? "Heart";
 
 		this.baseSprite.move(this.realX, this.realY + 32);
 
@@ -120,13 +123,13 @@ class Wall {
 			}
 
 			if(this._mineAnimation < 0.5) {
-				const r = this._mineAnimation / 0.5;
-				this.baseSprite.scale.set(2 * (1 - (0.25 * r.cubicOut())),  2 * (1 + (0.25 * r.cubicOut())));
-			} else {
 				if(!this._mined) {
 					this.mine();
 					this._mined = true;
 				}
+				const r = this._mineAnimation / 0.5;
+				this.baseSprite.scale.set(2 * (1 - (0.25 * r.cubicOut())),  2 * (1 + (0.25 * r.cubicOut())));
+			} else {
 				const r = (this._mineAnimation - 0.5) / 0.5;
 				this.baseSprite.scale.set(2 * (0.75 + (0.25 * r.cubicOut())),  2 * (1.25 - (0.25 * r.cubicOut())));
 			}
@@ -149,7 +152,6 @@ class Wall {
 			if(s && this.heartContainer) {
 				this.heartContainer.alpha = 1;
 			}
-			//this.currentRealHitBox = s ? this.realReleaseHitBox : this.realHitBox;
 		}
 	}
 
@@ -158,6 +160,8 @@ class Wall {
 		this.hp -= 1;
 		this.heartContainer.children[this.hp].break();
 		if(this.hp <= 0) {
+			const baa = new BreakAndAbsorb(this.baseSprite, this.blockId);
+			SpriteManager.ppLayer.addChild(baa);
 			this.chunkParent.removeBlock(this);
 		}
 	}
@@ -172,8 +176,8 @@ class Wall {
 
 			const count = this.hp;
 			const rows = Math.ceil(count / heartsPerRow);
-			this.heartContainer.move(this.baseSprite.x - ((Math.min(heartsPerRow, count) * spacingX) / 2), this.baseSprite.y - ((this.hitBox[2] + rows) * 32));
-			SpriteManager.uiContainer.addChild(this.heartContainer);
+			this.heartContainer.move(this.baseSprite.x - ((Math.min(heartsPerRow, count) * spacingX) / 2), this.baseSprite.y - ((this.hitBox[2] + rows + 1) * 32));
+			SpriteManager.addUi(this.heartContainer);
 
 			const heartContainer = this.heartContainer;
 
