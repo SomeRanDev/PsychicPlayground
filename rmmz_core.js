@@ -2397,7 +2397,7 @@ Tilemap.prototype.updateTransform = function() {
         this._addAllSpots(startX, startY);
         this._needsRepaint = false;
     }
-    this._sortChildren();
+    //this._sortChildren();
     PIXI.Container.prototype.updateTransform.call(this);
 };
 

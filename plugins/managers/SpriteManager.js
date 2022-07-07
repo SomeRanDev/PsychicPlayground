@@ -5,6 +5,8 @@ modify_Spriteset_Map = class {
 		this._cameraTargetX = 0;
 		this._cameraTargetY = 0;
 
+		this._sortTimer = 0;
+
 		PP.Spriteset_Map.initialize.apply(this, arguments);
 	}
 
@@ -20,6 +22,7 @@ modify_Spriteset_Map = class {
 			const e = SpriteManager.entities[i];
 			this.createPPEntity(e);
 		}
+		SpriteManager.entities = [];
 	}
 
 	createPPEntity(e) {
@@ -30,6 +33,13 @@ modify_Spriteset_Map = class {
 	}
 
 	_sortPPChildren() {
+		if((this._sortTimer++) > 30) {
+			this._sortTimer = 0;
+			this._forceSortPPChildren();
+		}
+	}
+
+	_forceSortPPChildren() {
 		this._ppLayer.children.sort(this._comparePPChildOrder.bind(this));
 	}
 
@@ -50,6 +60,7 @@ modify_Spriteset_Map = class {
 		this.createChunksLayer();
 		this.createPPEntities();
 		this.createMapCursor();
+		this.createHUDContainer();
 		this.createUIContainer();
 	}
 
@@ -69,14 +80,20 @@ modify_Spriteset_Map = class {
 	createMapCursor() {
 		this._mapCursor = new MouseCursor();
 		this._mapCursor.z = -10;
-		this._mapCursor.scale.set(2);
 		this._ppLayer.addChild(this._mapCursor);
+	}
+
+	createHUDContainer() {
+		this._hudContainer = new Sprite();
+		this._hudContainer.z = 9999;
+		this._ppLayer.addChild(this._hudContainer);
+		SpriteManager.hudContainer = this._hudContainer;
+		SpriteManager.processHudCache();
 	}
 
 	createUIContainer() {
 		this._uiContainer = new Sprite();
-		this._uiContainer.z = 9999;
-		this._ppLayer.addChild(this._uiContainer);
+		this.addChild(this._uiContainer);
 		SpriteManager.uiContainer = this._uiContainer;
 		SpriteManager.processUiCache();
 	}
@@ -146,8 +163,14 @@ modify_Spriteset_Map = class {
 class SpriteManager {
 	static entities = [];
 	static uiCache = [];
+	static hudCache = [];
 
 	static uiContainer = null;
+	static hudContainer = null;
+
+	static sort() {
+		SceneManager._scene._spriteset._forceSortPPChildren();
+	}
 
 	static addUi(ui) {
 		if(!this.uiContainer) {
@@ -164,11 +187,26 @@ class SpriteManager {
 		this.uiCache = [];
 	}
 
-	static addEntity(e) {
-		this.entities.push(e);
+	static addHud(hud) {
+		if(!this.hudContainer) {
+			this.hudCache.push(hud);
+		} else {
+			this.hudContainer.addChild(hud);
+		}
+	}
 
+	static processHudCache() {
+		for(const hud of this.hudCache) {
+			this.hudContainer.addChild(hud);
+		}
+		this.hudCache = [];
+	}
+
+	static addEntity(e) {
 		if(SceneManager._scene?._spriteset?._ppEntities) {
 			SceneManager._scene._spriteset.createPPEntity(e);
+		} else {
+			this.entities.push(e);
 		}
 	}
 

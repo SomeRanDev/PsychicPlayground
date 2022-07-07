@@ -9,6 +9,21 @@ class Map extends Sprite {
 		this.cursor = new Sprite(ImageManager.loadPicture("PlayerCursor"));
 		this.cursor.anchor.set(0.5, 1);
 		this.addChild(this.cursor);
+
+		SpriteManager.addUi(this);
+
+		this.generate();
+	}
+
+	setScale(s) {
+		this.scale.set(s);
+		this.cursor.scale.set(s === 0 ? 0 : (1 / s));
+	}
+
+	setupCorner() {
+		this.move(680, 10);
+		this.tint = 0xeeeeee;
+		this.setScale(0.3);
 	}
 
 	update() {

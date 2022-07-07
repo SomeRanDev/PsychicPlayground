@@ -3,6 +3,8 @@ class PlayerSprite extends Sprite {
 	constructor() {
 		super();
 
+		this._lastYTile = -999999;
+
 		this.anchor.set(0.5, 1);
 
 		this.idle = new DirectionalSprite(ImageManager.lPlayer("PlayerIdle"), 3);
@@ -22,6 +24,33 @@ class PlayerSprite extends Sprite {
 		this.frameDelay = 16;
 
 		this._textPopper = new TextPopper(this, 0, -32);
+		this._hotbar = new Hotbar();
+		this._healthHud = new PlayerHealth();
+
+		this._map = new Map(256, 256);
+		this._map.setupCorner();
+	}
+
+	refreshSpritePosition(startIndex = 0) {
+		if(!this.parent) return;
+
+		const parent = this.parent;
+		const yThreshold = this.y;
+		parent.removeChild(this);
+
+		let added = false;
+		const len = parent.children.length;
+		for(let i = startIndex; i < len; i++) {
+			const c = parent.children[i];
+			if(c.z === 0 && c.y > yThreshold) {
+				parent.addChildAt(this, i);
+				added = true;
+				break;
+			}
+		}
+		if(!added) {
+			parent.addChild(this);
+		}
 	}
 
 	setDirection(dir) {
@@ -77,9 +106,15 @@ class PlayerSprite extends Sprite {
 		this.x = $ppPlayer.position.x;
 		this.y = $ppPlayer.position.y;
 
-		this._textPopper.update();
+		//this._textPopper.update();
 
 		//this.scale.set(1, 1.0 + (Math.sin(PP.Time / 15) * 0.05));
+
+		const tileY = Math.floor(this.y / GenerationManager.TILE_HEIGHT);
+		if(this._lastYTile !== tileY) {
+			this._lastYTile = tileY;
+			this.refreshSpritePosition();
+		}
 	}
 
 	addText(text) {

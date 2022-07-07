@@ -7,7 +7,7 @@ class TextPopper extends Sprite {
 		this._offsetX = offsetX;
 		this._offsetY = offsetY;
 
-		SpriteManager.addUi(this);
+		SpriteManager.addHud(this);
 	}
 
 	addText(text) {
@@ -26,7 +26,7 @@ class TextPopper extends Sprite {
 		for(let i = 0; i < this._texts.length; i++) {
 			const text = this._texts[i];
 
-			text._progress += 0.02;
+			text._progress += 0.03;
 			if(text._progress > 1) text._progress = 1;
 
 			const p = text._progress;

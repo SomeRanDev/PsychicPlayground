@@ -44,6 +44,8 @@ class Chunk {
 		//this.unusedTileSprites = this.tileSprites.concat(this.unusedTileSprites);
 		//this.tileSprites = [];
 
+		this._sortedBlocks = false;
+
 		for(const s of this.underTileSprites) s.visible = false;
 		this.unusedUnderTileSprites = this.underTileSprites.concat(this.unusedUnderTileSprites);
 		this.underTileSprites = [];
@@ -99,14 +101,40 @@ class Chunk {
 
 	generateSomeTiles() {
 		if(this._generatedTiles < this._maxTiles) {
-			const newMax = Math.min(this._maxTiles, this._generatedTiles + 4);
+			const newMax = Math.min(this._maxTiles, this._generatedTiles + 2);
 			while(this._generatedTiles < newMax) {
 				const x = this._generatedTiles % GenerationManager.TILES_X;
 				const y = Math.floor(this._generatedTiles / GenerationManager.TILES_X);
 				this.generateTile(x, y);
 				this._generatedTiles++;
 			}
+		} else if(!this._sortedBlocks) {
+			this._sortedBlocks = true;
+
+			if(this.blocks.length > 0) {
+				let parent = this.blocks[0].parent;
+
+				if(parent) {
+					let smallestY = 999999999;
+					let smallestYBlock = null;
+					for(let i = 0; i < this.blocks.length; i++) {
+						if(this.blocks[i].y < smallestY) {
+							smallestYBlock = this.blocks[i];
+							smallestY = smallestYBlock.y;
+						}
+					}
+
+					SpriteManager.sort();
+
+					const startIndex = parent.children.indexOf(smallestYBlock);
+					for(const b in this.blocks) {
+						b.refreshSpritePosition(startIndex);
+					}
+				}
+			}
 		}
+
+		//this.refreshSpritePosition();
 		/*else if(this.refreshTiles.length > 0) {
 			for(const tile of this.refreshTiles) {
 				this.generateTile(tile[0], tile[1], false);

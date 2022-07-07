@@ -99,10 +99,10 @@ modify_Scene_Map = class {
 	}
 
 	updateLoadedChunks() {
-		const minX = Math.floor(this.PPCameraX / GenerationManager.CHUNK_SIZE_X) - 2;
-		const minY = Math.floor(this.PPCameraY / GenerationManager.CHUNK_SIZE_Y) - 2;
-		const maxX = minX + 6 + 4;
-		const maxY = minY + 4 + 4;
+		const minX = Math.floor(this.PPCameraX / GenerationManager.CHUNK_SIZE_X) - 1;
+		const minY = Math.floor(this.PPCameraY / GenerationManager.CHUNK_SIZE_Y) - 1;
+		const maxX = minX + 5;
+		const maxY = minY + 3;
 
 		if(this._lastMinX !== minX || this._lastMinY !== minY || this._lastMaxX !== maxX || this._lastMaxY !== maxY) {
 			this._lastMinX = minX;

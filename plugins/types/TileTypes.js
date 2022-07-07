@@ -51,4 +51,4 @@ const TileTypes = {
 		name: "Path",
 		renderBelow: true
 	}
-}
+};

@@ -3,7 +3,7 @@ class MouseCursor extends Sprite {
 		super(ImageManager.loadPicture("MouseCursor"));
 
 		this._time = 0;
-		this.alpha = 0.33;
+		this.alpha = 0.34;
 
 		this.targetX = 0;
 		this.targetY = 0;
@@ -12,7 +12,7 @@ class MouseCursor extends Sprite {
 	}
 
 	setAnimationFrame(i) {
-		this.setFrame(i * 16, 0, 16, 16);
+		this.setFrame(i * 32, 0, 32, 32);
 	}
 
 	setPos(x, y) {
@@ -29,8 +29,8 @@ class MouseCursor extends Sprite {
 	}
 
 	update() {
-		this.x = PP.lerp(this.x, this.targetX, 0.7);
-		this.y = PP.lerp(this.y, this.targetY, 0.7);
+		this.x = PP.lerp(this.x, this.targetX, 0.8);
+		this.y = PP.lerp(this.y, this.targetY, 0.8);
 	}
 
 	/*update() {

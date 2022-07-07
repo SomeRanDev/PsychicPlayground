@@ -77,6 +77,25 @@ class Mineable {
 		this._mined = false;
 	}
 
+	refreshSpritePosition(startIndex) {
+		const parent = this.baseSprite.parent;
+		parent.removeChild(this.baseSprite);
+		const yThreshold = this.baseSprite.y;
+
+		let added = false;
+		const len = parent.children.length;
+		for(let i = startIndex; i < len; i++) {
+			if(parent.children[i].y > yThreshold) {
+				parent.addChildAt(this.baseSprite, i);
+				added = true;
+				break;
+			}
+		}
+		if(!added) {
+			parent.addChild(this.baseSprite);
+		}
+	}
+
 	makeSprite() {
 		if(this.baseSprite) return this.baseSprite;
 
@@ -139,7 +158,7 @@ class Mineable {
 	setSelected(s) {
 		if(this._selected !== s) {
 			this._selected = s;
-			this.baseSprite.tint = s ? 0xdddddd : 0xffffff;
+			this.baseSprite.tint = s ? 0xcccccc : 0xffffff;
 			if(!s && this._pressed) {
 				this.setPressed(false);
 			}
@@ -177,7 +196,7 @@ class Mineable {
 			const count = this.hp;
 			const rows = Math.ceil(count / heartsPerRow);
 			this.heartContainer.move(this.baseSprite.x - ((Math.min(heartsPerRow, count) * spacingX) / 2), this.baseSprite.y - ((this.hitBox[2] + rows + 1) * 32));
-			SpriteManager.addUi(this.heartContainer);
+			SpriteManager.addHud(this.heartContainer);
 
 			const heartContainer = this.heartContainer;
 
