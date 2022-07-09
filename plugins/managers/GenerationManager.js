@@ -135,11 +135,8 @@ class GenerationManager {
 
 		const newXRatio = (Math.cos(angle) * dist) + 0.5;
 		const newYRatio = (Math.sin(angle) * dist) + 0.5;
-		//console.log(xRatio, yRatio, angle * (180 / Math.PI));
-		//this.ReadRotation
 
 		const pathCol = this.GenerationMapPath.getPixelAlphaFromRatio(newXRatio, newYRatio);
-		//console.log(pathCol);
 		if(pathCol > 0) {
 			return true;
 		}
@@ -213,7 +210,7 @@ class GenerationManager {
 		const globalY = ((chunkY + this.OFFSET_Y) * this.TILES_Y) + y;
 		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
 		let data = this.getData(globalIndex);
-		data = (data | (255 << 24)) & (blockId << 24);
+		data = (data & ((255 << 16) | (255 << 8) | 255)) | (blockId << 24);
 		this.setData(globalIndex, data);
 	}
 

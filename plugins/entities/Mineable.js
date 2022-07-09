@@ -17,6 +17,7 @@ class Mineable {
 
 		this._mined = false;
 
+		this._spawnAnimation = 1;
 		this._mineAnimation = 0;
 
 		SpriteManager.addEntity(this);
@@ -112,6 +113,7 @@ class Mineable {
 		this.updateSelection();
 		this.updatePressed();
 		this.updatePressAnimation();
+		this.updateSpawnAnimation();
 		this.updateHeartContainer();
 	}
 
@@ -229,6 +231,31 @@ class Mineable {
 	updateHeartContainer() {
 		if(!this._pressed && this.heartContainer) {
 			this.heartContainer.alpha -= 0.1;
+		}
+	}
+
+	spawnAnimation() {
+		this._spawnAnimation = 0;
+	}
+
+	updateSpawnAnimation() {
+		if(this._spawnAnimation < 1) {
+			this._spawnAnimation += 0.04;
+			if(this._spawnAnimation > 1) {
+				this._spawnAnimation = 1;
+				this.baseSprite.removeColorFilter();
+			} else {
+				const r = 1 - this._spawnAnimation;
+				this.baseSprite.setColorTone([255 * r, 255 * r, 255 * r, 255 * r]);
+			}
+
+			if(this._spawnAnimation < 0.5) {
+				const r = this._spawnAnimation / 0.5;
+				this.baseSprite.scale.set(2 * (1 - (0.25 * r.cubicOut())),  2 * (1 + (0.25 * r.cubicOut())));
+			} else {
+				const r = (this._spawnAnimation - 0.5) / 0.5;
+				this.baseSprite.scale.set(2 * (0.75 + (0.25 * r.cubicOut())),  2 * (1.25 - (0.25 * r.cubicOut())));
+			}
 		}
 	}
 }

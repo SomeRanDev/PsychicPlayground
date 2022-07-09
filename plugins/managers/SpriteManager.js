@@ -202,6 +202,38 @@ class SpriteManager {
 		SceneManager._scene._spriteset._forceSortPPChildren();
 	}
 
+	static validate() {
+		const ppLayer = SceneManager._scene._spriteset._ppLayer;
+		let minY = -99999999999;
+		const len = ppLayer.children;
+		let result = true;
+		for(let i = 0; i < len; i++) {
+			if(c.z !== 0) continue;
+
+			const c = ppLayer.children[i];
+			if(c.y <= minY) {
+				minY = c.y;
+			} else {
+				let success = false;
+				ppLayer.removeChild(c)
+				i--;
+				for(let j = i; j >= 0; j--) {
+					const cc = ppLayer.children[j];
+					if(cc.y <= c.y) {
+						ppLayer.addChildAt(c, j);
+						success = true;
+						break;
+					}
+				}
+				if(!success) {
+					ppLayer.addChildAt(c, 0);
+				}
+				result = false;
+			}
+		}
+		return result;
+	}
+
 	static addUi(ui) {
 		if(!this.uiContainer) {
 			this.uiCache.push(ui);

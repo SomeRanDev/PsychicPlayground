@@ -1,6 +1,6 @@
 const MineableTypes = {
 	0: {
-		name: "RedWall",
+		name: "SandPillar",
 		hitBox: [0.5, 0.5, 2, 1],
 		hp: 12,
 		res: 25,

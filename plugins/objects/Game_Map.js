@@ -26,4 +26,10 @@ modify_Game_Map = class {
 	isExitPause() {
 		return this.PauseMode === 2;
 	}
+
+	spawnBlock(mineableId, globalTileX, globalTileY) {
+		if(SceneManager?._scene?.spawnBlock) {
+			SceneManager._scene.spawnBlock(mineableId, globalTileX, globalTileY);
+		}
+	}
 }

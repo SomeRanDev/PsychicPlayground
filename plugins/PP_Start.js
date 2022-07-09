@@ -67,6 +67,7 @@ PP.makeText = function(text, fontSize = 20, align = "center") {
 		strokeThickness: 2,
 		lineJoin: "round"
 	});
+	Text.scaleMode = PIXI.SCALE_MODES.NEAREST;
 	Text.anchor.set(0.5, 1);
 	Text.resolution = 2;
 	return Text;

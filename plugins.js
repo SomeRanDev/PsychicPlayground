@@ -50,6 +50,7 @@ var $plugins =
 {"name":"---","status":false,"description":"","parameters":{}},
 {"name":"other/DisableDefault","status":true,"description":"","parameters":{}},
 {"name":"other/Bitmap","status":true,"description":"","parameters":{}},
+{"name":"other/Sprite","status":true,"description":"","parameters":{}},
 {"name":"---","status":false,"description":"","parameters":{}},
 {"name":"Playtest","status":true,"description":"","parameters":{}},
 {"name":"PP_End","status":true,"description":"","parameters":{}}

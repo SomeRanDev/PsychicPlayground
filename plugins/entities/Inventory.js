@@ -85,7 +85,29 @@ class Inventory {
 	}
 
 	isMining() {
-		return this.hotbarIndex <= 2 && this.hotbar[this.hotbarIndex] <= 2;
+		return this.hotbarIndex <= 2 && this.hotbar[this.hotbarIndex] >= 0 && this.hotbar[this.hotbarIndex] <= 2;
+	}
+
+	hasPlacableMaterial() {
+		if(this.hotbarIndex >= 3 && this.hotbarIndex <= 5) {
+			const matId = this.hotbar[this.hotbarIndex];
+			if(matId >= 0) {
+				return this.hasMaterial(matId, MaterialTypes[matId]?.buildCost ?? 0);
+			}
+		}
+		return false;
+	}
+
+	placeMaterial() {
+		if(this.hasPlacableMaterial()) {
+			const matId = this.hotbar[this.hotbarIndex];
+			const matData = MaterialTypes[matId];
+			const buildCost = matData?.buildCost ?? 0;
+			this.addMaterial(matId, -buildCost);
+			$ppPlayer.showPopup("-" + buildCost + " " + matData.name);
+			return matId;
+		}
+		return -1;
 	}
 
 	updateHotbarInput() {

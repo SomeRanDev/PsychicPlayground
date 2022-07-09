@@ -13,6 +13,8 @@ class Player {
 		this.currentDirection = 0;
 		this.lastAngle = 0;
 
+		this.canPlaceMaterial = false;
+
 		this.inventory = new Inventory();
 	}
 
@@ -71,6 +73,10 @@ class Player {
 	update() {
 		this.inventory.update();
 		this.updateMovement();
+	}
+
+	enableTileCursorPlacement(b) {
+		this.canPlaceMaterial = b;
 	}
 
 	updateMovement() {

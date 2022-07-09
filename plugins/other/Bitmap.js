@@ -7,6 +7,29 @@ Bitmap.load = function() {
 	return result;
 };
 
+Bitmap.prototype._drawTextOutline = function(text, tx, ty, maxWidth) {
+};
+
+Bitmap.prototype._drawTextBody = function(text, tx, ty, maxWidth) {
+	const context = this.context;
+
+	context.imageSmoothingEnabled = false;
+	context.fillStyle = "#000000";
+	context.fillText(text, tx + 1, ty + 1, maxWidth);
+
+	// Based on
+	// https://forums.rpgmakerweb.com/index.php?threads/removing-font-blur.75294/post-708149
+	var imageData = context.getImageData(0, 0, this.width, this.height);
+	var data = imageData.data;
+	for (var i = 0; i < data.length; i += 4) {
+		data[i] = data[i];
+		data[i + 1] = data[i + 1];
+		data[i + 2] = data[i + 2];
+		data[i + 3] = (data[i + 3] * 1.5).clamp(0, 255);
+	}
+	context.putImageData(imageData, 0, 0);
+};
+
 /*
 Object.defineProperty(Bitmap.prototype, "repeatWrap", {
 	get: function() {
@@ -48,14 +71,14 @@ Bitmap.prototype.startFastFillRect = function() {
 }
 
 Bitmap.prototype.fastFillRect = function(x, y, width, height, color) {
-    const context = this.context;
-    context.fillStyle = color;
-    context.fillRect(x, y, width, height);
+	const context = this.context;
+	context.fillStyle = color;
+	context.fillRect(x, y, width, height);
 };
 
 Bitmap.prototype.endFastFillRect = function() {
 	this.context.restore();
-    this._baseTexture.update();
+	this._baseTexture.update();
 }
 
 Bitmap.prototype.getPixelNumberFromRatio = function(x, y) {
@@ -76,10 +99,10 @@ Bitmap.prototype.getPixelNumber = function(x, y) {
 };
 
 Bitmap.prototype.getImageData = function() {
-    return this.context.getImageData(0, 0, this.width, this.height);
+	return this.context.getImageData(0, 0, this.width, this.height);
 };
 
 Bitmap.prototype.setImageData = function(imageData) {
-    this.context.putImageData(imageData, 0, 0);
-    this._baseTexture.update();
+	this.context.putImageData(imageData, 0, 0);
+	this._baseTexture.update();
 };

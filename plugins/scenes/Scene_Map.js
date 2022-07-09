@@ -184,12 +184,24 @@ modify_Scene_Map = class {
 		const cx = Math.floor(localPos.x / GenerationManager.CHUNK_SIZE_X);
 		const cy = Math.floor(localPos.y / GenerationManager.CHUNK_SIZE_Y);
 
-		if(TouchInput.isTriggered()) {
+		if(!this._isRightClickHeld && TouchInput.isCancelled()) {
+			this._isRightClickHeld = true;
+			this._rightClickHistory = [];
+		} else if(this._isRightClickHeld && (TouchInput.isCancelReleased() || !TouchInput.mouseInside)) {
+			this._isRightClickHeld = false;
+			this._rightClickHistory = [];
+		}
+
+		if(this._isRightClickHeld) {
 			const chunk = this._chunkExists[this.getChunkKey(cx, cy)];
 			if(chunk !== null) {
 				const tileX = Math.floor((localPos.x - (cx * GenerationManager.CHUNK_SIZE_X)) / GenerationManager.TILE_WIDTH);
 				const tileY = Math.floor((localPos.y - (cy * GenerationManager.CHUNK_SIZE_Y)) / GenerationManager.TILE_HEIGHT);
-				chunk.onMouseClick(tileX, tileY);
+				const tileIndex = (tileY * GenerationManager.GLOBAL_WIDTH) + tileX;
+				if(!this._rightClickHistory.includes(tileIndex)) {
+					chunk.onMouseRightClick(tileX, tileY);
+					this._rightClickHistory.push(tileIndex);
+				}
 			}
 		}
 	}
@@ -236,8 +248,10 @@ modify_Scene_Map = class {
 
 		if(finalObject) {
 			this._spriteset._mapCursor.visible = false;
+			$ppPlayer.enableTileCursorPlacement(false);
 		} else {
 			this._spriteset._mapCursor.visible = TouchInput.mouseInside;
+			$ppPlayer.enableTileCursorPlacement(TouchInput.mouseInside);
 		}
 	}
 
@@ -308,6 +322,16 @@ modify_Scene_Map = class {
 	updateExitPause() {
 		if(Input.isTriggeredEx("esc")) {
 			this.setPaused(false);
+		}
+	}
+
+	spawnBlock(mineableId, globalTileX, globalTileY) {
+		const chunkX = Math.floor(globalTileX / GenerationManager.TILES_X);
+		const chunkY = Math.floor(globalTileY / GenerationManager.TILES_Y);
+		const id = this.getChunkKey(chunkX, chunkY);
+		const chunk = this._chunkExists[id];
+		if(chunk) {
+			chunk.addBlock(mineableId, globalTileX, globalTileY);
 		}
 	}
 }

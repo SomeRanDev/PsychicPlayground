@@ -165,11 +165,10 @@ class Hotbar extends Sprite {
 	}
 
 	makeToolTip(index) {
-		const toolTip = new HotbarToolTip();
+		const toolTip = new HotbarToolTip(index);
 		toolTip.x = (toolTip.width / -4);
-		toolTip.y = 12;
+		toolTip.y = 8;
 		toolTip.scale.set(0.5);
-		toolTip.openness = 0;
 		this._pieces[index].addChild(toolTip);
 		return toolTip;
 	}
@@ -181,9 +180,6 @@ class Hotbar extends Sprite {
 		this.updateMenuAnimation();
 		this.updateMenuInteraction();
 		this.updateToolTip();
-		for(const slot of this._hotbarSlots) {
-			if(slot.update) slot.update();
-		}
 	}
 
 	updateSelection() {
@@ -203,6 +199,10 @@ class Hotbar extends Sprite {
 
 	updateSlots() {
 		for(const slot of this._hotbarSlots) {
+			if(slot.update) {
+				slot.update();
+			}
+
 			slot._ratio = slot._ratio.moveTowardsCond(slot._selected, 0, 1, slot._selected ? 0.08 : 0.1);
 			if(slot._ratio !== 0) {
 				this._updateSlotAnimation(slot);
@@ -484,8 +484,11 @@ class Hotbar extends Sprite {
 			const touchPos = new Point(TouchInput.x, TouchInput.y);
 			localPos = this._pieces[i]._list.worldTransform.applyInverse(touchPos);
 
-			if(localPos.x < 23 && localPos.x > -23 && localPos.y < -20 && localPos.y > -70) {
+			if(localPos.x < 23 && localPos.x > -23 && localPos.y < 10 && localPos.y > -70) {
 				hoverIndex = i;
+				if(localPos.y < -41) {
+					this._toolTips[i].setDataId(-1);
+				}
 				break;
 			} else {
 				this._toolTips[i].setDataId(-1);
@@ -621,18 +624,12 @@ class Hotbar extends Sprite {
 	}
 
 	updateToolTip() {
-		if(this._menuOpen) {
-			for(let i = 0; i < 3; i++) {
-				/*if(this._toolTipText[i] && !this._toolTips[i].isOpen()) {
-					this._toolTips[i].openness += 40;
-				} else if(!this._toolTipText[i] && !this._toolTips[i].isClosed()) {
-					this._toolTips[i].openness -= 40;
-				}*/
-			}
+		const len = this._toolTips.length;
+		for(let i = 0; i < len; i++) {
+			const toolTip = this._toolTips[i];
+			//toolTip.x = this._pieces[i].x + (toolTip.width / -4);
+			//toolTip.y = this._pieces[i].y + 12;
+			toolTip.update();
 		}
-		
-		//this._toolTip.x = TouchInput.x - this.x + 8;
-		//this._toolTip.y = TouchInput.y - this.y - 12;
-		//this._toolTip.visible = TouchInput.mouseInside;
 	}
 }

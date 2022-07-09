@@ -20,6 +20,15 @@ class CollisionManager {
 		return this.collisions[globalIndex] === 0;
 	}
 
+	static canMoveToLocalTile(chunkX, chunkY, localTileX, localTileY) {
+		const globalX = (chunkX * GenerationManager.TILES_X) + localTileX;
+		const globalY = (chunkY * GenerationManager.TILES_Y) + localTileY;
+		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
+		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
+		const globalIndex = GenerationManager.globalCoordsToIndex(globalX + width2, globalY + height2);
+		return this.collisions[globalIndex] === 0;
+	}
+
 	static processMovementX(currentX, currentY, shiftX) {
 		currentX = Math.floor(currentX);
 		currentY = Math.floor(currentY);

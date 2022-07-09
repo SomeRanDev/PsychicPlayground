@@ -40,6 +40,40 @@ TouchInput._onWheel = function(event) {
 	TouchInput.wheelScrolled = event.deltaY;
 };
 
+TouchInput._onMouseUp = function(event) {
+	const x = Graphics.pageToCanvasX(event.pageX);
+	const y = Graphics.pageToCanvasY(event.pageY);
+	if (event.button === 0) {
+		this._mousePressed = false;
+		this._onRelease(x, y);
+	} else if(event.button === 2) {
+		this._onRightRelease(x, y);
+	}
+};
+
+TouchInput._onRightRelease = function(x, y) {
+    this._newState.rightReleased = true;
+    this._x = x;
+    this._y = y;
+};
+
+TouchInput.isCancelReleased = function() {
+    return this._currentState.rightReleased;
+};
+
+TouchInput._createNewState = function() {
+    return {
+        triggered: false,
+        cancelled: false,
+        moved: false,
+        hovered: false,
+        released: false,
+        rightReleased: false,
+        wheelX: 0,
+        wheelY: 0
+    };
+};
+
 modify_Input = class {
 	static clear() {
 		PP.Input.clear.apply(this, arguments);
