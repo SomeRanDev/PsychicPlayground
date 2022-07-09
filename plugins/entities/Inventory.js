@@ -84,6 +84,10 @@ class Inventory {
 		this.updateHotbarInput();
 	}
 
+	isMining() {
+		return this.hotbarIndex <= 2 && this.hotbar[this.hotbarIndex] <= 2;
+	}
+
 	updateHotbarInput() {
 		if(TouchInput.wheelScrolled > 0) {
 			this.incrementHotbarIndex();

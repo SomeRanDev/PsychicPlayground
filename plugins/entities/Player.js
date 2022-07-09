@@ -39,6 +39,10 @@ class Player {
 	saveData() {
 	}
 
+	isMining() {
+		return this.inventory.isMining() && TouchInput.isPressed();
+	}
+
 	showPopup(text) {
 		this.sprite.addText(text);
 	}

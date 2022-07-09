@@ -18,6 +18,14 @@ class Hotbar extends Sprite {
 			this.makeHotbarPiece("ItemsHotbar", 2),
 		];
 
+		this._toolTips = [
+			this.makeToolTip(0),
+			this.makeToolTip(1),
+			this.makeToolTip(2)
+		];
+
+		this._toolTipText = ["", "", ""];
+
 		this.anchor.set(0.5, 1);
 		this.move(Graphics.width / 2, Graphics.height - 10);
 
@@ -102,7 +110,7 @@ class Hotbar extends Sprite {
 	}
 
 	makeHotbarSlot(index) {
-		const slot = new Sprite();
+		const slot = new DynamicBitmapShifter();
 		slot.anchor.set(0.5, 1);
 
 		slot._selected = false;
@@ -147,7 +155,7 @@ class Hotbar extends Sprite {
 	makeHotbarSlotX(slot, index, barIndex) {
 		const x = new Sprite(ImageManager.lUi("X"));
 		x.anchor.set(0.5);
-		x.move(slot.x + 5, slot.y - 8);
+		x.move(slot.x + 0, slot.y - 16);
 		x.alpha = 0;
 		x.tint = 0xcccccc;
 
@@ -156,12 +164,26 @@ class Hotbar extends Sprite {
 		this._pieces[barIndex].addChild(x);
 	}
 
+	makeToolTip(index) {
+		const toolTip = new HotbarToolTip();
+		toolTip.x = (toolTip.width / -4);
+		toolTip.y = 12;
+		toolTip.scale.set(0.5);
+		toolTip.openness = 0;
+		this._pieces[index].addChild(toolTip);
+		return toolTip;
+	}
+
 	update() {
 		this.updateSelection();
 		this.updateSlots();
 		this.updateMenuOpen();
 		this.updateMenuAnimation();
 		this.updateMenuInteraction();
+		this.updateToolTip();
+		for(const slot of this._hotbarSlots) {
+			if(slot.update) slot.update();
+		}
 	}
 
 	updateSelection() {
@@ -245,9 +267,9 @@ class Hotbar extends Sprite {
 			for(let i = 0; i < hotbar.length; i++) {
 				const icon = this.findIcon(hotbar[i], i);
 				const slot = this._hotbarSlots[i];
-				slot.bitmap = icon === null ? null : ImageManager.lIcon(icon);
-				slot.visible = !!slot.bitmap;
-				this._xSprites[i].visible = slot.visible;
+				slot.setBitmap(icon === null ? null : ImageManager.lIcon(icon));
+				//slot.visible = !!slot.bitmap;
+				this._xSprites[i].visible = slot.hasBitmap();
 			}
 		}
 	}
@@ -462,15 +484,17 @@ class Hotbar extends Sprite {
 			const touchPos = new Point(TouchInput.x, TouchInput.y);
 			localPos = this._pieces[i]._list.worldTransform.applyInverse(touchPos);
 
-			if(localPos.x < 23 && localPos.x > -23 && localPos.y < 0 && localPos.y > -60) {
+			if(localPos.x < 23 && localPos.x > -23 && localPos.y < -20 && localPos.y > -70) {
 				hoverIndex = i;
 				break;
 			} else {
+				this._toolTips[i].setDataId(-1);
 				this.updateMenuListInteractionNoHover(i);
 			}
 		}
 
 		for(let i = hoverIndex + 1; i < 3; i++) {
+			this._toolTips[i].setDataId(-1);
 			this.updateMenuListInteractionNoHover(i);
 		}
 
@@ -499,10 +523,10 @@ class Hotbar extends Sprite {
 	updateXSprites(hoverIndex, localPos) {
 		let xHoverIndex = -1;
 		if(hoverIndex !== -1) {
-			if(localPos.y <= -51 && localPos.y >= -55) {
-				const x = Math.floor((localPos.x - 3) / 5);
-				if(x === -3 || x === 0 || x === 3) {
-					xHoverIndex = (hoverIndex * 3) + (x / 3) + 1;
+			if(localPos.y <= -57 && localPos.y >= -65) {
+				const x = Math.floor((localPos.x - 7) / 14) + 1;
+				if(x === -1 || x === 0 || x === 1) {
+					xHoverIndex = (hoverIndex * 3) + (x / 1) + 1;
 				}
 			}
 		}
@@ -579,6 +603,7 @@ class Hotbar extends Sprite {
 
 			if(hovered) {
 				result = slot;
+				this._toolTips[index].setDataId(slot._dataId);
 			}
 		}
 		return result;
@@ -593,5 +618,21 @@ class Hotbar extends Sprite {
 				slot.y = slot._baseY + (1 * ratio);
 			}
 		}
+	}
+
+	updateToolTip() {
+		if(this._menuOpen) {
+			for(let i = 0; i < 3; i++) {
+				/*if(this._toolTipText[i] && !this._toolTips[i].isOpen()) {
+					this._toolTips[i].openness += 40;
+				} else if(!this._toolTipText[i] && !this._toolTips[i].isClosed()) {
+					this._toolTips[i].openness -= 40;
+				}*/
+			}
+		}
+		
+		//this._toolTip.x = TouchInput.x - this.x + 8;
+		//this._toolTip.y = TouchInput.y - this.y - 12;
+		//this._toolTip.visible = TouchInput.mouseInside;
 	}
 }

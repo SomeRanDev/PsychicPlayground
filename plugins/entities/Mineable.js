@@ -128,7 +128,7 @@ class Mineable {
 
 	updatePressed() {
 		if(this._selected) {
-			this.setPressed(TouchInput.isPressed());
+			this.setPressed($ppPlayer.isMining());
 		}
 	}
 
