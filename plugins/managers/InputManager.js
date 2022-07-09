@@ -6,7 +6,11 @@ Input.keyMapper[83] = "s";
 Input.keyMapper[65] = "a";
 Input.keyMapper[68] = "d";
 Input.keyMapper[69] = "e";
+Input.keyMapper[77] = "m";
 Input.keyMapper[120] = "F9";
+for(let i = 49, j = 1; i <= 57; i++, j++) {
+	Input.keyMapper[i] = "" + j;
+}
 
 Input.keyMapper[90] = "z";
 Input.keyMapper[88] = "x";
@@ -14,19 +18,10 @@ Input.keyMapper[67] = "c";
 
 Input.gamepadMapper = {};
 
+TouchInput.wheelScrolled = 0;
+
 TouchInput.__old__setupEventHandlers = TouchInput._setupEventHandlers;
 TouchInput._setupEventHandlers = function() {
-	/*const pf = { passive: false };
-	document.addEventListener("mousedown", this._onMouseDown.bind(this));
-	document.addEventListener("mousemove", this._onMouseMove.bind(this));
-	document.addEventListener("mouseup", this._onMouseUp.bind(this));
-	document.addEventListener("wheel", this._onWheel.bind(this), pf);
-	document.addEventListener("touchstart", this._onTouchStart.bind(this), pf);
-	document.addEventListener("touchmove", this._onTouchMove.bind(this), pf);
-	document.addEventListener("touchend", this._onTouchEnd.bind(this));
-	document.addEventListener("touchcancel", this._onTouchCancel.bind(this));
-	window.addEventListener("blur", this._onLostFocus.bind(this));*/
-
 	TouchInput.__old__setupEventHandlers.apply(this, arguments);
 	document.addEventListener("mouseleave", function() {
 		TouchInput.mouseInside = false;
@@ -37,6 +32,12 @@ TouchInput.__old_onMouseMove = TouchInput._onMouseMove;
 TouchInput._onMouseMove = function(event) {
 	TouchInput.__old_onMouseMove.apply(this, arguments);
 	TouchInput.mouseInside = true;
+};
+
+TouchInput.__old__onWheel = TouchInput._onWheel;
+TouchInput._onWheel = function(event) {
+	TouchInput.__old__onWheel.apply(this, arguments);
+	TouchInput.wheelScrolled = event.deltaY;
 };
 
 modify_Input = class {

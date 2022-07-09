@@ -6,9 +6,13 @@ class Map extends Sprite {
 		b.smooth = true;
 		super(b);
 
+		this.anchor.set(0.5);
+
 		this.cursor = new Sprite(ImageManager.loadPicture("PlayerCursor"));
 		this.cursor.anchor.set(0.5, 1);
 		this.addChild(this.cursor);
+
+		this._displayRatio = 0;
 
 		SpriteManager.addUi(this);
 
@@ -21,22 +25,42 @@ class Map extends Sprite {
 	}
 
 	setupCorner() {
-		this.move(680, 26);
+		this.move(720, 66);
 		this.tint = 0xeeeeee;
 		this.setScale(0.3);
 	}
 
 	update() {
+		this.updatePlayerPosCursor();
+		this.updatePauseInflate();
+	}
+
+	updatePlayerPosCursor() {
 		const globalWidth = GenerationManager.GLOBAL_WIDTH * 32;
 		const globalHeight = GenerationManager.GLOBAL_HEIGHT * 32;
-		const px = ($ppPlayer.position.x + globalWidth / 2) / (globalWidth);
-		const py = ($ppPlayer.position.y + globalHeight / 2) / (globalHeight);
-		this.cursor.move(px * this.width, py * this.height);
+		const px = ($ppPlayer.position.x + (globalWidth / 2)) / (globalWidth);
+		const py = ($ppPlayer.position.y + (globalHeight / 2)) / (globalHeight);
+		this.cursor.move((px * (this.width)) - (this.width / 2), (py * (this.height)) - (this.height / 2));
+	}
+
+	updatePauseInflate() {
+		const isPaused = $gameMap.isMapPause();
+		const newRatio = this._displayRatio.moveTowardsCond(isPaused, 0, 1, 0.05);
+		if(this._displayRatio !== newRatio) {
+			this._displayRatio = newRatio;
+
+			const r = isPaused ? newRatio.cubicOut() : newRatio.cubicIn();
+			this.move(PP.lerp(720, (Graphics.width / 2), r), PP.lerpEx(66, (Graphics.height / 2), r));
+			this.setScale(0.3 + (0.7 * r));
+		}
 	}
 
 	generate() {
 		const width = this.bitmap.width;
 		const height = this.bitmap.height;
+
+		this.bitmap.startFastFillRect();
+
 		//const imgData = this.bitmap.getImageData();
 		for(let x = 0; x < width; x++) {
 			for(let y = 0; y < height; y++) {
@@ -77,7 +101,7 @@ class Map extends Sprite {
 					} else if(block === 1 || block === 2) {
 						col = 0x57404e;
 						if(this.bitmap.getPixelNumber(x, y - 1) !== 0) {
-							this.bitmap.fillRect(x, y - 1, 1, 1, "rgba(111, 227, 163, " + alpha + ")");
+							this.bitmap.fastFillRect(x, y - 1, 1, 1, "rgba(111, 227, 163, " + alpha + ")");
 						}
 					} else if(topTile === 220) {
 						col = 0xffffff;
@@ -106,10 +130,12 @@ class Map extends Sprite {
 				*/
 
 				if(this.bitmap.getAlphaPixel(x, y) <= 0) {
-					this.bitmap.fillRect(x, y, 1, 1, colStr);
+					this.bitmap.fastFillRect(x, y, 1, 1, colStr);
 				}
 			}
 		}
+
+		this.bitmap.endFastFillRect();
 
 		//this.bitmap.setImageData(imgData);
 	}

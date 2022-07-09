@@ -62,6 +62,7 @@ modify_Spriteset_Map = class {
 		this.createChunksLayer();
 		this.createPPEntities();
 		this.createMapCursor();
+		this.createPauseDarken();
 		this.createHUDContainer();
 		this.createUIContainer();
 	}
@@ -85,6 +86,15 @@ modify_Spriteset_Map = class {
 		this._ppLayer.addChild(this._mapCursor);
 	}
 
+	createPauseDarken() {
+		this._pauseDarken = new Sprite(ImageManager.loadPicture("ScreenOverlay"));
+		this._pauseDarken.z = 1000;
+		this._pauseDarken.anchor.set(0.5);
+		this._pauseDarken.alpha = 0;
+		SpriteManager.darken = this._pauseDarken;
+		this._ppLayer.addChild(this._pauseDarken);
+	}
+
 	createHUDContainer() {
 		this._hudContainer = new Sprite();
 		this._hudContainer.z = 9999;
@@ -105,11 +115,17 @@ modify_Spriteset_Map = class {
 		this._sortPPChildren();
 	}
 
+	updateUiOnly() {
+		this._hudContainer.update();
+		this._uiContainer.update();
+	}
+
 	destroy(options) {
 		PP.Spriteset_Map.destroy.apply(this, arguments);
 		SpriteManager.ppLayer = null;
 		SpriteManager.uiContainer = null;
-	};
+		SpriteManager.darken = null;
+	}
 
 	//==============================
 	// Camera stuff
@@ -169,6 +185,18 @@ class SpriteManager {
 
 	static uiContainer = null;
 	static hudContainer = null;
+
+	static onPause() {
+		if(SceneManager._scene?._spriteset?._mapCursor) {
+			SceneManager._scene._spriteset._mapCursor.visible = false;
+		}
+	}
+
+	static onUnpause() {
+		if(SceneManager._scene?._spriteset?._mapCursor) {
+			SceneManager._scene._spriteset._mapCursor.visible = true;
+		}
+	}
 
 	static sort() {
 		SceneManager._scene._spriteset._forceSortPPChildren();

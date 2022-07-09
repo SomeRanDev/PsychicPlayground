@@ -43,6 +43,21 @@ Bitmap.prototype._updateWrapMode = function() {
 	}
 };*/
 
+Bitmap.prototype.startFastFillRect = function() {
+	this.context.save();
+}
+
+Bitmap.prototype.fastFillRect = function(x, y, width, height, color) {
+    const context = this.context;
+    context.fillStyle = color;
+    context.fillRect(x, y, width, height);
+};
+
+Bitmap.prototype.endFastFillRect = function() {
+	this.context.restore();
+    this._baseTexture.update();
+}
+
 Bitmap.prototype.getPixelNumberFromRatio = function(x, y) {
 	return this.getPixelNumber(x.clamp(0, 1) * (this.width - 1), y.clamp(0, 1) * (this.height - 1));
 };

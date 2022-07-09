@@ -107,3 +107,8 @@ PP.Int32ArrayOf = function() {
 	}
 	return result;
 };
+
+PIXI.Text.prototype.move = function(x, y) {
+	this.x = x;
+	this.y = y;
+};

@@ -2115,6 +2115,7 @@ SceneManager.updateScene = function() {
         if (this._scene.isStarted()) {
             if (this.isGameActive()) {
                 this._scene.update();
+                TouchInput.wheelScrolled = 0;
             }
         } else if (this._scene.isReady()) {
             this.onBeforeSceneStart();

@@ -5,17 +5,32 @@ class Player {
 
 		this.position = new Vector2(0, 0);
 		this.speed = 3;//2;
+		this.moving = false;
 
 		this.TURN_RATE = 9.0;
 
 		this.targetDirection = 0;
 		this.currentDirection = 0;
 		this.lastAngle = 0;
+
+		this.inventory = new Inventory();
 	}
 
 	makeSprite() {
 		this.sprite = new PlayerSprite(this);
 		return this.sprite;
+	}
+
+	refreshHotbarIcons() {
+		if(this.sprite) {
+			this.sprite._hotbar.refreshIcons();
+		}
+	}
+
+	refreshHotbarNumbers() {
+		if(this.sprite) {
+			this.sprite._hotbar.refreshNumbers();
+		}
 	}
 
 	loadData() {
@@ -29,17 +44,36 @@ class Player {
 	}
 
 	gainMaterial(blockId) {
-		this.showPopup("+12 Wood");
+		const blockData = MineableTypes[blockId];
+		if(blockData && blockData.material) {
+			const materialId = blockData.material;
+			const material = MaterialTypes[materialId];
+			if(material) {
+				const min = blockData.materialGainMin ?? 0;
+				const max = blockData.materialGainMax ?? 0;
+				const amount = min + Math.floor(Math.random() * (max - min));
+				if(this.inventory.addMaterial(materialId, amount)) {
+					this.showPopup("+" + amount + " " + material.name);
+				} else {
+					this.showPopup("Max " + material.name + "!");
+				}
+			}
+		}
 	}
 
 	cameraX() { return this.position.x; }
 	cameraY() { return this.position.y; }
 
 	update() {
-		const isMoving = this.isMoving();
+		this.inventory.update();
+		this.updateMovement();
+	}
+
+	updateMovement() {
+		this.moving = this.isMoving();
 		const lastDirection = this.currentDirection;
 
-		if(isMoving) {
+		if(this.moving) {
 			this.updateTargetDirection();
 
 			this.position.x = Math.round(CollisionManager.processMovementX(this.position.x, this.position.y, (this.speed * Input.InputVector.x)));
@@ -47,14 +81,6 @@ class Player {
 		}
 
 		this.updateTurning(lastDirection);
-
-		if(this.sprite) {
-			if(isMoving) {
-				this.sprite.setWalk();
-			} else {
-				this.sprite.setIdle();
-			}
-		}
 	}
 
 	isMoving() {

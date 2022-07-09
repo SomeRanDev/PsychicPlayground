@@ -24,6 +24,13 @@ class PlayerSprite extends Sprite {
 		this.frameDelay = 16;
 
 		this._textPopper = new TextPopper(this, 0, -32);
+
+		if(!ImageManager.IsTwitter) {
+			this.makeHud();
+		}
+	}
+
+	makeHud() {
 		this._hotbar = new Hotbar();
 		this._healthHud = new PlayerHealth();
 
@@ -60,9 +67,11 @@ class PlayerSprite extends Sprite {
 	}
 
 	setDirection(dir) {
-		this.direction = dir;
-		if(this.currentAni) {
-			this.currentAni.setDirection(dir);
+		if(this.direction !== dir) {
+			this.direction = dir;
+			if(this.currentAni) {
+				this.currentAni.setDirection(dir);
+			}
 		}
 	}
 
@@ -111,6 +120,12 @@ class PlayerSprite extends Sprite {
 
 		this.x = $ppPlayer.position.x;
 		this.y = $ppPlayer.position.y;
+
+		if($ppPlayer.moving) {
+			this.setWalk();
+		} else {
+			this.setIdle();
+		}
 
 		//this._textPopper.update();
 

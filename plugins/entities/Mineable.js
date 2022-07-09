@@ -172,6 +172,14 @@ class Mineable {
 			if(s && this.heartContainer) {
 				this.heartContainer.alpha = 1;
 			}
+			/*
+			if(s && this.baseSprite) {
+				const p = this.baseSprite.parent;
+				p.removeChild(this.baseSprite);
+				p.addChild(this.baseSprite);
+				SpriteManager.sort();
+			}
+			*/
 		}
 	}
 

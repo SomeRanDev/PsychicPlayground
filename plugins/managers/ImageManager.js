@@ -1,6 +1,30 @@
 
-
+// special mode for posting progress on twitter without spoiling the game ahead of time
 ImageManager.IsTwitter = false;
+
+if(!ImageManager.IsTwitter) {
+
+ImageManager.lPlayer = function(filename) {
+	return this.loadBitmap("img/player/", filename);
+};
+
+ImageManager.lGeneration = function(filename) {
+	return this.loadBitmap("img/generation/", filename);
+};
+
+ImageManager.lUi = function(filename) {
+	return this.loadBitmap("img/ui/", filename);
+};
+
+ImageManager.lTile = function(filename) {
+	return this.loadBitmap("img/tiles/", filename);
+};
+
+ImageManager.lIcon = function(filename) {
+	return this.loadBitmap("img/icons/", filename);
+};
+
+} else {
 
 ImageManager.lExists = function(filepath) {
 	const p = require("path");
@@ -27,10 +51,15 @@ ImageManager.lGeneration = function(filename) {
 };
 
 ImageManager.lUi = function(filename) {
-	return this.loadBitmap("img/ui/", filename);
+	return this.loadBitmapWTwitter("img/ui/", filename);
 };
 
 ImageManager.lTile = function(filename) {
 	return this.loadBitmapWTwitter("img/tiles/", filename);
 };
 
+ImageManager.lIcon = function(filename) {
+	return this.loadBitmapWTwitter("img/icons/", filename);
+};
+
+}

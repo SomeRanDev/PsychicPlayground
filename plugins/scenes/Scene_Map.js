@@ -7,6 +7,7 @@ modify_Scene_Map = class {
 	initialize() {
 		PP.Scene_Map.initialize.apply(this, arguments);
 		this._isPaused = false;
+		this._pauseType = 0;
 
 		this._chunks = [];
 		this._freeChunks = [];
@@ -16,15 +17,54 @@ modify_Scene_Map = class {
 		this._targetCameraY = null;
 	}
 
+	updateChildren() {
+		if(!this._isPaused) {
+			PP.Scene_Map.updateChildren.apply(this, arguments);
+		}
+	}
+
 	updateMain() {
 		PP.Time += PP.WS;
 		{
 			if(!this._isPaused) {
 				PP.Scene_Map.updateMain.apply(this, arguments);
 				this.updatePPPlayer();
+				this.updatePauseInput();
 			} else {
-				this.updatePause();
+				this.updateCameraPos();
+				this._spriteset.updateUiOnly();
+				switch(this._pauseType) {
+					case 0: { this.updateMenuPause(); break; }
+					case 1: { this.updateMapPause(); break; }
+					case 2: { this.updateExitPause(); break; }
+				}
 			}
+			this.updateBackgroundDarken();
+		}
+	}
+
+	updatePauseInput() {
+		if(Input.isTriggeredEx("e")) {
+			this.setPaused(true, 0);
+			$gameMap.CameraOffsetY = 60;
+		} else if(Input.isTriggeredEx("m")) {
+			this.setPaused(true, 1);
+		} else if(Input.isTriggeredEx("esc")) {
+			this.setPaused(true, 2);
+		}
+	}
+
+	setPaused(p, type) {
+		this._isPaused = p;
+		$gameMap.IsPaused = p;
+
+		this._pauseType = type;
+		$gameMap.PauseMode = p ? type : -1;
+
+		if(p) {
+			SpriteManager.onPause();
+		} else {
+			SpriteManager.onUnpause();
 		}
 	}
 
@@ -61,12 +101,12 @@ modify_Scene_Map = class {
 	}
 
 	genCameraPosX() {
-		const result = ((this._targetCameraX ?? $ppPlayer.cameraX()) * this._spriteset._tilemap.scale.x) - (Graphics.width / 2);// + $gameMap.ESPCameraOffsetX;
+		const result = ((this._targetCameraX ?? $ppPlayer.cameraX()) * this._spriteset._tilemap.scale.x) - (Graphics.width / 2) + $gameMap.CameraOffsetX;
 		return result.clamp(this.minCameraX(), this.maxCameraX());
 	}
 
 	genCameraPosY() {
-		const result = ((this._targetCameraY ?? $ppPlayer.cameraY()) * this._spriteset._tilemap.scale.y) - (Graphics.height / 2);// + $gameMap.ESPCameraOffsetY;
+		const result = ((this._targetCameraY ?? $ppPlayer.cameraY()) * this._spriteset._tilemap.scale.y) - (Graphics.height / 2) + $gameMap.CameraOffsetY;
 		return result.clamp(this.minCameraY(), this.maxCameraY());
 	}
 
@@ -233,6 +273,41 @@ modify_Scene_Map = class {
 		return new Chunk(x, y);
 	}
 
-	updatePause() {
+	updateBackgroundDarken() {
+		SpriteManager.darken.move(this.PPCameraX + (Graphics.width / 2), this.PPCameraY + (Graphics.height / 2));
+		if(this._isPaused) {
+			if(SpriteManager.darken.alpha < 0.3) {
+				SpriteManager.darken.alpha += 0.02;
+				if(SpriteManager.darken.alpha > 0.3) {
+					SpriteManager.darken.alpha = 0.3;
+				}
+			}
+		} else {
+			if(SpriteManager.darken.alpha > 0) {
+				SpriteManager.darken.alpha -= 0.02;
+				if(SpriteManager.darken.alpha < 0) {
+					SpriteManager.darken.alpha = 0;
+				}
+			}
+		}
+	}
+
+	updateMenuPause() {
+		if(Input.isTriggeredEx("e")) {
+			this.setPaused(false);
+			$gameMap.CameraOffsetY = 0;
+		}
+	}
+
+	updateMapPause() {
+		if(Input.isTriggeredEx("m")) {
+			this.setPaused(false);
+		}
+	}
+
+	updateExitPause() {
+		if(Input.isTriggeredEx("esc")) {
+			this.setPaused(false);
+		}
 	}
 }
