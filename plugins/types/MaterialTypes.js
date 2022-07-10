@@ -32,8 +32,8 @@ const MaterialTypes = {
 		max: 256,
 		icon: "Wood",
 		desc: "Grow trees.",
-		mineable: 1,
-		buildCost: 24
+		mineable: 3,
+		buildCost: 16
 	},
 	7: {
 		name: "Steel",

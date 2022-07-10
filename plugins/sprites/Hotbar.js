@@ -244,8 +244,14 @@ class Hotbar extends Sprite {
 			this._menuOpen = $gameMap.isInvPause();
 			if(this._menuOpen) {
 				this.refreshInventoryListSlots();
+			} else {
+				this.onMenuClose();
 			}
 		}
+	}
+
+	onMenuClose() {
+		this.closeAllToolTips();
 	}
 
 	updateMenuAnimation() {
@@ -624,12 +630,20 @@ class Hotbar extends Sprite {
 	}
 
 	updateToolTip() {
+		if(this._menuOpen) {
+			const len = this._toolTips.length;
+			for(let i = 0; i < len; i++) {
+				const toolTip = this._toolTips[i];
+				toolTip.update();
+			}
+		}
+	}
+
+	closeAllToolTips() {
 		const len = this._toolTips.length;
 		for(let i = 0; i < len; i++) {
-			const toolTip = this._toolTips[i];
-			//toolTip.x = this._pieces[i].x + (toolTip.width / -4);
-			//toolTip.y = this._pieces[i].y + 12;
-			toolTip.update();
+			this._toolTips[i].setDataId(-1);
+			this._toolTips[i].setFakeOpenness(0);
 		}
 	}
 }

@@ -78,36 +78,23 @@ class Chunk {
 	}
 
 	onMouseRightClick(localTileX, localTileY) {
-		if($ppPlayer.canPlaceMaterial &&
-			$ppPlayer.inventory.hasPlacableMaterial() &&
+		const matId = $ppPlayer.inventory.hasPlacableMaterial();
+		if(matId !== null &&
 			CollisionManager.canMoveToLocalTile(this.chunkX, this.chunkY, localTileX, localTileY)
 		) {
-			const matId = $ppPlayer.inventory.placeMaterial();
 			const matData = MaterialTypes[matId];
 			if(matData && typeof matData.mineable === "number") {
+				const mineableData = MineableTypes[matData.mineable];
 				this.addBlock(localTileX, localTileY - 1, matData.mineable);
-				SpriteManager.sort();
+				return true;
 			}
 		}
+		return false;
 	}
 
 	generateAllTiles() {
 		this._generatedTiles = 0;
 		this._maxTiles = (GenerationManager.TILES_X * GenerationManager.TILES_Y);
-		//this.generateSomeTiles();
-
-		/*for(let x = 0; x < GenerationManager.TILES_X; x++) {
-			for(let y = 0; y < GenerationManager.TILES_Y; y++) {
-				this.generateTile(x, y);
-			}
-		}*/
-		/*
-		if(this.refreshTiles.length > 0) {
-			for(const tile of this.refreshTiles) {
-				this.generateTile(tile[0], tile[1], false);
-			}
-			this.refreshTiles = [];
-		}*/
 	}
 
 	generateSomeTiles() {

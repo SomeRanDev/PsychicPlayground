@@ -115,6 +115,7 @@ class Mineable {
 		this.updatePressAnimation();
 		this.updateSpawnAnimation();
 		this.updateHeartContainer();
+		this.updateTint();
 	}
 
 	updateSelection() {
@@ -161,7 +162,6 @@ class Mineable {
 	setSelected(s) {
 		if(this._selected !== s) {
 			this._selected = s;
-			this.baseSprite.tint = s ? 0xcccccc : 0xffffff;
 			if(!s && this._pressed) {
 				this.setPressed(false);
 			}
@@ -256,6 +256,12 @@ class Mineable {
 				const r = (this._spawnAnimation - 0.5) / 0.5;
 				this.baseSprite.scale.set(2 * (0.75 + (0.25 * r.cubicOut())),  2 * (1.25 - (0.25 * r.cubicOut())));
 			}
+		}
+	}
+
+	updateTint() {
+		if(this.baseSprite) {
+			this.baseSprite.tint = this._selected && $ppPlayer.selectMineables() ? 0xcccccc : 0xffffff;
 		}
 	}
 }

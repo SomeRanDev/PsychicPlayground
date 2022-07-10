@@ -29,6 +29,16 @@ const MineableTypes = {
 		materialGainMin: 8,
 		materialGainMax: 12
 	},
+	3: {
+		name: "SmallTree",
+		hitBox: [0.5, 0.5, 1, 1],
+		hp: 6,
+		res: 30,
+		hpIcon: "Stick",
+		material: 3,
+		materialGainMin: 8,
+		materialGainMax: 12
+	},
 	99: {
 		name: "GodColumn",
 		hitBox: [0.5, 0.5, 1, 1],

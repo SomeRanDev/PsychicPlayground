@@ -41,6 +41,22 @@ class Player {
 	saveData() {
 	}
 
+	selectMineables() {
+		return this.inventory.isMining();
+	}
+
+	showMapCursor() {
+		return this.inventory.isMaterial();
+	}
+
+	showEnabledCursor() {
+		return this.inventory.hasPlacableMaterial();
+	}
+
+	maxBuildAmount() {
+		return this.inventory.maxBuildAmount();
+	}
+
 	isMining() {
 		return this.inventory.isMining() && TouchInput.isPressed();
 	}

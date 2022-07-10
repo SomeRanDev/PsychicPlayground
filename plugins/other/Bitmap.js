@@ -16,55 +16,7 @@ Bitmap.prototype._drawTextBody = function(text, tx, ty, maxWidth) {
 	context.imageSmoothingEnabled = false;
 	context.fillStyle = "#000000";
 	context.fillText(text, tx + 1, ty + 1, maxWidth);
-
-	// Based on
-	// https://forums.rpgmakerweb.com/index.php?threads/removing-font-blur.75294/post-708149
-	var imageData = context.getImageData(0, 0, this.width, this.height);
-	var data = imageData.data;
-	for (var i = 0; i < data.length; i += 4) {
-		data[i] = data[i];
-		data[i + 1] = data[i + 1];
-		data[i + 2] = data[i + 2];
-		data[i + 3] = (data[i + 3] * 1.5).clamp(0, 255);
-	}
-	context.putImageData(imageData, 0, 0);
 };
-
-/*
-Object.defineProperty(Bitmap.prototype, "repeatWrap", {
-	get: function() {
-		return this._repeatWrap;
-	},
-	set: function(value) {
-		if (this._repeatWrap !== value) {
-			this._repeatWrap = value;
-			this._updateWrapMode();
-		}
-	},
-	configurable: true
-});
-
-Bitmap.prototype.__old_initialize = Bitmap.prototype.initialize;
-Bitmap.prototype.initialize = function() {
-	Bitmap.prototype.__old_initialize.apply(this, arguments);
-	this._repeatWrap = false;
-}
-
-Bitmap.prototype.__old_createBaseTexture = Bitmap.prototype._createBaseTexture;
-Bitmap.prototype._createBaseTexture = function(source) {
-	Bitmap.prototype.__old_createBaseTexture.apply(this, arguments);
-	this._updateWrapMode();
-};
-
-Bitmap.prototype._updateWrapMode = function() {
-	if (this._baseTexture) {
-		if (!this._repeatWrap) {
-			this._baseTexture.mipmap = PIXI.MIPMAP_MODES.ON;
-		} else {
-			this._baseTexture.mipmap = PIXI.MIPMAP_MODES.OFF;
-		}
-	}
-};*/
 
 Bitmap.prototype.startFastFillRect = function() {
 	this.context.save();

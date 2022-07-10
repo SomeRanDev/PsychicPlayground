@@ -1,6 +1,6 @@
 class HotbarToolTip extends Window_Base {
 	constructor(type) {
-		super(new Rectangle(0, 0, 128, 64+8));
+		super(new Rectangle(0, 0, 128, 74));
 		this._dataId = -1;
 		this._type = type;
 
@@ -20,29 +20,6 @@ class HotbarToolTip extends Window_Base {
 				break;
 			}
 		}
-
-		/*this.nameText = PP.makeText("Pyrokinesis 33", 12);
-		this.nameText.style.fill = 0x000000;
-		this.nameText.style.strokeThickness = 1;
-		//this.nameText.scale.set(2);
-		this.nameText.resolution = 12;
-		//this.nameText.width = 128;
-		this.nameText.x = 128 / 2;
-		this.nameText.y = 21;
-		this.nameText.style.strokeThickness = 0;
-		this.addChild(this.nameText);
-
-		this.descText = PP.makeText("This is a large desc\nI hope it fits.", 12);
-		this.descText.style.fill = 0x000000;
-		this.descText.style.strokeThickness = 0;
-		this.descText.style.align = "left";
-		this.descText.style.lineSpacing = -4;
-		//this.descText.scale.set(2);
-		this.descText.resolution = 12;
-		//this.nameText.width = 128;
-		this.descText.x = 128 / 2;
-		this.descText.y = 58;
-		this.addChild(this.descText);*/
 
 		this.contents.outlineWidth = 0;
 		this.contents.outlineColor = "rgba(0, 0, 0, 1)";
@@ -76,13 +53,13 @@ class HotbarToolTip extends Window_Base {
 
 		this.contents.clear();
 
-		this.contents.fontSize = 20;
-		this.drawText(name, 2, -12, this.contents.width - 4, "center");
+		this.contents.fontSize = 24;
+		this.drawText(name, 2, -10, this.contentsWidth() - 4, "center");
 
-		this.contents.fontSize = 15;
+		this.contents.fontSize = 16;
 		const descLines = desc.split("\n");
 		for(let i = 0; i < descLines.length; i++) {
-			this.drawText(descLines[i], 2, 12 + (i * 12), this.contents.width - 4, "center");
+			this.drawText(descLines[i], 2, 11 + (i * 13), this.contentsWidth() - 4, "center");
 		}
 	}
 

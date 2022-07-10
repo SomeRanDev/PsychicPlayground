@@ -174,6 +174,39 @@ modify_Scene_Map = class {
 		}
 	}
 
+	// Based on:
+	// https://stackoverflow.com/a/55666538/8623874
+	calcStraightLine(startCoordinates, endCoordinates) {
+		const coordinatesArray = [];
+
+		let x1 = startCoordinates[0];
+		let y1 = startCoordinates[1];
+		const x2 = endCoordinates[0];
+		const y2 = endCoordinates[1];
+
+		const dx = Math.abs(x2 - x1);
+		const dy = Math.abs(y2 - y1);
+		const sx = (x1 < x2) ? 1 : -1;
+		const sy = (y1 < y2) ? 1 : -1;
+		let err = dx - dy;
+
+		coordinatesArray.push([x1, y1]);
+
+		while (!((x1 == x2) && (y1 == y2))) {
+			const e2 = err << 1;
+			if (e2 > -dy) {
+				err -= dy;
+				x1 += sx;
+			}
+			if (e2 < dx) {
+				err += dx;
+				y1 += sy;
+			}
+			coordinatesArray.push([x1, y1]);
+		}
+		return coordinatesArray;
+	}
+
 	updateMouseMovement() {
 		const touchPos = new Point(TouchInput.x, TouchInput.y);
 		const localPos = this._spriteset._tilemap.worldTransform.applyInverse(touchPos);
@@ -184,12 +217,18 @@ modify_Scene_Map = class {
 		const cx = Math.floor(localPos.x / GenerationManager.CHUNK_SIZE_X);
 		const cy = Math.floor(localPos.y / GenerationManager.CHUNK_SIZE_Y);
 
+		if($ppPlayer.showMapCursor()) {
+			this.updateBuildLine(localPos, cx, cy);
+		} else if(this._isRightClickHeld) {
+			this.onBuildCanceled();
+		}
+	}
+
+	updateBuildLine(localPos, cx, cy) {
 		if(!this._isRightClickHeld && TouchInput.isCancelled()) {
-			this._isRightClickHeld = true;
-			this._rightClickHistory = [];
+			this.onBuildStart();
 		} else if(this._isRightClickHeld && (TouchInput.isCancelReleased() || !TouchInput.mouseInside)) {
-			this._isRightClickHeld = false;
-			this._rightClickHistory = [];
+			this.onBuildEnd();
 		}
 
 		if(this._isRightClickHeld) {
@@ -197,13 +236,80 @@ modify_Scene_Map = class {
 			if(chunk !== null) {
 				const tileX = Math.floor((localPos.x - (cx * GenerationManager.CHUNK_SIZE_X)) / GenerationManager.TILE_WIDTH);
 				const tileY = Math.floor((localPos.y - (cy * GenerationManager.CHUNK_SIZE_Y)) / GenerationManager.TILE_HEIGHT);
-				const tileIndex = (tileY * GenerationManager.GLOBAL_WIDTH) + tileX;
-				if(!this._rightClickHistory.includes(tileIndex)) {
-					chunk.onMouseRightClick(tileX, tileY);
-					this._rightClickHistory.push(tileIndex);
+
+				const globalTileX = (cx * GenerationManager.TILES_X) + tileX;
+				const globalTileY = (cy * GenerationManager.TILES_Y) + tileY;
+
+				if(!this._firstRightClickPos) {
+					this._firstRightClickPos = [globalTileX, globalTileY];
+				} else {
+					for(const point of this._rightClickGuides) {
+						point.visible = false;
+					}
+
+					const points = this.calcStraightLine(this._firstRightClickPos, [globalTileX, globalTileY]);
+					for(let i = 0; i < points.length; i++) {
+						if(this._rightClickGuides.length <= i) {
+							const spr = new Sprite(ImageManager.loadPicture("MouseCursor"));
+							spr.z = -10;
+							spr.visible = true;
+							this._spriteset._mapCursorContainer.addChild(spr);
+							this._rightClickGuides.push(spr);
+						}
+						this._rightClickGuides[i].alpha = i < this._maxBuildAmount ? 1 : 0.25;
+						this._rightClickGuides[i].move(points[i][0] * 32, points[i][1] * 32);
+						this._rightClickGuides[i].visible = true;
+					}
+					this._rightClickPoints = points;
 				}
 			}
 		}
+	}
+
+	onBuildStart() {
+		this._isRightClickHeld = true;
+		this._rightClickPoints = [];
+		this._rightClickGuides = [];
+		this._firstRightClickPos = null;
+
+		this._maxBuildAmount = $ppPlayer.maxBuildAmount();
+	}
+
+	onBuildEnd() {
+		const len = Math.min(this._rightClickPoints.length, this._maxBuildAmount);
+		let count = 0;
+		for(let i = 0; i < len; i++) {
+			const point = this._rightClickPoints[i];
+			if(this._onRightClickRelease(point[0], point[1])) {
+				count++;
+			}
+		}
+		$ppPlayer.inventory.onBuild(count);
+		this.onBuildCanceled();
+		SpriteManager.sort();
+	}
+
+	onBuildCanceled() {
+		for(const point of this._rightClickGuides) {
+			this._spriteset._mapCursorContainer.removeChild(point);
+			point.bitmap = null;
+			point.destroy();
+		}
+
+		this._isRightClickHeld = false;
+		this._rightClickPoints = null;
+		this._rightClickGuides = null;
+		this._firstRightClickPos = null;
+	}
+
+	_onRightClickRelease(globalTileX, globalTileY) {
+		const cx = Math.floor(globalTileX / GenerationManager.TILES_X);
+		const cy = Math.floor(globalTileY / GenerationManager.TILES_Y);
+		const chunk = this._chunkExists[this.getChunkKey(cx, cy)];
+		if(chunk) {
+			return chunk.onMouseRightClick(globalTileX - (cx * GenerationManager.TILES_X), globalTileY - (cy * GenerationManager.TILES_Y));
+		}
+		return false;
 	}
 
 	updateMouseCursor() {
@@ -250,7 +356,8 @@ modify_Scene_Map = class {
 			this._spriteset._mapCursor.visible = false;
 			$ppPlayer.enableTileCursorPlacement(false);
 		} else {
-			this._spriteset._mapCursor.visible = TouchInput.mouseInside;
+			this._spriteset._mapCursor.visible = TouchInput.mouseInside && $ppPlayer.showMapCursor();
+			this._spriteset._mapCursor.setEnabled($ppPlayer.showEnabledCursor());
 			$ppPlayer.enableTileCursorPlacement(TouchInput.mouseInside);
 		}
 	}

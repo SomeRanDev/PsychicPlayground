@@ -7,12 +7,6 @@ class MouseCursor extends Sprite {
 
 		this.targetX = 0;
 		this.targetY = 0;
-
-		this.setAnimationFrame(2);
-	}
-
-	setAnimationFrame(i) {
-		this.setFrame(i * 32, 0, 32, 32);
 	}
 
 	setPos(x, y) {
@@ -29,8 +23,13 @@ class MouseCursor extends Sprite {
 	}
 
 	update() {
-		this.x = PP.lerp(this.x, this.targetX, 0.8);
-		this.y = PP.lerp(this.y, this.targetY, 0.8);
+		this.x = PP.lerp(this.x, this.targetX, 0.7);
+		this.y = PP.lerp(this.y, this.targetY, 0.7);
+	}
+
+	setEnabled(e) {
+		this.tint = e ? 0xffffff : 0xffffff;
+		this.alpha = e ? 0.9 : 0.4;
 	}
 
 	/*update() {

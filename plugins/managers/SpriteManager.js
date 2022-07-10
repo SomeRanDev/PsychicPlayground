@@ -62,6 +62,7 @@ modify_Spriteset_Map = class {
 		this.createChunksLayer();
 		this.createPPEntities();
 		this.createMapCursor();
+		this.createMapCursorContainer();
 		this.createPauseDarken();
 		this.createHUDContainer();
 		this.createUIContainer();
@@ -84,6 +85,12 @@ modify_Spriteset_Map = class {
 		this._mapCursor = new MouseCursor();
 		this._mapCursor.z = -10;
 		this._ppLayer.addChild(this._mapCursor);
+	}
+
+	createMapCursorContainer() {
+		this._mapCursorContainer = new Sprite();
+		this._mapCursorContainer.z = -10;
+		this._ppLayer.addChild(this._mapCursorContainer);
 	}
 
 	createPauseDarken() {

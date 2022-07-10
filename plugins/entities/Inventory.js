@@ -88,14 +88,44 @@ class Inventory {
 		return this.hotbarIndex <= 2 && this.hotbar[this.hotbarIndex] >= 0 && this.hotbar[this.hotbarIndex] <= 2;
 	}
 
+	isMaterial() {
+		return this.hotbarIndex >= 3 && this.hotbarIndex <= 5 && this.hotbar[this.hotbarIndex] >= 0;
+	}
+
 	hasPlacableMaterial() {
 		if(this.hotbarIndex >= 3 && this.hotbarIndex <= 5) {
 			const matId = this.hotbar[this.hotbarIndex];
 			if(matId >= 0) {
-				return this.hasMaterial(matId, MaterialTypes[matId]?.buildCost ?? 0);
+				return this.hasMaterial(matId, MaterialTypes[matId]?.buildCost ?? 0) ? matId : null;
 			}
 		}
-		return false;
+		return null;
+	}
+
+	maxBuildAmount() {
+		if(this.hotbarIndex >= 3 && this.hotbarIndex <= 5) {
+			const matId = this.hotbar[this.hotbarIndex];
+			if(matId >= 0) {
+				const buildCost = MaterialTypes[matId]?.buildCost || 1;
+				const materialCount = this.materials[matId];
+				return Math.floor(materialCount / buildCost);
+			}
+		}
+		return 0;
+	}
+
+	onBuild(count = 1) {
+		if(this.hotbarIndex >= 3 && this.hotbarIndex <= 5) {
+			const matId = this.hotbar[this.hotbarIndex];
+			const matData = MaterialTypes[matId];
+			const buildCost = matData?.buildCost ?? 0;
+			if(this.hasMaterial(matId, MaterialTypes[matId]?.buildCost ?? 0)) {
+				this.addMaterial(matId, -(buildCost * count));
+				$ppPlayer.showPopup("-" + (buildCost * count) + " " + matData.name);
+			} else {
+				$ppPlayer.showPopup("Not enough " + matData.name + ".");
+			}
+		}
 	}
 
 	placeMaterial() {
@@ -103,8 +133,8 @@ class Inventory {
 			const matId = this.hotbar[this.hotbarIndex];
 			const matData = MaterialTypes[matId];
 			const buildCost = matData?.buildCost ?? 0;
-			this.addMaterial(matId, -buildCost);
-			$ppPlayer.showPopup("-" + buildCost + " " + matData.name);
+			//this.addMaterial(matId, -buildCost);
+			//$ppPlayer.showPopup("-" + buildCost + " " + matData.name);
 			return matId;
 		}
 		return -1;
