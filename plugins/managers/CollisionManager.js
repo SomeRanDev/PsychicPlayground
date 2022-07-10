@@ -1,6 +1,8 @@
 class CollisionManager {
 	static collisions = new Uint8Array(GenerationManager.MaxTiles);
 
+	static MoveSuccessful = false;
+
 	static registerCollision(globalX, globalY) {
 		const globalIndex = GenerationManager.globalCoordsToIndex(globalX, globalY);
 		this.collisions[globalIndex] = 1;
@@ -34,8 +36,10 @@ class CollisionManager {
 		currentY = Math.floor(currentY);
 
 		if(this.canMoveTo(currentX + shiftX, currentY)) {
+			CollisionManager.MoveSuccessful = true;
 			return currentX + shiftX;
 		}
+		CollisionManager.MoveSuccessful = false;
 		if(shiftX > 0) {
 			for(let i = currentX + shiftX - 1; i >= currentX + 1; i--) {
 				if(this.canMoveTo(i, currentY)) {
@@ -57,8 +61,10 @@ class CollisionManager {
 		currentY = Math.floor(currentY);
 
 		if(this.canMoveTo(currentX, currentY + shiftY)) {
+			CollisionManager.MoveSuccessful = true;
 			return currentY + shiftY;
 		}
+		CollisionManager.MoveSuccessful = false;
 		if(shiftY > 0) {
 			for(let i = currentY + shiftY - 1; i >= currentY + 1; i--) {
 				if(this.canMoveTo(currentX, i)) {

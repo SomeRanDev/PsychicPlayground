@@ -15,6 +15,11 @@ class Player {
 
 		this.canPlaceMaterial = false;
 
+		this.shootFrequency = 24;
+		this._projectiles = [];
+		this._projectileTime = 0;
+		this._projectileTriggeredTime = 0;
+
 		this.inventory = new Inventory();
 	}
 
@@ -89,6 +94,8 @@ class Player {
 	update() {
 		this.inventory.update();
 		this.updateMovement();
+		this.updateProjectileInput();
+		this.updateProjectiles();
 	}
 
 	enableTileCursorPlacement(b) {
@@ -156,6 +163,63 @@ class Player {
 			case 8: return 6;
 			case _: return 2;
 		};
+	}
+
+	updateProjectileInput() {
+		const isPressed = TouchInput.isPressed();
+
+		if(TouchInput.isTriggered()) {
+			this._projectileTriggeredTime = 10;
+		} else if(this._projectileTriggeredTime > 0) {
+			this._projectileTriggeredTime--;
+		}
+
+		if(this._projectileTime === 0) {
+			if(isPressed || (this._projectileTriggeredTime > 0)) {
+				this._projectileTime = 1;
+				this.shoot();
+			}
+		}
+		if(isPressed || this._projectileTime > 0) {
+			if(this._projectileTime++ > this.shootFrequency) {
+				this._projectileTime = 0;
+			}
+		}
+	}
+
+	shoot() {
+		const materialId = this.inventory.hasShootableMaterial();
+		const materialData = MaterialTypes[materialId];
+		if(materialData) {
+			const projectile = ProjectileObjectPool.getObject(
+				this.position.x,
+				this.position.y,
+				TouchInput.worldX,
+				TouchInput.worldY,
+				materialId,
+				materialData.damage,
+				180,
+				{
+					directionRefreshAcc: 12
+				}
+			);
+			this._projectiles.push(projectile);
+
+			this.inventory.addMaterial(materialId, -(materialData.shootCost ?? 1));
+		}
+	}
+
+	updateProjectiles() {
+		let len = this._projectiles.length;
+		for(let i = 0; i < len; i++) {
+			if(this._projectiles[i].update()) {
+				const p = this._projectiles[i];
+				this._projectiles.splice(i, 1);
+				ProjectileObjectPool.removeObject(p);
+				i--;
+				len--;
+			}
+		}
 	}
 }
 

@@ -45,6 +45,7 @@ var $plugins =
 {"name":"entities/Player","status":true,"description":"","parameters":{}},
 {"name":"entities/Chunk","status":true,"description":"","parameters":{}},
 {"name":"entities/Mineable","status":true,"description":"","parameters":{}},
+{"name":"entities/Projectile","status":true,"description":"","parameters":{}},
 {"name":"entities/ObjectPool","status":true,"description":"","parameters":{}},
 {"name":"entities/Inventory","status":true,"description":"","parameters":{}},
 {"name":"---","status":false,"description":"","parameters":{}},

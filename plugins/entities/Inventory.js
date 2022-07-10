@@ -50,14 +50,15 @@ class Inventory {
 				this.hotbar[i] = -1;
 			}
 		}
-		for(let i = 3; i <= 6; i++) {
+		for(let i = 3; i <= 5; i++) {
 			const materialId = this.hotbar[i];
 			if(!this.hasMaterial(materialId)) {
 				this.hotbar[i] = -1;
 			}
 		}
-		for(let i = 7; i <= 9; i++) {
+		for(let i = 6; i <= 8; i++) {
 			const itemId = this.hotbar[i];
+			console.log(this.items, this.hasItem(itemId), itemId);
 			if(!this.hasItem(itemId)) {
 				this.hotbar[i] = -1;
 			}
@@ -102,6 +103,16 @@ class Inventory {
 		return null;
 	}
 
+	hasShootableMaterial() {
+		if(this.hotbarIndex >= 3 && this.hotbarIndex <= 5) {
+			const matId = this.hotbar[this.hotbarIndex];
+			if(matId >= 0) {
+				return this.hasMaterial(matId, MaterialTypes[matId]?.shootCost ?? 1) ? matId : null;
+			}
+		}
+		return null;
+	}
+
 	maxBuildAmount() {
 		if(this.hotbarIndex >= 3 && this.hotbarIndex <= 5) {
 			const matId = this.hotbar[this.hotbarIndex];
@@ -133,8 +144,6 @@ class Inventory {
 			const matId = this.hotbar[this.hotbarIndex];
 			const matData = MaterialTypes[matId];
 			const buildCost = matData?.buildCost ?? 0;
-			//this.addMaterial(matId, -buildCost);
-			//$ppPlayer.showPopup("-" + buildCost + " " + matData.name);
 			return matId;
 		}
 		return -1;
@@ -265,6 +274,13 @@ class Inventory {
 		this.materials[materialId] += amount;
 		if(this.materials[materialId] > MaterialTypes[materialId].max) {
 			this.materials[materialId] = MaterialTypes[materialId].max;
+		}
+		if(this.materials[materialId] <= 0) {
+			this.materials[materialId] = 0;
+			if($ppPlayer && !ImageManager.IsTwitter) {
+				this.verifyHotbarOptions();
+				$ppPlayer.refreshHotbarIcons();
+			}
 		}
 		if($ppPlayer && !ImageManager.IsTwitter) {
 			$ppPlayer.refreshHotbarNumbers();

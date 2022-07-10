@@ -6,7 +6,8 @@ const MaterialTypes = {
 		icon: "Dirt",
 		desc: "Build dirt pillars.",
 		mineable: 0,
-		buildCost: 16
+		buildCost: 16,
+		shootCost: 1
 	},
 	1: {
 		name: "Sand",
@@ -15,7 +16,8 @@ const MaterialTypes = {
 		icon: "Sand",
 		desc: "Raise sand pillars.",
 		mineable: 0,
-		buildCost: 16
+		buildCost: 16,
+		shootCost: 1
 	},
 	2: {
 		name: "Rock",
@@ -24,7 +26,8 @@ const MaterialTypes = {
 		icon: "Rock",
 		desc: "Make rock pillars.",
 		mineable: 0,
-		buildCost: 16
+		buildCost: 16,
+		shootCost: 1
 	},
 	3: {
 		name: "Wood",
@@ -33,7 +36,8 @@ const MaterialTypes = {
 		icon: "Wood",
 		desc: "Grow trees.",
 		mineable: 3,
-		buildCost: 16
+		buildCost: 16,
+		shootCost: 1
 	},
 	7: {
 		name: "Steel",
@@ -42,6 +46,7 @@ const MaterialTypes = {
 		icon: "Steel",
 		desc: "Construct beams.",
 		mineable: 99,
-		buildCost: 16
+		buildCost: 16,
+		shootCost: 1
 	}
 };
