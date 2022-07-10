@@ -23,6 +23,11 @@ modify_Scene_Map = class {
 		}
 	}
 
+	start() {
+		PP.Scene_Map.start.apply(this, arguments);
+		SpriteManager.addEntity($ppPlayer);
+	}
+
 	updateMain() {
 		PP.Time += PP.WS;
 		{

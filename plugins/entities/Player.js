@@ -1,8 +1,6 @@
 
 class Player {
 	constructor() {
-		SpriteManager.addEntity(this);
-
 		this.position = new Vector2(0, 0);
 		this.speed = 3;//2;
 		this.moving = false;

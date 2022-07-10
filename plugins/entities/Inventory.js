@@ -58,7 +58,6 @@ class Inventory {
 		}
 		for(let i = 6; i <= 8; i++) {
 			const itemId = this.hotbar[i];
-			console.log(this.items, this.hasItem(itemId), itemId);
 			if(!this.hasItem(itemId)) {
 				this.hotbar[i] = -1;
 			}
