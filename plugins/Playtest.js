@@ -1,6 +1,5 @@
 if(Utils.isOptionValid("test")) {
 
-
 Scene_Boot.prototype.startNormalGame = function() {
 	this.checkPlayerLocation();
 	DataManager.setupNewGame();

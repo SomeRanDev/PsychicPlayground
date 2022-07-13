@@ -16,7 +16,7 @@ class Map extends Sprite {
 
 		SpriteManager.addUi(this);
 
-		//this.generate();
+		this.generate();
 	}
 
 	setScale(s) {
