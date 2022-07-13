@@ -3,6 +3,8 @@ class DirectionalSprite extends Sprite {
 	constructor(texture, frameCount) {
 		super(texture);
 
+		if(!frameCount) throw "No frame count provided in DirectionalSprite constructor!!";
+
 		this._frameWidth = 0;
 		this._frameHeight = 0;
 

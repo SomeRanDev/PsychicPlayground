@@ -4,12 +4,12 @@ class CollisionManager {
 	static MoveSuccessful = false;
 
 	static registerCollision(globalX, globalY) {
-		const globalIndex = GenerationManager.globalCoordsToIndex(globalX, globalY);
+		const globalIndex = $generation.globalCoordsToIndex(globalX, globalY);
 		this.collisions[globalIndex] = 1;
 	}
 
 	static clearCollision(globalX, globalY) {
-		const globalIndex = GenerationManager.globalCoordsToIndex(globalX, globalY);
+		const globalIndex = $generation.globalCoordsToIndex(globalX, globalY);
 		this.collisions[globalIndex] = 0;
 	}
 
@@ -18,7 +18,7 @@ class CollisionManager {
 		const globalY = Math.floor(Math.round(globalPixelY) / GenerationManager.TILE_HEIGHT);
 		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
 		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
-		const globalIndex = GenerationManager.globalCoordsToIndex(globalX + width2, globalY + height2);
+		const globalIndex = $generation.globalCoordsToIndex(globalX + width2, globalY + height2);
 		return this.collisions[globalIndex] === 0;
 	}
 
@@ -27,7 +27,7 @@ class CollisionManager {
 		const globalY = (chunkY * GenerationManager.TILES_Y) + localTileY;
 		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
 		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
-		const globalIndex = GenerationManager.globalCoordsToIndex(globalX + width2, globalY + height2);
+		const globalIndex = $generation.globalCoordsToIndex(globalX + width2, globalY + height2);
 		return this.collisions[globalIndex] === 0;
 	}
 

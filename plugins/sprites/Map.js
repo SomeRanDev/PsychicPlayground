@@ -84,7 +84,7 @@ class Map extends Sprite {
 
 				if(!forceBlack) {
 
-					const tile = GenerationManager.getTileRatio(xRatio, yRatio) >>> 0;
+					const tile = $generation.getTileRatio(xRatio, yRatio) >>> 0;
 
 					const block = ((tile & 0xff000000) >> 24);
 					const topTile = ((tile & 0xff0000) >> 16);

@@ -79,7 +79,7 @@ class HotbarToolTip extends Window_Base {
 		if(this._fakeOpenness !== o) {
 			this._fakeOpenness = o.clamp(0, 1);
 			this.openness = Math.round((this._dataId < 0 ? this._fakeOpenness : this._fakeOpenness.cubicOut()) * 255);
-			this.alpha = 0.8 * this._fakeOpenness;
+			this.alpha = 1.0 * this._fakeOpenness;
 		}
 	}
 }

@@ -17,10 +17,43 @@ modify_Scene_Map = class {
 		this._targetCameraY = null;
 	}
 
+	onMapLoaded() {
+		PP.Scene_Map.onMapLoaded.apply(this, arguments);
+		this._isGenerated = $gameMap.isGenerated();
+	}
+
+	onTransfer() {
+		PP.Scene_Map.onTransfer.apply(this, arguments);
+
+		for(const chunk of this._chunks) {
+			chunk.onMapEnd();
+		}
+		for(const chunk of this._freeChunks) {
+			chunk.onMapEnd();
+		}
+
+		this._chunks = [];
+		this._freeChunks = [];
+		this._chunkExists = {};
+
+		Chunk.TextureRef = [];
+
+		MineableObjectPool.clear();
+		ProjectileObjectPool.clear();
+		HeartObjectPool.clear();
+
+		SpriteManager.clear();
+	}
+
 	updateChildren() {
 		if(!this._isPaused) {
 			PP.Scene_Map.updateChildren.apply(this, arguments);
 		}
+	}
+
+	start() {
+		PP.Scene_Map.start.apply(this, arguments);
+		SpriteManager.addEntity($ppPlayer);
 	}
 
 	updateMain() {
@@ -47,7 +80,7 @@ modify_Scene_Map = class {
 		if(Input.isTriggeredEx("e")) {
 			this.setPaused(true, 0);
 			$gameMap.CameraOffsetY = 60;
-		} else if(Input.isTriggeredEx("m")) {
+		} else if($ppPlayer.allowMapHud() && Input.isTriggeredEx("m")) {
 			this.setPaused(true, 1);
 		} else if(Input.isTriggeredEx("esc")) {
 			this.setPaused(true, 2);
@@ -71,7 +104,11 @@ modify_Scene_Map = class {
 	updatePPPlayer() {
 		$ppPlayer.update();
 		this.updateCameraPos();
-		this.updateChunks();
+		if(this._isGenerated) {
+			this.updateChunks();
+		} else {
+			this.updateMouseMovement();
+		}
 	}
 
 	setCameraTargetXY(x, y) {
@@ -90,7 +127,7 @@ modify_Scene_Map = class {
 	updateCameraPos(force = false) {
 		if(this.canMoveCamera() && this._spriteset && this._spriteset.canMoveCamera()) {
 			const letsForce = false;//$gameTemp._isNewGame || ($gameMap._isTranferring && !$espGamePlayer._canControl) || force || this._spriteset._tilemap.scale.x > 1;
-			this._spriteset.setCameraPos(this.genCameraPosX(), this.genCameraPosY(), letsForce);
+			this._spriteset.setCameraPos(this.genCameraPosX(), this.genCameraPosY(), force);
 			this.PPCameraX = -this._spriteset._tilemap.x;
 			this.PPCameraY = -this._spriteset._tilemap.y;
 		}
@@ -111,18 +148,30 @@ modify_Scene_Map = class {
 	}
 
 	minCameraX() {
+		if(!this._isGenerated) {
+			return 0;
+		}
 		return ((GenerationManager.CHUNKS_X - 1) / -2) * GenerationManager.CHUNK_SIZE_X;
 	}
 
 	minCameraY() {
+		if(!this._isGenerated) {
+			return 0;
+		}
 		return ((GenerationManager.CHUNKS_Y - 1) / -2) * GenerationManager.CHUNK_SIZE_Y;
 	}
 
 	maxCameraX() {
+		if(!this._isGenerated) {
+			return ($gameMap.width() * 32) - (Graphics.width);
+		}
 		return (((GenerationManager.CHUNKS_X - 1) / 2) * GenerationManager.CHUNK_SIZE_X) - Graphics.width;
 	}
 
 	maxCameraY() {
+		if(!this._isGenerated) {
+			return ($gameMap.height() * 32) - (Graphics.height);
+		}
 		return (((GenerationManager.CHUNKS_Y - 1) / 2) * GenerationManager.CHUNK_SIZE_Y) - Graphics.height;
 	}
 
@@ -395,19 +444,21 @@ modify_Scene_Map = class {
 	}
 
 	updateBackgroundDarken() {
-		SpriteManager.darken.move(this.PPCameraX + (Graphics.width / 2), this.PPCameraY + (Graphics.height / 2));
-		if(this._isPaused) {
-			if(SpriteManager.darken.alpha < 0.3) {
-				SpriteManager.darken.alpha += 0.02;
-				if(SpriteManager.darken.alpha > 0.3) {
-					SpriteManager.darken.alpha = 0.3;
+		if(SpriteManager.darken) {
+			SpriteManager.darken.move(this.PPCameraX + (Graphics.width / 2), this.PPCameraY + (Graphics.height / 2));
+			if(this._isPaused) {
+				if(SpriteManager.darken.alpha < 0.3) {
+					SpriteManager.darken.alpha += 0.02;
+					if(SpriteManager.darken.alpha > 0.3) {
+						SpriteManager.darken.alpha = 0.3;
+					}
 				}
-			}
-		} else {
-			if(SpriteManager.darken.alpha > 0) {
-				SpriteManager.darken.alpha -= 0.02;
-				if(SpriteManager.darken.alpha < 0) {
-					SpriteManager.darken.alpha = 0;
+			} else {
+				if(SpriteManager.darken.alpha > 0) {
+					SpriteManager.darken.alpha -= 0.02;
+					if(SpriteManager.darken.alpha < 0) {
+						SpriteManager.darken.alpha = 0;
+					}
 				}
 			}
 		}

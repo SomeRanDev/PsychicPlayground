@@ -32,4 +32,8 @@ modify_Game_Map = class {
 			SceneManager._scene.spawnBlock(mineableId, globalTileX, globalTileY);
 		}
 	}
+
+	isGenerated() {
+		return !!($dataMap?.meta?.Generated);
+	}
 }

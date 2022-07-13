@@ -22,6 +22,13 @@ class ObjectPool {
 		obj.onPoolRemove();
 		this.objects.push(obj);
 	}
+
+	clear() {
+		for(const o of this.objects) {
+			o.onPoolClear();
+		}
+		this.objects = [];
+	}
 }
 
 const MineableObjectPool = new ObjectPool(Mineable);

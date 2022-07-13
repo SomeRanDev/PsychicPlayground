@@ -34,15 +34,26 @@ class Chunk {
 		this.setPosition(chunkX, chunkY);
 	}
 
+	onMapEnd() {
+		for(const block of this.blocks) {
+			block.onPoolClear();
+		}
+		this.blocks = [];
+
+		this.blockLayer.destroy();
+		this.upperLayer.destroy();
+		this.middleLayer.destroy();
+		this.lowerLayer.destroy();
+
+		this.baseSprite.destroy();
+	}
+
 	setPosition(chunkX, chunkY) {
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
 		this.baseSprite.move((this.chunkX * GenerationManager.CHUNK_SIZE_X) + 16, (this.chunkY * GenerationManager.CHUNK_SIZE_Y) + 16);
 
 		this.refreshTiles = [];
-		
-		//this.unusedTileSprites = this.tileSprites.concat(this.unusedTileSprites);
-		//this.tileSprites = [];
 
 		this._sortedBlocks = false;
 
@@ -109,7 +120,10 @@ class Chunk {
 		} else if(!this._sortedBlocks) {
 			this._sortedBlocks = true;
 
+			SpriteManager.validate();
+
 			if(this.blocks.length > 0) {
+				/*
 				let parent = this.blocks[0].parent;
 
 				if(parent) {
@@ -129,6 +143,7 @@ class Chunk {
 						b.refreshSpritePosition(startIndex);
 					}
 				}
+				*/
 			}
 		}
 
@@ -143,11 +158,11 @@ class Chunk {
 	}
 
 	generateTile(x, y, allowRefresh = true) {
-		let tile = GenerationManager.getTile(this.chunkX, this.chunkY, x, y);
+		let tile = $generation.getTile(this.chunkX, this.chunkY, x, y);
 		/*
-		if(allowRefresh && GenerationManager.RefreshTile) {
+		if(allowRefresh && $generation.RefreshTile) {
 			this.refreshTiles.push([x, y]);
-			GenerationManager.RefreshTile = false;
+			$generation.RefreshTile = false;
 		}
 		*/
 
@@ -188,13 +203,13 @@ class Chunk {
 	}
 
 	addBlock(localTileX, localTileY, blockId) {
-		GenerationManager.setTileBlock(this.chunkX, this.chunkY, localTileX, localTileY, blockId);
+		$generation.setTileBlock(this.chunkX, this.chunkY, localTileX, localTileY, blockId);
 		this.setupBlock(localTileX, localTileY, blockId, true);
 	}
 
 	removeBlock(block) {
 		if(this.blocks.includes(block)) {
-			GenerationManager.setTileBlock(this.chunkX, this.chunkY, block.x, block.y, 255);
+			$generation.setTileBlock(this.chunkX, this.chunkY, block.x, block.y, 255);
 			MineableObjectPool.removeObject(block);
 			this.blocks.remove(block);
 		}

@@ -25,6 +25,7 @@ class PlayerSprite extends Sprite {
 
 		this._textPopper = new TextPopper(this, 0, -32);
 
+		console.log("player sprite created");
 		if(!ImageManager.IsTwitter) {
 			this.makeHud();
 		}
@@ -36,9 +37,11 @@ class PlayerSprite extends Sprite {
 
 		this._map = new Map(256, 256);
 		this._map.setupCorner();
+		this._map.visible = $ppPlayer.allowMapHud();
 
 		this._mapKey = new Key("M", "Map");
 		this._mapKey.move(Graphics.width - 80, 2);
+		this._mapKey.visible = $ppPlayer.allowMapHud();
 
 		this._invKey = new Key("E", "Inventory");
 		this._invKey.move(Graphics.width - 100, Graphics.height - 28);

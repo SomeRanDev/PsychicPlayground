@@ -8,6 +8,14 @@ Number.prototype.cubicIn = function() {
 	return Easing.Cubic.In(this);
 };
 
+Number.prototype.quadOut = function() {
+	return Easing.Quadratic.Out(this);
+};
+
+Number.prototype.quadIn = function() {
+	return Easing.Quadratic.In(this);
+};
+
 Number.prototype.backOut = function() {
 	return Easing.Back.Out(this);
 };

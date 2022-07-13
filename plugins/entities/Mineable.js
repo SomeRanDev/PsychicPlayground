@@ -35,12 +35,25 @@ class Mineable {
 		this.baseSprite.visible = false;
 
 		if(this.heartContainer) {
+			this.heartContainer.destroy();
 			this.heartContainer = null;
 		}
 
 		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
 		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
 		CollisionManager.clearCollision(this.globalX + width2, this.globalY + height2 + 1);
+	}
+
+	onPoolClear() {
+		if(this.baseSprite) {
+			this.baseSprite.destroy();
+			this.baseSprite = null;
+		}
+
+		if(this.heartContainer) {
+			this.heartContainer.destroy();
+			this.heartContainer = null;
+		}
 	}
 
 	setup(chunk, blockId, localTileX, localTileY, globalX, globalY) {
@@ -171,6 +184,7 @@ class Mineable {
 	setPressed(s) {
 		if(this._pressed !== s) {
 			this._pressed = s;
+
 			if(s && this.heartContainer) {
 				this.heartContainer.alpha = 1;
 			}

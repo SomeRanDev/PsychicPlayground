@@ -52,4 +52,8 @@ class Heart extends Sprite {
 		}
 		this.visible = false;
 	}
+
+	onPoolClear() {
+		this.destroy();
+	}
 }

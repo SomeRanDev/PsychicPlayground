@@ -90,6 +90,13 @@ class Projectile {
 		}
 	}
 
+	onPoolClear() {
+		if(this.sprite) {
+			this.sprite.destroy();
+			this.sprite = null;
+		}
+	}
+
 	onCollide() {
 		this.collided = 1;
 	}

@@ -1,6 +1,6 @@
 class Biome_Desert extends Biome_Base {
-	constructor() {
-		super();
+	constructor(generator) {
+		super(generator);
 	}
 
 	getUpperType(globalX, globalY, globalIndex, low, mid, block, total) {

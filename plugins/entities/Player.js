@@ -1,8 +1,6 @@
 
 class Player {
 	constructor() {
-		SpriteManager.addEntity(this);
-
 		this.position = new Vector2(0, 0);
 		this.speed = 3;//2;
 		this.moving = false;
@@ -44,6 +42,10 @@ class Player {
 	}
 
 	saveData() {
+	}
+
+	allowMapHud() {
+		return $gameMap.isGenerated() && this.inventory.hasItem(0);
 	}
 
 	selectMineables() {
@@ -118,6 +120,27 @@ class Player {
 
 	isMoving() {
 		return Input.InputVector.length() > 0;
+	}
+
+	setMZDir(dir) {
+		switch(dir) {
+			case 2: return this.lookUp();
+			case 8: return this.lookDown();
+		}
+	}
+
+	lookUp() {
+		this.setDirection(90);
+	}
+
+	lookDown() {
+		this.setDirection(270);
+	}
+
+	setDirection(d) {
+		this.currentDirection = d;
+		this.targetDirection = d;
+		this.updateTurning(9999);
 	}
 
 	updateTargetDirection() {

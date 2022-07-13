@@ -48,15 +48,15 @@ AutotilePos = [
 
 Scene_Boot.prototype.__GenerationManager_isPlayerDataLoaded = Scene_Boot.prototype.isPlayerDataLoaded;
 Scene_Boot.prototype.isPlayerDataLoaded = function() {
-    return Scene_Boot.prototype.__GenerationManager_isPlayerDataLoaded.apply(this, arguments) && GenerationManager.isReady();
+    return Scene_Boot.prototype.__GenerationManager_isPlayerDataLoaded.apply(this, arguments) && $generation.isReady();
 };
 
-class GenerationManager {
-	static chunkData = {};
+var $generation = null;
 
-	static AllTileData;
-	static HasTileData;
-	static RefreshTile = false;
+class GenerationManager {
+	//static AllTileData;
+	//static HasTileData;
+	RefreshTile = false;
 
 	static CHUNKS_X = 128;
 	static CHUNKS_Y = 128;
@@ -70,21 +70,11 @@ class GenerationManager {
 	static TILE_WIDTH = 32;
 	static TILE_HEIGHT = 32;
 
-	static isReady() {
+	isReady() {
 		return this.GenerationMap.isReady() && this.GenerationMapPath.isReady();
 	}
 
 	static start() {
-		this.hyperFastNoise = require("./js/nativelibs/HyperFastNoise.node");
-		this.hyperFastNoise.SetupNoise(Math.floor(Math.random() * 100000));
-
-		this.defaultBiome = new Biome_Base();
-		this.biomes = [ new Biome_Base() ];
-		this.redBiomes = [ new Biome_Desert() ];
-		this.greenBiomes = [ new Biome_Forest() ];
-		this.blueBiomes = [ new Biome_Forest() ];
-		//noise.seed(Math.random());
-
 		this.OFFSET_X = (this.CHUNKS_X / 2);
 		this.OFFSET_Y = (this.CHUNKS_Y / 2);
 
@@ -93,20 +83,48 @@ class GenerationManager {
 		this.JAIL_DISTANCE = (this.GLOBAL_WIDTH / 2) - (this.TILES_X * 2);
 
 		this.MaxTiles = this.CHUNKS_X * this.CHUNKS_Y * this.TILES_X * this.TILES_Y;
-		this.HasTileData = new Int8Array(this.MaxTiles);
-		this.AllTileData = new Uint32Array(this.MaxTiles);
+	}
 
-		this.ReadRotation = Math.PI * 2 * Math.random();
+	constructor(seed) {
+		if(!GenerationManager.hyperFaseNoise) {
+			GenerationManager.hyperFastNoise = require("./js/nativelibs/HyperFastNoise.node");
+		}
+
+		this.hash = 0;
+		if(seed && seed.length > 0) {
+			for(let i = 0; i < seed.length; i++) {
+				this.hash = ((this.hash << 5) - this.hash) + seed.charCodeAt(i);
+				this.hash |= 0;
+			}
+		} else {
+			this.hash = Math.floor(Math.random() * 100000);
+		}
+
+		GenerationManager.hyperFastNoise.SetupNoise(this.hash);
+
+		this.defaultBiome = new Biome_Base(this);
+		this.biomes = [ new Biome_Base(this) ];
+		this.redBiomes = [ new Biome_Desert(this) ];
+		this.greenBiomes = [ new Biome_Forest(this) ];
+		this.blueBiomes = [ new Biome_Forest(this) ];
+		//noise.seed(Math.random());
+
+		GenerationManager.start();
+
+		this.HasTileData = new Int8Array(GenerationManager.MaxTiles);
+		this.AllTileData = new Uint32Array(GenerationManager.MaxTiles);
+
+		this.ReadRotation = Math.PI * 2 * ((this.hash % 1000) / 1000);
 		this.GenerationMap = ImageManager.lGeneration("Map1")//PP.rotateBitmap(ImageManager.lGeneration("Map1"), 0);
 		this.GenerationMapPath = ImageManager.lGeneration("Map1Path")//PP.rotateBitmap(ImageManager.lGeneration("Map1Path"), 0);
 	}
 
-	static globalCoordsToIndex(globalX, globalY) {
-		return (globalY * this.GLOBAL_WIDTH) + globalX;
+	globalCoordsToIndex(globalX, globalY) {
+		return (globalY * GenerationManager.GLOBAL_WIDTH) + globalX;
 	}
 
-	static globalIndexToCoords(globalIndex) {
-		return [ globalIndex % this.GLOBAL_WIDTH, Math.floor(globalIndex / this.GLOBAL_WIDTH) ];
+	globalIndexToCoords(globalIndex) {
+		return [ globalIndex % GenerationManager.GLOBAL_WIDTH, Math.floor(globalIndex / GenerationManager.GLOBAL_WIDTH) ];
 	}
 
 	static getPerlinNoise(x, y, index) {
@@ -114,11 +132,11 @@ class GenerationManager {
 		//return noise.perlin2(x * 0.2, y * 0.2);
 	}
 
-	static generateEverything() {
+	generateEverything() {
 		for(let i = 0; i < GenerationManager.CHUNKS_X; i++) {
 			for(let j = 0; j < GenerationManager.CHUNKS_Y; j++) {
-				for(let ii = 0; ii < this.TILES_X; ii++) {
-					for(let jj = 0; jj < this.TILES_Y; jj++) {
+				for(let ii = 0; ii < GenerationManager.TILES_X; ii++) {
+					for(let jj = 0; jj < GenerationManager.TILES_Y; jj++) {
 						this.getTile(i, j, ii, jj);
 					}
 				}
@@ -126,9 +144,9 @@ class GenerationManager {
 		}
 	}
 
-	static GetPathAt(globalX, globalY) {
-		const xRatio = 0.25 + (globalX / this.GLOBAL_WIDTH) * 0.5;
-		const yRatio = 0.25 + (globalY / this.GLOBAL_HEIGHT) * 0.5;
+	GetPathAt(globalX, globalY) {
+		const xRatio = 0.25 + (globalX / GenerationManager.GLOBAL_WIDTH) * 0.5;
+		const yRatio = 0.25 + (globalY / GenerationManager.GLOBAL_HEIGHT) * 0.5;
 
 		const dist = Math.sqrt(Math.pow(xRatio - 0.5, 2) + Math.pow(yRatio - 0.5, 2));
 		const angle = Math.atan2(xRatio - 0.5, yRatio - 0.5) + this.ReadRotation;
@@ -143,7 +161,7 @@ class GenerationManager {
 		return false;
 	}
 
-	static GetGenerationPoint(xRatio, yRatio) {
+	GetGenerationPoint(xRatio, yRatio) {
 		xRatio = 0.25 + (xRatio) * 0.5;
 		yRatio = 0.25 + (yRatio) * 0.5;
 
@@ -170,8 +188,11 @@ class GenerationManager {
 		throw "this should not execute??";
 	}
 
-	static getBiome(globalX, globalY) {
-		const col = this.GetGenerationPoint(globalX / this.GLOBAL_WIDTH, globalY / this.GLOBAL_HEIGHT);
+	getBiome(globalX, globalY) {
+		const col = this.GetGenerationPoint(
+			globalX / GenerationManager.GLOBAL_WIDTH,
+			globalY / GenerationManager.GLOBAL_HEIGHT
+		);
 		const type = col === 0 ? 0 : Math.floor((col - 1) / 2);
 
 		let biomes = null;
@@ -183,7 +204,7 @@ class GenerationManager {
 		}
 
 		if(biomes !== null) {
-			var r = this.hyperFastNoise.GetCellularNoise1(globalX, globalY);
+			var r = GenerationManager.hyperFastNoise.GetCellularNoise1(globalX, globalY);
 			r = (r + 1) / 2.0;
 			const index = Math.floor(r * biomes.length);
 			return biomes[index];
@@ -191,50 +212,50 @@ class GenerationManager {
 		return this.defaultBiome;
 	}
 
-	static getTileRatio(xRatio, yRatio) {
-		const globalX = Math.floor(this.GLOBAL_WIDTH * xRatio);
-		const globalY = Math.floor(this.GLOBAL_HEIGHT * yRatio);
-		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
+	getTileRatio(xRatio, yRatio) {
+		const globalX = Math.floor(GenerationManager.GLOBAL_WIDTH * xRatio);
+		const globalY = Math.floor(GenerationManager.GLOBAL_HEIGHT * yRatio);
+		const globalIndex = (globalY * GenerationManager.GLOBAL_WIDTH) + globalX;
 		return this.getTileGlobal(globalX, globalY, globalIndex);
 	}
 
-	static getTile(chunkX, chunkY, x, y) {
-		const globalX = ((chunkX + this.OFFSET_X) * this.TILES_X) + x;
-		const globalY = ((chunkY + this.OFFSET_Y) * this.TILES_Y) + y;
-		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
+	getTile(chunkX, chunkY, x, y) {
+		const globalX = ((chunkX + GenerationManager.OFFSET_X) * GenerationManager.TILES_X) + x;
+		const globalY = ((chunkY + GenerationManager.OFFSET_Y) * GenerationManager.TILES_Y) + y;
+		const globalIndex = (globalY * GenerationManager.GLOBAL_WIDTH) + globalX;
 		return this.getTileGlobal(globalX, globalY, globalIndex);
 	}
 
-	static setTileBlock(chunkX, chunkY, x, y, blockId) {
-		const globalX = ((chunkX + this.OFFSET_X) * this.TILES_X) + x;
-		const globalY = ((chunkY + this.OFFSET_Y) * this.TILES_Y) + y;
-		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
+	setTileBlock(chunkX, chunkY, x, y, blockId) {
+		const globalX = ((chunkX + GenerationManager.OFFSET_X) * GenerationManager.TILES_X) + x;
+		const globalY = ((chunkY + GenerationManager.OFFSET_Y) * GenerationManager.TILES_Y) + y;
+		const globalIndex = (globalY * GenerationManager.GLOBAL_WIDTH) + globalX;
 		let data = this.getData(globalIndex);
 		data = (data & ((255 << 16) | (255 << 8) | 255)) | (blockId << 24);
 		this.setData(globalIndex, data);
 	}
 
-	static hasData(index) {
+	hasData(index) {
 		return this.HasTileData[index] === 1;
 	}
 
-	static getData(index) {
+	getData(index) {
 		return this.AllTileData[index];
 	}
 
-	static setData(index, data) {
+	setData(index, data) {
 		this.AllTileData[index] = data;
 		this.HasTileData[index] = 1;
 	}
 
-	static getTileGlobal(globalX, globalY, globalIndex) {
+	getTileGlobal(globalX, globalY, globalIndex) {
 		if(!this.hasData(globalIndex)) {
 			this.setData(globalIndex, this._generateTile(globalX, globalY, globalIndex));
 		}
 		return this.getData(globalIndex);
 	}
 
-	static _generateTile(globalX, globalY, globalIndex) {
+	_generateTile(globalX, globalY, globalIndex) {
 		const midTile = this._getMiddleTileType(globalX, globalY);
 		const mid = this._generateTileRaw(midTile, globalX, globalY, globalIndex, this._getMiddleTileType.bind(this));
 
@@ -249,21 +270,21 @@ class GenerationManager {
 		return (block << 24) | (top << 16) | (mid << 8) | low;
 	}
 
-	static _getBlockTileType(globalX, globalY, globalIndex, low, mid, total) {
+	_getBlockTileType(globalX, globalY, globalIndex, low, mid, total) {
 		if(this.hasData(globalIndex)) {
 			const result = ((this.getData(globalIndex) >> 24) & 255);
 			return Math.floor(result / 13);
 		}
 
-		const dist = Math.sqrt(Math.pow((this.GLOBAL_WIDTH / 2) - globalX, 2) + Math.pow((this.GLOBAL_HEIGHT / 2) - globalY, 2));
-		if(dist >= this.JAIL_DISTANCE && dist < this.JAIL_DISTANCE + 4) {
+		const dist = Math.sqrt(Math.pow((GenerationManager.GLOBAL_WIDTH / 2) - globalX, 2) + Math.pow((GenerationManager.GLOBAL_HEIGHT / 2) - globalY, 2));
+		if(dist >= GenerationManager.JAIL_DISTANCE && dist < GenerationManager.JAIL_DISTANCE + 4) {
 			return 99;
 		}
 
 		return this.getBiome(globalX, globalY).getBlockType(globalX, globalY, globalIndex, low, mid, total);
 	}
 
-	static _getUpperTileType(globalX, globalY, low, mid, block, total) {
+	_getUpperTileType(globalX, globalY, low, mid, block, total) {
 		const globalIndex = this.globalCoordsToIndex(globalX, globalY);
 		if(this.hasData(globalIndex)) {
 			const result = ((this.getData(globalIndex) >> 16) & 255);
@@ -272,8 +293,8 @@ class GenerationManager {
 		return this.getBiome(globalX, globalY).getUpperType(globalX, globalY, globalIndex, low, mid, block, total);
 	}
 
-	static _getMiddleTileType(globalX, globalY) {
-		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
+	_getMiddleTileType(globalX, globalY) {
+		const globalIndex = (globalY * GenerationManager.GLOBAL_WIDTH) + globalX;
 		if(this.hasData(globalIndex)) {
 			const result = ((this.getData(globalIndex) >> 8) & 255);
 			return result > 200 ? result : Math.floor(result / 13);
@@ -281,12 +302,12 @@ class GenerationManager {
 		return this.getBiome(globalX, globalY).getMiddleType(globalX, globalY, globalIndex);
 	}
 
-	static _getLowerTileType(globalX, globalY) {
-		const globalIndex = (globalY * this.GLOBAL_WIDTH) + globalX;
+	_getLowerTileType(globalX, globalY) {
+		const globalIndex = (globalY * GenerationManager.GLOBAL_WIDTH) + globalX;
 		return this.getBiome(globalX, globalY).getLowerType(globalX, globalY, globalIndex);
 	}
 
-	static _generateTileRaw(tileType, globalX, globalY, globalIndex, getTileTypeFunc) {
+	_generateTileRaw(tileType, globalX, globalY, globalIndex, getTileTypeFunc) {
 		//const tileType = getTileTypeFunc(globalX, globalY, globalIndex);
 		let result = tileType;
 		if(tileType < 200) {
@@ -340,7 +361,7 @@ class GenerationManager {
 			result = index === -1 ? 255 : ((tileType * 13) + index);
 
 			if(index === -1) {
-				GenerationManager.RefreshTile = true;
+				this.RefreshTile = true;
 			}
 		}
 
@@ -348,4 +369,6 @@ class GenerationManager {
 	}
 }
 
-GenerationManager.start();
+//GenerationManager.start();
+
+$generation = new GenerationManager("test");

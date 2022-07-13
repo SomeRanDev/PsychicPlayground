@@ -129,9 +129,6 @@ modify_Spriteset_Map = class {
 
 	destroy(options) {
 		PP.Spriteset_Map.destroy.apply(this, arguments);
-		SpriteManager.ppLayer = null;
-		SpriteManager.uiContainer = null;
-		SpriteManager.darken = null;
 	}
 
 	//==============================
@@ -193,6 +190,15 @@ class SpriteManager {
 	static uiContainer = null;
 	static hudContainer = null;
 
+	static clear() {
+		this.entities = [];
+		this.uiCache = [];
+		this.hudCache = [];
+
+		this.uiContainer = null;
+		this.hudContainer = null;
+	}
+
 	static onPause() {
 		if(SceneManager._scene?._spriteset?._mapCursor) {
 			SceneManager._scene._spriteset._mapCursor.visible = false;
@@ -212,13 +218,12 @@ class SpriteManager {
 	static validate() {
 		const ppLayer = SceneManager._scene._spriteset._ppLayer;
 		let minY = -99999999999;
-		const len = ppLayer.children;
+		const len = ppLayer.children.length;
 		let result = true;
 		for(let i = 0; i < len; i++) {
-			if(c.z !== 0) continue;
-
 			const c = ppLayer.children[i];
-			if(c.y <= minY) {
+			if(c.z !== 0) continue;
+			if(c.y >= minY) {
 				minY = c.y;
 			} else {
 				let success = false;
@@ -293,3 +298,48 @@ class SpriteManager {
 		}
 	}
 }
+
+Object.defineProperty(Tilemap.prototype, "width", {
+    get: function() {
+        return this._mapWidth * 32;
+    },
+    set: function(value) {
+        this._width = value;
+    },
+    configurable: true
+});
+
+Object.defineProperty(Tilemap.prototype, "height", {
+    get: function() {
+        return this._mapHeight * 32;
+    },
+    set: function(value) {
+        this._height = value;
+    },
+    configurable: true
+});
+
+Tilemap.prototype.updateTransform = function() {
+    const ox = Math.ceil(this.origin.x);
+    const oy = Math.ceil(this.origin.y);
+    const startX = 0;//Math.floor((ox - this._margin) / this._tileWidth);
+    const startY = 0;//Math.floor((oy - this._margin) / this._tileHeight);
+    this._lowerLayer.x = 0;//startX * this._tileWidth - ox;
+    this._lowerLayer.y = 0;//startY * this._tileHeight - oy;
+    this._upperLayer.x = 0;//startX * this._tileWidth - ox;
+    this._upperLayer.y = 0;// startY * this._tileHeight - oy;
+    if (
+        this._needsRepaint ||
+        this._lastAnimationFrame !== this.animationFrame ||
+        this._lastStartX !== startX ||
+        this._lastStartY !== startY
+    ) {
+        this._lastAnimationFrame = this.animationFrame;
+        this._lastStartX = startX;
+        this._lastStartY = startY;
+        this._addAllSpots(startX, startY);
+        this._needsRepaint = false;
+    }
+    this._sortChildren();
+    PIXI.Container.prototype.updateTransform.call(this);
+};
