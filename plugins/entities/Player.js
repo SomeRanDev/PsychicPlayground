@@ -1,9 +1,10 @@
 
 class Player {
 	constructor() {
-		this.position = new Vector2(0, 0);
-		this.speed = 3;//2;
+		//this.position = new Vector2(0, 0);
 		this.moving = false;
+
+		this._walkTime = 0;
 
 		this.TURN_RATE = 9.0;
 
@@ -11,12 +12,17 @@ class Player {
 		this.currentDirection = 0;
 		this.lastAngle = 0;
 
+		this.spriteOffsetX = 0;
+		this.spriteOffsetY = 0;
+
 		this.canPlaceMaterial = false;
 
 		this.shootFrequency = 24;
 		this._projectiles = [];
 		this._projectileTime = 0;
 		this._projectileTriggeredTime = 0;
+
+		this._collisionRect = { left: 6, right: 6, bottom: 0, top: 12 };
 
 		this.inventory = new Inventory();
 	}
@@ -38,10 +44,63 @@ class Player {
 		}
 	}
 
-	loadData() {
+	loadData(data) {
+		this.position = new Vector2(data.position.x, data.position.y);
+		console.log(data.position, this.position, data.spriteOffsetX, data.spriteOffsetY);
+		this.moving = data.moving;
+
+		this._walkTime = data._walkTime;
+
+		this.TURN_RATE = data.TURN_RATE;
+
+		this.targetDirection = data.targetDirection;
+		this.currentDirection = data.currentDirection;
+		this.lastAngle = data.lastAngle;
+
+		this.spriteOffsetX = data.spriteOffsetX;
+		this.spriteOffsetY = data.spriteOffsetY;
+
+		this.canPlaceMaterial = data.canPlaceMaterial;
+
+		this.shootFrequency = data.shootFrequency;
+		this._projectiles = data._projectiles;
+		this._projectileTime = data._projectileTime;
+		this._projectileTriggeredTime = data._projectileTriggeredTime;
+
+		this._collisionRect = data._collisionRect;
+
+		this.inventory.loadData(data.inventory);
 	}
 
 	saveData() {
+		const result = {};
+
+		result.position = { x: this.position.x, y: this.position.y };
+		result.moving = this.moving;
+
+		result._walkTime = this._walkTime;
+
+		result.TURN_RATE = this.TURN_RATE;
+
+		result.targetDirection = this.targetDirection;
+		result.currentDirection = this.currentDirection;
+		result.lastAngle = this.lastAngle;
+
+		result.spriteOffsetX = this.spriteOffsetX;
+		result.spriteOffsetY = this.spriteOffsetY;
+
+		result.canPlaceMaterial = this.canPlaceMaterial;
+
+		result.shootFrequency = this.shootFrequency;
+		result._projectiles = this._projectiles;
+		result._projectileTime = this._projectileTime;
+		result._projectileTriggeredTime = this._projectileTriggeredTime;
+
+		result._collisionRect = this._collisionRect;
+
+		result.inventory = this.inventory.saveData();
+
+		return result;
 	}
 
 	allowMapHud() {
@@ -93,8 +152,46 @@ class Player {
 	cameraX() { return this.position.x; }
 	cameraY() { return this.position.y; }
 
+	teleport(teleportPos) {
+		if(!this.playerEffect) {
+			this.playerEffect = new TeleportEffect(this, teleportPos);
+		}
+	}
+
+	hopOnBed() {
+		if(!this.playerEffect) {
+			this.playerEffect = new BedEffect(this, {
+				x: ($gameTemp.currentlyRunning.x * TS) + (TS * 0.5),
+				y: $gameTemp.currentlyRunning.y * TS + (TS * 1.5)
+			});
+		}
+	}
+
+	leaveBed() {
+		this.playerEffect = new BedLeaveEffect(this);
+	}
+
+	removeEffect(effect) {
+		if(this.playerEffect === effect) {
+			this.playerEffect = null;
+		}
+	}
+
+	moveTo(x, y) {
+		this.position.x = x;
+		this.position.y = y;
+	}
+
+	shift(x, y) {
+		this.position.x += x;
+		this.position.y += y;
+	}
+
 	update() {
 		this.inventory.update();
+		if(this.playerEffect) {
+			this.playerEffect.update();
+		}
 		this.updateMovement();
 		this.updateProjectileInput();
 		this.updateProjectiles();
@@ -104,15 +201,57 @@ class Player {
 		this.canPlaceMaterial = b;
 	}
 
+	canMove() {
+		return !($gameMap.isEventRunning() || $gameMessage.isBusy() || $gamePlayer.isTransferring() || this.playerEffect?.disallowMovement);
+	}
+
 	updateMovement() {
 		this.moving = this.isMoving();
 		const lastDirection = this.currentDirection;
 
-		if(this.moving) {
+		if(this.moving && this.canMove()) {
 			this.updateTargetDirection();
 
-			this.position.x = Math.round(CollisionManager.processMovementX(this.position.x, this.position.y, (this.speed * Input.InputVector.x)));
-			this.position.y = Math.round(CollisionManager.processMovementY(this.position.x, this.position.y, (this.speed * Input.InputVector.y)));
+			this._walkTime += 1;
+			let speed = 3;// + (this._walkTime.clamp(0, 90) / 90);
+
+			CollisionManager.setPlayerCollisionCheck();
+
+			let sx = this.position.x;
+			let sy = this.position.y;
+			const colRect = this._collisionRect;
+
+			const inputX = Input.InputVector.x;
+			if(inputX < 0) {
+				sx -= colRect.left;
+			} else if(inputX > 0) {
+				sx += colRect.right;
+			}
+			if(inputX !== 0) {
+				const newPosX = CollisionManager.processMovementX(sx, sy + colRect.bottom, (speed * inputX));
+				const newPosX2 = CollisionManager.processMovementX(sx, sy - colRect.top, (speed * inputX));
+				const finalX = inputX < 0 ? (Math.max(newPosX, newPosX2) + colRect.left) : (Math.min(newPosX, newPosX2) - colRect.left);
+				this.position.x = Math.round(finalX);
+			}
+
+			sx = this.position.x;
+			const inputY = Input.InputVector.y;
+			if(inputY < 0) {
+				sy -= colRect.top;
+			} else if(inputY > 0) {
+				sy += colRect.bottom;
+			}
+			if(inputY !== 0) {
+				const newPosY = CollisionManager.processMovementY(sx - colRect.left, sy, (speed * inputY));
+				const newPosY2 = CollisionManager.processMovementY(sx + colRect.right, sy, (speed * inputY));
+				const finalY = inputY < 0 ? (Math.max(newPosY, newPosY2) + colRect.top) : (Math.min(newPosY, newPosY2) - colRect.bottom);
+				this.position.y = Math.round(finalY);
+				console.log("CHANGED POSITION Y");
+			}
+
+			CollisionManager.checkForResponse(Math.floor(this.position.x / TS), Math.floor(this.position.y / TS));
+		} else {
+			this._walkTime = 0;
 		}
 
 		this.updateTurning(lastDirection);
@@ -227,6 +366,7 @@ class Player {
 				}
 			);
 			this._projectiles.push(projectile);
+			projectile.owner = this;
 
 			this.inventory.addMaterial(materialId, -(materialData.shootCost ?? 1));
 		}
@@ -243,6 +383,27 @@ class Player {
 				len--;
 			}
 		}
+	}
+
+	checkProjectile(projectile, x, y) {
+		const x1 = this.position.x - this._collisionRect.left;
+		const x2 = this.position.x + this._collisionRect.right;
+		const y1 = this.position.y - this._collisionRect.top;
+		const y2 = this.position.y + this._collisionRect.bottom;
+		const r = projectile.radius;
+
+		const xn = Math.max(x1, Math.min(x, x2));
+		const yn = Math.max(y1, Math.min(y, y2));
+		const dx = xn - x;
+		const dy = yn - y;
+
+		if((dx * dx + dy * dy) <= r * r) {
+			if(projectile.onPlayerHit) {
+				projectile.onPlayerHit(this);
+			}
+			return true;
+		}
+		return false;
 	}
 }
 

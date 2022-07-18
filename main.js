@@ -180,6 +180,7 @@ if(!main_isElectronjs()) {
 	});
 	proc.on("spawn", function() {
 		process.exit();
+		nw.App.quit()
 	});
 
 } else {

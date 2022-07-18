@@ -39,9 +39,13 @@ class Mineable {
 			this.heartContainer = null;
 		}
 
-		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
-		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
-		CollisionManager.clearCollision(this.globalX + width2, this.globalY + height2 + 1);
+		if(this.noChunkGen) {
+			CollisionManager.clearCollision(this.globalX, this.globalY);
+		} else {
+			const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
+			const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
+			CollisionManager.clearCollision(this.globalX + width2, this.globalY + height2 + 1);
+		}
 	}
 
 	onPoolClear() {
@@ -58,37 +62,67 @@ class Mineable {
 
 	setup(chunk, blockId, localTileX, localTileY, globalX, globalY) {
 		this.chunkParent = chunk;
+		this.noChunkGen = !chunk.baseSprite;
 		this.blockId = blockId;
 
 		this.x = localTileX;
 		this.y = localTileY;
 		this.globalX = globalX;
 		this.globalY = globalY;
-		this.realX = chunk.baseSprite.x + (32 * localTileX);
-		this.realY = chunk.baseSprite.y + (32 * localTileY);
+
+		if(this.noChunkGen) {
+			this.realX = (32 * localTileX);
+			this.realY = (32 * localTileY);
+		} else {
+			this.realX = chunk.baseSprite.x + (32 * localTileX);
+			this.realY = chunk.baseSprite.y + (32 * localTileY);
+		}
 
 		const blockData = MineableTypes[blockId];
 
 		this.hitBox = blockData.hitBox ?? [0, 0, 0, 0];
 
-		this.realHitBox = PP.Int32ArrayOf(
-			(this.realX - (32 * this.hitBox[0])),
-			(this.realX + (32 * this.hitBox[1])),
-			(this.realY - (32 * this.hitBox[2])),
-			(this.realY + (32 * this.hitBox[3]))
-		);
+		if(this.noChunkGen) {
+			this.realHitBox = PP.Int32ArrayOf(
+				(this.realX - (32 * this.hitBox[0])) + 16,
+				(this.realX + (32 * this.hitBox[1])) + 16,
+				(this.realY - (32 * this.hitBox[2])),
+				(this.realY + (32 * this.hitBox[3]))
+			);
+		} else {
+			this.realHitBox = PP.Int32ArrayOf(
+				(this.realX - (32 * this.hitBox[0])),
+				(this.realX + (32 * this.hitBox[1])),
+				(this.realY - (32 * this.hitBox[2])) + 16,
+				(this.realY + (32 * this.hitBox[3])) + 16
+			);
+		}
+		
 
 		this.hp = blockData.hp ?? 5;
 		this.res = blockData.res ?? 0;
 		this.hpIcon = blockData.hpIcon ?? "Heart";
 
-		this.baseSprite.move(this.realX, this.realY + 32);
+		this.refreshPosition();
 
-		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
-		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
-		CollisionManager.registerCollision(globalX + width2, globalY + height2 + 1);
+		if(this.noChunkGen) {
+			CollisionManager.registerMineableCollision(globalX, globalY);
+		} else {
+			const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
+			const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
+			CollisionManager.registerMineableCollision(globalX + width2, globalY + height2 + 1);
+		}
 
 		this._mined = false;
+	}
+
+	refreshPosition() {
+		if(!this.baseSprite) return;
+		if(this.noChunkGen) {
+			this.baseSprite.move(this.realX + 16, this.realY + 32);
+		} else {
+			this.baseSprite.move(this.realX, this.realY + 48);
+		}
 	}
 
 	refreshSpritePosition(startIndex) {
@@ -119,6 +153,9 @@ class Mineable {
 		this.baseSprite.anchor.set(0.5, 1);
 		this.baseSprite.visible = true;
 		this.baseSprite.bitmap = ImageManager.lTile(this._textureUrl);
+
+		this.refreshPosition();
+
 		return this.baseSprite;
 	}
 
@@ -206,7 +243,7 @@ class Mineable {
 		if(this.hp <= 0) {
 			const baa = new BreakAndAbsorb(this.baseSprite, this.blockId);
 			SpriteManager.ppLayer.addChild(baa);
-			this.chunkParent.removeBlock(this);
+			this.chunkParent.removeMineable(this);
 		}
 	}
 
@@ -217,6 +254,7 @@ class Mineable {
 			const heartsPerRow = 5;
 
 			this.heartContainer = new Sprite();
+			this.heartContainer.filters = [new PIXI.filters.OutlineFilter(1, 0xffffff)];
 
 			const count = this.hp;
 			const rows = Math.ceil(count / heartsPerRow);

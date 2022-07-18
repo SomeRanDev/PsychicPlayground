@@ -9,12 +9,15 @@ class PlayerSprite extends Sprite {
 
 		this.idle = new DirectionalSprite(ImageManager.lPlayer("PlayerIdle"), 3);
 		this.walk = new DirectionalSprite(ImageManager.lPlayer("PlayerWalk"), 3);
+		this.sleep = new DirectionalSprite(ImageManager.lPlayer("PlayerSleep"), 2);
 
 		this.idle.visible = true;
 		this.walk.visible = false;
+		this.sleep.visible = false;
 
 		this.addChild(this.idle);
 		this.addChild(this.walk);
+		this.addChild(this.sleep);
 
 		this.setDirection(2);
 		this.setAnimation(this.idle);
@@ -25,7 +28,6 @@ class PlayerSprite extends Sprite {
 
 		this._textPopper = new TextPopper(this, 0, -32);
 
-		console.log("player sprite created");
 		if(!ImageManager.IsTwitter) {
 			this.makeHud();
 		}
@@ -108,31 +110,37 @@ class PlayerSprite extends Sprite {
 		}		
 	}
 
+	setSleep() {
+		if(this.setAnimation(this.sleep)) {
+			this._timeCount = 0;
+			this.currentAni.backAndForth = false;
+			this.setFrameDelay(30);
+		}		
+	}
+
 	setFrameDelay(delay) {
 		this.frameDelay = delay;
 	}
 
 	update() {
-		this._timeCount++;
-		if(this._timeCount >= this.frameDelay) {
-			this._timeCount = 0;
-			if(this.currentAni) {
-				this.currentAni.incrementAnimation();
+		if($ppPlayer.canMove()) {
+			this._timeCount++;
+			if(this._timeCount >= this.frameDelay) {
+				this._timeCount = 0;
+				if(this.currentAni) {
+					this.currentAni.incrementAnimation();
+				}
+			}
+
+			if($ppPlayer.moving) {
+				this.setWalk();
+			} else {
+				this.setIdle();
 			}
 		}
 
-		this.x = $ppPlayer.position.x;
-		this.y = $ppPlayer.position.y;
-
-		if($ppPlayer.moving) {
-			this.setWalk();
-		} else {
-			this.setIdle();
-		}
-
-		//this._textPopper.update();
-
-		//this.scale.set(1, 1.0 + (Math.sin(PP.Time / 15) * 0.05));
+		this.x = $ppPlayer.position.x + $ppPlayer.spriteOffsetX;
+		this.y = $ppPlayer.position.y + $ppPlayer.spriteOffsetY;
 
 		const tileY = Math.floor(this.y / 16);
 		if(this._lastYTile !== tileY) {

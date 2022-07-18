@@ -23,12 +23,16 @@ class Scene_WorldLoad extends Scene_Base {
 	}
 
 	prepare(worldSettings, playerSettings) {
-		console.log(worldSettings);
-		console.log(playerSettings);
+		this._worldSettings = worldSettings;
+		this._playerSettings = playerSettings;
 	}
 
 	initialize() {
 		super.initialize();
+	}
+
+	isReady() {
+		return super.isReady() && $generation.isReady();
 	}
 
 	create() {
@@ -119,6 +123,13 @@ class Scene_WorldLoad extends Scene_Base {
 	commandNewGame() {
 		DataManager.setupNewGame();
 		this.fadeOutAll();
+
+		$gameVariables.setValue(1, this._worldSettings.name);
+		$gameVariables.setValue(2, this._worldSettings.seed);
+		$gameVariables.setValue(3, this._playerSettings.playerName);
+		$gameVariables.setValue(4, this._playerSettings.playerClass);
+		$gameVariables.setValue(5, this._worldSettings.playerStats);
+
 		SceneManager.goto(Scene_Map);
 	}
 

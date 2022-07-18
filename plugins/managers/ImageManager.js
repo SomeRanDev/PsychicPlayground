@@ -28,6 +28,10 @@ ImageManager.lProjectile = function(filename) {
 	return this.loadBitmap("img/projectiles/", filename);
 };
 
+ImageManager.lEntities = function(filename) {
+	return this.loadBitmap("img/entities/", filename);
+};
+
 } else {
 
 ImageManager.lExists = function(filepath) {
@@ -68,6 +72,10 @@ ImageManager.lIcon = function(filename) {
 
 ImageManager.lProjectile = function(filename) {
 	return this.loadBitmap("img/projectiles/", filename);
+};
+
+ImageManager.lEntities = function(filename) {
+	return this.loadBitmapWTwitter("img/entities/", filename);
 };
 
 }

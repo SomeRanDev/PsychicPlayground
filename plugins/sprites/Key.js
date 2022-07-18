@@ -1,6 +1,6 @@
 class Key extends Sprite {
-	constructor(letter, subText) {
-		super(ImageManager.lUi("Key"));
+	constructor(letter, subText, isSpace = false) {
+		super(ImageManager.lUi(isSpace ? "SpaceKey" : "Key"));
 
 		this.scale.set(2);
 

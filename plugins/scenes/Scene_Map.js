@@ -13,6 +13,8 @@ modify_Scene_Map = class {
 		this._freeChunks = [];
 		this._chunkExists = {};
 
+		this._mineables = [];
+
 		this._targetCameraX = null;
 		this._targetCameraY = null;
 	}
@@ -20,11 +22,23 @@ modify_Scene_Map = class {
 	onMapLoaded() {
 		PP.Scene_Map.onMapLoaded.apply(this, arguments);
 		this._isGenerated = $gameMap.isGenerated();
+
+		$gameMap.buildEntities();
+
+		this.updateCameraPos(true);
 	}
 
 	onTransfer() {
 		PP.Scene_Map.onTransfer.apply(this, arguments);
+		this.clearEverything();
+	}
 
+	terminate() {
+		PP.Scene_Map.terminate.apply(this, arguments);
+		this.clearEverything();
+	}
+
+	clearEverything() {
 		for(const chunk of this._chunks) {
 			chunk.onMapEnd();
 		}
@@ -36,11 +50,13 @@ modify_Scene_Map = class {
 		this._freeChunks = [];
 		this._chunkExists = {};
 
+		$gameMap.clearUpdateEntities();
+
 		Chunk.TextureRef = [];
 
-		MineableObjectPool.clear();
-		ProjectileObjectPool.clear();
-		HeartObjectPool.clear();
+		ClearAllObjectPools();
+
+		CollisionManager.clearAll();
 
 		SpriteManager.clear();
 	}
@@ -107,7 +123,11 @@ modify_Scene_Map = class {
 		if(this._isGenerated) {
 			this.updateChunks();
 		} else {
-			this.updateMouseMovement();
+			if(!$gameMap.isEventRunning()) {
+				this.updateMouseMovement();
+				this.updateMouseCursor();
+			}
+			this.updateMineableBehavior();
 		}
 	}
 
@@ -181,16 +201,17 @@ modify_Scene_Map = class {
 
 	updateChunks() {
 		this.updateLoadedChunks();
-		this.updateMouseMovement();
-		this.updateMouseCursor();
-		this.updateChunkBehavior();
-		this.updateMousePress();
+		if(!$gameMap.isEventRunning()) {
+			this.updateMouseMovement();
+			this.updateMouseCursor();
+		}
+		this.updateMineableBehavior();
 	}
 
 	updateLoadedChunks() {
 		const minX = Math.floor(this.PPCameraX / GenerationManager.CHUNK_SIZE_X) - 1;
 		const minY = Math.floor(this.PPCameraY / GenerationManager.CHUNK_SIZE_Y) - 1;
-		const maxX = minX + 5;
+		const maxX = minX + 4;
 		const maxY = minY + 3;
 
 		if(this._lastMinX !== minX || this._lastMinY !== minY || this._lastMaxX !== maxX || this._lastMaxY !== maxY) {
@@ -209,7 +230,7 @@ modify_Scene_Map = class {
 					}
 				}
 			}
-			
+
 			for(let x = minX; x <= maxX; x++) {
 				for(let y = minY; y <= maxY; y++) {
 					const key = this.getChunkKey(x, y);
@@ -281,36 +302,33 @@ modify_Scene_Map = class {
 		}
 
 		if(this._isRightClickHeld) {
-			const chunk = this._chunkExists[this.getChunkKey(cx, cy)];
-			if(chunk !== null) {
-				const tileX = Math.floor((localPos.x - (cx * GenerationManager.CHUNK_SIZE_X)) / GenerationManager.TILE_WIDTH);
-				const tileY = Math.floor((localPos.y - (cy * GenerationManager.CHUNK_SIZE_Y)) / GenerationManager.TILE_HEIGHT);
+			const tileX = Math.floor((localPos.x - (cx * GenerationManager.CHUNK_SIZE_X)) / GenerationManager.TILE_WIDTH);
+			const tileY = Math.floor((localPos.y - (cy * GenerationManager.CHUNK_SIZE_Y)) / GenerationManager.TILE_HEIGHT);
 
-				const globalTileX = (cx * GenerationManager.TILES_X) + tileX;
-				const globalTileY = (cy * GenerationManager.TILES_Y) + tileY;
+			const globalTileX = (cx * GenerationManager.TILES_X) + tileX;
+			const globalTileY = (cy * GenerationManager.TILES_Y) + tileY;
 
-				if(!this._firstRightClickPos) {
-					this._firstRightClickPos = [globalTileX, globalTileY];
-				} else {
-					for(const point of this._rightClickGuides) {
-						point.visible = false;
-					}
-
-					const points = this.calcStraightLine(this._firstRightClickPos, [globalTileX, globalTileY]);
-					for(let i = 0; i < points.length; i++) {
-						if(this._rightClickGuides.length <= i) {
-							const spr = new Sprite(ImageManager.loadPicture("MouseCursor"));
-							spr.z = -10;
-							spr.visible = true;
-							this._spriteset._mapCursorContainer.addChild(spr);
-							this._rightClickGuides.push(spr);
-						}
-						this._rightClickGuides[i].alpha = i < this._maxBuildAmount ? 1 : 0.25;
-						this._rightClickGuides[i].move(points[i][0] * 32, points[i][1] * 32);
-						this._rightClickGuides[i].visible = true;
-					}
-					this._rightClickPoints = points;
+			if(!this._firstRightClickPos) {
+				this._firstRightClickPos = [globalTileX, globalTileY];
+			} else {
+				for(const point of this._rightClickGuides) {
+					point.visible = false;
 				}
+
+				const points = this.calcStraightLine(this._firstRightClickPos, [globalTileX, globalTileY]);
+				for(let i = 0; i < points.length; i++) {
+					if(this._rightClickGuides.length <= i) {
+						const spr = new Sprite(ImageManager.loadPicture("MouseCursor"));
+						spr.z = -10;
+						spr.visible = true;
+						this._spriteset._mapCursorContainer.addChild(spr);
+						this._rightClickGuides.push(spr);
+					}
+					this._rightClickGuides[i].alpha = i < this._maxBuildAmount ? 1 : 0.25;
+					this._rightClickGuides[i].move(points[i][0] * 32, points[i][1] * 32);
+					this._rightClickGuides[i].visible = true;
+				}
+				this._rightClickPoints = points;
 			}
 		}
 	}
@@ -352,6 +370,9 @@ modify_Scene_Map = class {
 	}
 
 	_onRightClickRelease(globalTileX, globalTileY) {
+		if(!this._isGenerated) {
+			return this._noGen_onMouseRightClick(globalTileX, globalTileY);
+		}
 		const cx = Math.floor(globalTileX / GenerationManager.TILES_X);
 		const cy = Math.floor(globalTileY / GenerationManager.TILES_Y);
 		const chunk = this._chunkExists[this.getChunkKey(cx, cy)];
@@ -359,6 +380,44 @@ modify_Scene_Map = class {
 			return chunk.onMouseRightClick(globalTileX - (cx * GenerationManager.TILES_X), globalTileY - (cy * GenerationManager.TILES_Y));
 		}
 		return false;
+	}
+
+	_noGen_onMouseRightClick(globalTileX, globalTileY) {
+		const matId = $ppPlayer.inventory.hasPlacableMaterial();
+		if(matId !== null && CollisionManager.emptyMineablePos(globalTileX, globalTileY)) {
+			const matData = MaterialTypes[matId];
+			if(matData && typeof matData.mineable === "number") {
+				const mineableData = MineableTypes[matData.mineable];
+				return this.spawnMineable(globalTileX, globalTileY, matData.mineable, true);
+			}
+		}
+		return false;
+	}
+
+	spawnMineable(x, y, blockId, spawnAnimation = false) {
+		if(blockId === 255) {
+			return true;
+		}
+
+		const blockData = MineableTypes[blockId];
+		const name = Array.isArray(blockData.name) ? blockData.name[Math.floor(Math.random() * blockData.name.length)] : blockData.name;
+		const block = MineableObjectPool.getObject(name);
+		this._mineables.push(block);
+
+		block.setup(this, blockId, x, y, x, y);
+
+		if(spawnAnimation) {
+			block.spawnAnimation();
+		}
+
+		return true;
+	}
+
+	removeMineable(mineable) {
+		if(this._mineables.includes(mineable)) {
+			MineableObjectPool.removeObject(mineable);
+			this._mineables.remove(mineable);
+		}
 	}
 
 	updateMouseCursor() {
@@ -370,13 +429,24 @@ modify_Scene_Map = class {
 		}
 	}
 
-	updateChunkBehavior() {
+	updateMineableBehavior() {
 		const oldSelection = this._selectedObject;
 
 		PP.selectedObjects = [];
-		for(const c of this._chunks) {
-			if(c !== null) {
-				c.update();
+
+		if(!$gameMap.isEventRunning()) {
+			if(!this._isGenerated) {
+				for(const m of this._mineables) {
+					if(m !== null) {
+						m.update();
+					}
+				}
+			} else {
+				for(const c of this._chunks) {
+					if(c !== null) {
+						c.update();
+					}
+				}
 			}
 		}
 
@@ -409,19 +479,6 @@ modify_Scene_Map = class {
 			this._spriteset._mapCursor.setEnabled($ppPlayer.showEnabledCursor());
 			$ppPlayer.enableTileCursorPlacement(TouchInput.mouseInside);
 		}
-	}
-
-	updateMousePress() {
-		/*
-		if(TouchInput.isTriggered()) {
-			if(this._selectedObject) {
-				this._selectedObject.setPressed(true);
-			}
-		} else if(TouchInput.isReleased()) {
-			if(this._selectedObject) {
-				this._selectedObject.setPressed(false);
-			}
-		}*/
 	}
 
 	addChunk(c) {
@@ -484,6 +541,10 @@ modify_Scene_Map = class {
 	}
 
 	spawnBlock(mineableId, globalTileX, globalTileY) {
+		if(!this._isGenerated) {
+			this.spawnMineable(globalTileX, globalTileY, mineableId);
+			return;
+		}
 		const chunkX = Math.floor(globalTileX / GenerationManager.TILES_X);
 		const chunkY = Math.floor(globalTileY / GenerationManager.TILES_Y);
 		const id = this.getChunkKey(chunkX, chunkY);

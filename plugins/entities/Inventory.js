@@ -21,7 +21,6 @@ class Inventory {
 
 		this.activeSkillAmmo = new Int32Array(AbilityTypes.length);
 
-		this.addActiveSkill(0);
 		this.addActiveSkill(3);
 
 		this.addMaterial(0, 10);
@@ -64,20 +63,28 @@ class Inventory {
 		}
 	}
 
-	save() {
+	saveData() {
 		return [
 			Array.from(this.passiveSkills),
 			Array.from(this.activeSkills),
 			Array.from(this.materials),
-			Array.from(this.items)
+			Array.from(this.items),
+			Array.from(this.activeSkillAmmo),
+			this.hotbarIndex,
+			Array.from(this.hotbar)
 		];
 	}
 
-	load(data) {
-		this.passiveSkills = TypedArray.from(data[0]);
-		this.activeSkills = TypedArray.from(data[1]);
-		this.materials = TypedArray.from(data[2]);
-		this.items = TypedArray.from(data[3]);
+	loadData(data) {
+		this.passiveSkills = Int32Array.from(data[0]);
+		this.activeSkills = Int32Array.from(data[1]);
+		this.materials = Int32Array.from(data[2]);
+		this.items = Int32Array.from(data[3]);
+		this.activeSkillAmmo = Int32Array.from(data[4]);
+
+		this.hotbarIndex = data[5];
+
+		this.hotbar = Int32Array.from(data[6]);
 	}
 
 	update() {

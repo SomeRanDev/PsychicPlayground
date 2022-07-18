@@ -46,10 +46,12 @@ AutotilePos = [
 
 }
 
+/*
 Scene_Boot.prototype.__GenerationManager_isPlayerDataLoaded = Scene_Boot.prototype.isPlayerDataLoaded;
 Scene_Boot.prototype.isPlayerDataLoaded = function() {
     return Scene_Boot.prototype.__GenerationManager_isPlayerDataLoaded.apply(this, arguments) && $generation.isReady();
 };
+*/
 
 var $generation = null;
 
@@ -71,7 +73,7 @@ class GenerationManager {
 	static TILE_HEIGHT = 32;
 
 	isReady() {
-		return this.GenerationMap.isReady() && this.GenerationMapPath.isReady();
+		return $gameTemp.GenerationMap.isReady() && $gameTemp.GenerationMapPath.isReady();
 	}
 
 	static start() {
@@ -102,11 +104,11 @@ class GenerationManager {
 
 		GenerationManager.hyperFastNoise.SetupNoise(this.hash);
 
-		this.defaultBiome = new Biome_Base(this);
-		this.biomes = [ new Biome_Base(this) ];
-		this.redBiomes = [ new Biome_Desert(this) ];
-		this.greenBiomes = [ new Biome_Forest(this) ];
-		this.blueBiomes = [ new Biome_Forest(this) ];
+		this.defaultBiome = new Biome_Base();
+		this.biomes = [ new Biome_Base() ];
+		this.redBiomes = [ new Biome_Desert() ];
+		this.greenBiomes = [ new Biome_Forest() ];
+		this.blueBiomes = [ new Biome_Forest() ];
 		//noise.seed(Math.random());
 
 		GenerationManager.start();
@@ -115,8 +117,17 @@ class GenerationManager {
 		this.AllTileData = new Uint32Array(GenerationManager.MaxTiles);
 
 		this.ReadRotation = Math.PI * 2 * ((this.hash % 1000) / 1000);
-		this.GenerationMap = ImageManager.lGeneration("Map1")//PP.rotateBitmap(ImageManager.lGeneration("Map1"), 0);
-		this.GenerationMapPath = ImageManager.lGeneration("Map1Path")//PP.rotateBitmap(ImageManager.lGeneration("Map1Path"), 0);
+		this.GenerationMapString = "Map1";
+		this.GenerationMapPathString = "Map1Path";
+
+		GenerationManager.GenerationMap = null;
+		GenerationManager.GenerationMapPath = null;
+		this.refreshGenerationMap();
+	}
+
+	refreshGenerationMap() {
+		GenerationManager.GenerationMap = ImageManager.lGeneration(this.GenerationMapString);//PP.rotateBitmap(ImageManager.lGeneration("Map1"), 0);
+		GenerationManager.GenerationMapPath = ImageManager.lGeneration(this.GenerationMapPathString);//PP.rotateBitmap(ImageManager.lGeneration("Map1Path"), 0);
 	}
 
 	globalCoordsToIndex(globalX, globalY) {
@@ -154,7 +165,7 @@ class GenerationManager {
 		const newXRatio = (Math.cos(angle) * dist) + 0.5;
 		const newYRatio = (Math.sin(angle) * dist) + 0.5;
 
-		const pathCol = this.GenerationMapPath.getPixelAlphaFromRatio(newXRatio, newYRatio);
+		const pathCol = GenerationManager.GenerationMapPath.getPixelAlphaFromRatio(newXRatio, newYRatio);
 		if(pathCol > 0) {
 			return true;
 		}
@@ -162,6 +173,8 @@ class GenerationManager {
 	}
 
 	GetGenerationPoint(xRatio, yRatio) {
+		if(!GenerationManager.GenerationMap.isReady()) throw "Generation map not loaded";
+
 		xRatio = 0.25 + (xRatio) * 0.5;
 		yRatio = 0.25 + (yRatio) * 0.5;
 
@@ -171,7 +184,7 @@ class GenerationManager {
 		const newXRatio = (Math.cos(angle) * dist) + 0.5;
 		const newYRatio = (Math.sin(angle) * dist) + 0.5;
 
-		const col = this.GenerationMap.getPixelNumberFromRatio(newXRatio, newYRatio);
+		const col = GenerationManager.GenerationMap.getPixelNumberFromRatio(newXRatio, newYRatio);
 		//const a = (col & 0xff000000) >> 24;
 		const r = (col & 0x00ff0000) >> 16;
 		const g = (col & 0x0000ff00) >> 8;

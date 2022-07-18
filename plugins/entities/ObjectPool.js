@@ -31,6 +31,14 @@ class ObjectPool {
 	}
 }
 
+function ClearAllObjectPools() {
+	MineableObjectPool.clear();
+	ProjectileObjectPool.clear();
+	EnemyProjectileObjectPool.clear();
+	HeartObjectPool.clear();
+}
+
 const MineableObjectPool = new ObjectPool(Mineable);
 const ProjectileObjectPool = new ObjectPool(Projectile);
+const EnemyProjectileObjectPool = new ObjectPool(EnemyProjectile);
 const HeartObjectPool = new ObjectPool(Heart);

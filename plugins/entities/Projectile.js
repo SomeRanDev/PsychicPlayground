@@ -127,6 +127,8 @@ class Projectile {
 		const xSpd = -5 * Math.cos(rads);
 		const ySpd = 5 * Math.sin(rads);
 
+		CollisionManager.setProjectileCollisionCheck();
+
 		this.x = Math.round(CollisionManager.processMovementX(this.x, this.y, xSpd));
 		this.mainSpr.x = this.x;
 
@@ -141,6 +143,22 @@ class Projectile {
 		if(!CollisionManager.MoveSuccessful) {
 			this.onCollide();
 			return false;
+		}
+
+		if($gameTemp.projectileReactors) {
+			for(const reactors of $gameTemp.projectileReactors) {
+				if(reactors.checkProjectile(this.x, this.y)) {
+					this.onCollide();
+					return false;
+				}
+			}
+		}
+
+		if(this.owner !== $ppPlayer) {
+			if($ppPlayer.checkProjectile(this, this.x, this.y)) {
+				this.onCollide();
+				return false;
+			}
 		}
 
 		if(this._particleTimer++ >= 0) {

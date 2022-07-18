@@ -91,7 +91,7 @@ class Chunk {
 	onMouseRightClick(localTileX, localTileY) {
 		const matId = $ppPlayer.inventory.hasPlacableMaterial();
 		if(matId !== null &&
-			CollisionManager.canMoveToLocalTile(this.chunkX, this.chunkY, localTileX, localTileY)
+			CollisionManager.emptyMineableChunkPos(this.chunkX, this.chunkY, localTileX, localTileY)
 		) {
 			const matData = MaterialTypes[matId];
 			if(matData && typeof matData.mineable === "number") {
@@ -207,7 +207,7 @@ class Chunk {
 		this.setupBlock(localTileX, localTileY, blockId, true);
 	}
 
-	removeBlock(block) {
+	removeMineable(block) {
 		if(this.blocks.includes(block)) {
 			$generation.setTileBlock(this.chunkX, this.chunkY, block.x, block.y, 255);
 			MineableObjectPool.removeObject(block);

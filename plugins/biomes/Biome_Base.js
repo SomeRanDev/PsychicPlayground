@@ -1,11 +1,10 @@
 class Biome_Base {
-	constructor(generator) {
-		this.generator = generator;
+	constructor() {
 		this.plainGrassId = (255 << 24) | (4 << 8) | 200;
 	}
 
 	checkPath(globalX, globalY) {
-		return this.generator.GetPathAt(globalX, globalY);
+		return $generation.GetPathAt(globalX, globalY);
 	}
 
 	generatePath(globalX, globalY, globalIndex) {

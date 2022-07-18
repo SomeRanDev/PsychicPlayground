@@ -12,6 +12,7 @@ modify_Spriteset_Map = class {
 
 	createPPLayer() {
 		this._ppLayer = new Sprite();
+		this._ppLayer.z = 1;
 		this._tilemap.addChild(this._ppLayer);
 		SpriteManager.ppLayer = this._ppLayer;
 	}
@@ -254,6 +255,14 @@ class SpriteManager {
 		}
 	}
 
+	static removeUi(ui) {
+		if(!this.uiContainer) {
+			this.uiCache.remove(ui);
+		} else {
+			this.uiContainer.removeChild(ui);
+		}
+	}
+
 	static processUiCache() {
 		for(const ui of this.uiCache) {
 			this.uiContainer.addChild(ui);
@@ -296,6 +305,13 @@ class SpriteManager {
 			const layer = SceneManager._scene._spriteset._chunkLayer;
 			layer.removeChild(c);
 		}
+	}
+
+	static globalToWorld(pos) {
+		if(SceneManager._scene._spriteset._tilemap) {
+			return SceneManager._scene._spriteset._tilemap.worldTransform.applyInverse(pos);
+		}
+		return new Point(0, 0);
 	}
 }
 
