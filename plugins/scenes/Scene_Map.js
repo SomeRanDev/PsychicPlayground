@@ -100,6 +100,8 @@ modify_Scene_Map = class {
 			this.setPaused(true, 1);
 		} else if(Input.isTriggeredEx("esc")) {
 			this.setPaused(true, 2);
+			this._escMenu = new Scene_EscMenu(() => this.unpauseEscMenu());
+			this.addChild(this._escMenu);
 		}
 	}
 
@@ -535,9 +537,16 @@ modify_Scene_Map = class {
 	}
 
 	updateExitPause() {
+		this._escMenu.update();
 		if(Input.isTriggeredEx("esc")) {
-			this.setPaused(false);
+			this.unpauseEscMenu();
 		}
+	}
+
+	unpauseEscMenu() {
+		this._escMenu.destroySelf();
+		this.setPaused(false);
+		this._escMenu = null;
 	}
 
 	spawnBlock(mineableId, globalTileX, globalTileY) {

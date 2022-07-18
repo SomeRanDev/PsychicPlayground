@@ -34,6 +34,7 @@ var $plugins =
 {"name":"scenes/Scene_WorldSetup","status":true,"description":"","parameters":{}},
 {"name":"scenes/Scene_PlayerSetup","status":true,"description":"","parameters":{}},
 {"name":"scenes/Scene_WorldLoad","status":true,"description":"","parameters":{}},
+{"name":"scenes/Scene_EscMenu","status":true,"description":"","parameters":{}},
 {"name":"---","status":false,"description":"","parameters":{}},
 {"name":"windows/Window_Options","status":true,"description":"","parameters":{}},
 {"name":"windows/Window_SavefileList","status":true,"description":"","parameters":{}},

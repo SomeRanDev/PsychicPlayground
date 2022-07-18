@@ -28,6 +28,7 @@ class CollisionManager {
 			switch(data.type) {
 				case 0: {
 					$gamePlayer.reserveTransfer(data.id, data.x, data.y, data.dir, 0);
+					$gamePlayer._setPPPlayerPos = true;
 					break;
 				}
 			}

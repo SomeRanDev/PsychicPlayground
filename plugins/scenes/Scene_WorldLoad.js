@@ -130,6 +130,8 @@ class Scene_WorldLoad extends Scene_Base {
 		$gameVariables.setValue(4, this._playerSettings.playerClass);
 		$gameVariables.setValue(5, this._worldSettings.playerStats);
 
+		$ppPlayer.setAllStats(this._playerSettings.playerStats);
+
 		SceneManager.goto(Scene_Map);
 	}
 

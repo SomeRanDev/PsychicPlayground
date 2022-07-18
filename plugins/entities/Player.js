@@ -24,12 +24,26 @@ class Player {
 
 		this._collisionRect = { left: 6, right: 6, bottom: 0, top: 12 };
 
+		this.focusing = 1;
+		this.moving = 1;
+		this.shooting = 1;
+		this.breaking = 1;
+		this.making = 1;
+
 		this.inventory = new Inventory();
 	}
 
 	makeSprite() {
 		this.sprite = new PlayerSprite(this);
 		return this.sprite;
+	}
+
+	setAllStats(allStats) {
+		this.focusing = allStats[0];
+		this.moving = allStats[1];
+		this.shooting = allStats[2];
+		this.breaking = allStats[3];
+		this.making = allStats[4];
 	}
 
 	refreshHotbarIcons() {
@@ -46,28 +60,34 @@ class Player {
 
 	loadData(data) {
 		this.position = new Vector2(data.position.x, data.position.y);
-		console.log(data.position, this.position, data.spriteOffsetX, data.spriteOffsetY);
+
 		this.moving = data.moving;
 
 		this._walkTime = data._walkTime;
 
 		this.TURN_RATE = data.TURN_RATE;
 
-		this.targetDirection = data.targetDirection;
-		this.currentDirection = data.currentDirection;
-		this.lastAngle = data.lastAngle;
+		this.targetDirection = data.targetDirection ?? 0;
+		this.currentDirection = data.currentDirection ?? 0;
+		this.lastAngle = data.lastAngle ?? 0;
 
-		this.spriteOffsetX = data.spriteOffsetX;
-		this.spriteOffsetY = data.spriteOffsetY;
+		this.spriteOffsetX = data.spriteOffsetX ?? 0;
+		this.spriteOffsetY = data.spriteOffsetY ?? 0;
 
-		this.canPlaceMaterial = data.canPlaceMaterial;
+		this.canPlaceMaterial = data.canPlaceMaterial ?? false;
 
-		this.shootFrequency = data.shootFrequency;
-		this._projectiles = data._projectiles;
-		this._projectileTime = data._projectileTime;
-		this._projectileTriggeredTime = data._projectileTriggeredTime;
+		this.shootFrequency = data.shootFrequency ?? 24;
+		this._projectiles = data._projectiles ?? [];
+		this._projectileTime = data._projectileTime ?? 0;
+		this._projectileTriggeredTime = data._projectileTriggeredTime ?? 0;
 
 		this._collisionRect = data._collisionRect;
+
+		this.focusing = data.focusing ?? 1;
+		this.moving = data.moving ?? 1;
+		this.shooting = data.shooting ?? 1;
+		this.breaking = data.breaking ?? 1;
+		this.making = data.making ?? 1;
 
 		this.inventory.loadData(data.inventory);
 	}
@@ -97,6 +117,12 @@ class Player {
 		result._projectileTriggeredTime = this._projectileTriggeredTime;
 
 		result._collisionRect = this._collisionRect;
+
+		result.focusing = this.focusing;
+		result.moving = this.moving;
+		result.shooting = this.shooting;
+		result.breaking = this.breaking;
+		result.making = this.making;
 
 		result.inventory = this.inventory.saveData();
 
@@ -246,7 +272,6 @@ class Player {
 				const newPosY2 = CollisionManager.processMovementY(sx + colRect.right, sy, (speed * inputY));
 				const finalY = inputY < 0 ? (Math.max(newPosY, newPosY2) + colRect.top) : (Math.min(newPosY, newPosY2) - colRect.bottom);
 				this.position.y = Math.round(finalY);
-				console.log("CHANGED POSITION Y");
 			}
 
 			CollisionManager.checkForResponse(Math.floor(this.position.x / TS), Math.floor(this.position.y / TS));

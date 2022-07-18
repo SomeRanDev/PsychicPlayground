@@ -73,7 +73,7 @@ class GenerationManager {
 	static TILE_HEIGHT = 32;
 
 	isReady() {
-		return $gameTemp.GenerationMap.isReady() && $gameTemp.GenerationMapPath.isReady();
+		return GenerationManager.GenerationMap.isReady() && GenerationManager.GenerationMapPath.isReady();
 	}
 
 	static start() {

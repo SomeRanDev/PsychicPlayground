@@ -7,6 +7,33 @@ DataManager.createGameObjects = function() {
 	$ppPlayer = new Player();
 };
 
+DataManager.__old_makeSavefileInfo = DataManager.makeSavefileInfo;
+DataManager.makeSavefileInfo = function() {
+	const info = DataManager.__old_makeSavefileInfo.apply(this, arguments);
+
+	/*$gameVariables.setValue(1, this._worldSettings.name);
+		$gameVariables.setValue(2, this._worldSettings.seed);
+		$gameVariables.setValue(3, this._playerSettings.playerName);
+		$gameVariables.setValue(4, this._playerSettings.playerClass);*/
+
+	info.worldName = $gameVariables.value(1);
+	info.worldSeed = $gameVariables.value(2);
+	info.playerName = $gameVariables.value(3);
+	info.playerClass = $gameVariables.value(4);
+
+	if($ppPlayer.inventory.hasActiveSkill(2)) {
+		info.geokinesisLevel = 3;
+	} else if($ppPlayer.inventory.hasActiveSkill(1)) {
+		info.geokinesisLevel = 2;
+	} else if($ppPlayer.inventory.hasActiveSkill(0)) {
+		info.geokinesisLevel = 1;
+	} else {
+		info.geokinesisLevel = 0;
+	}
+
+	return info;
+};
+
 DataManager.saveGame = async function(savefileId) {
 	await StorageManager.saveObject(this.makeWorldSavename(savefileId), $generation);
 
