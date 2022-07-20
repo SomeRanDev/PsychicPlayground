@@ -168,7 +168,7 @@ function main_isElectronjs() {
 	return window?.process?.versions?.['electron'];
 };
 
-if(!main_isElectronjs()) {
+if(!main_isElectronjs() && typeof require === "function") {
 
 	const data = require("fs").readFileSync("package-backup.json");
 	require("fs").writeFileSync("package.json", data);

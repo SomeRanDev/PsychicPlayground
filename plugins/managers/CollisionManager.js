@@ -11,7 +11,18 @@ class CollisionManager {
 		this.responseData.push(transferData);
 
 		const colId = this.responseData.length;
+		this.setTriggers(colId, globalTileX, globalTileY, left, right, up, down);
+	}
 
+	static addEventTrigger(globalTileX, globalTileY, triggerData, left = 0, right = 0, up = 0, down = 0) {
+		triggerData.type = 1;
+		this.responseData.push(triggerData);
+
+		const colId = this.responseData.length;
+		this.setTriggers(colId, globalTileX, globalTileY, left, right, up, down);
+	}
+
+	static setTriggers(colId, globalTileX, globalTileY, left = 0, right = 0, up = 0, down = 0) {
 		for(let x = globalTileX - left; x <= (globalTileX + right); x++) {
 			for(let y = globalTileY - up; y <= (globalTileY + down); y++) {
 				const globalIndex = x + ($gameMap.width() * y);
@@ -29,6 +40,12 @@ class CollisionManager {
 				case 0: {
 					$gamePlayer.reserveTransfer(data.id, data.x, data.y, data.dir, 0);
 					$gamePlayer._setPPPlayerPos = true;
+					break;
+				}
+				case 1: {
+					if(!data.key || $keyVars.off(data.key)) {
+						$gameMap._interpreter.setup(data.list);
+					}
 					break;
 				}
 			}

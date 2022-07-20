@@ -24,6 +24,23 @@ class TitleButton extends Sprite {
 		this.addChild(this.text);
 	}
 
+	reset() {
+		this.scale.set(1);
+		this.move(this._originalX, this._originalY);
+		this.text.move(0, 0);
+
+		this._clicked = false;
+		this._notClicked = false;
+		this._selected = false;
+
+		this._clickAni = 0;
+		this._hoverAni = 0;
+
+		this.anchor.set(0.5);
+
+		this.alpha = 0.75;
+	}
+
 	update() {
 		if(this._notClicked) {
 			const newClick = this._clickAni.moveUnderTowards(1, 0.05);

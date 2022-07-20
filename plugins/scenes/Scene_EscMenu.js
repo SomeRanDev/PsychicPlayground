@@ -27,6 +27,8 @@ class Scene_EscMenu extends Stage {
 
 	makeButton(text, x, y, onclick) {
 		const b = new TitleButton(this, text, 200, 28);
+		b._originalX = x;
+		b._originalY = y;
 		b.move(x, y);
 		b.onClick = onclick;
 		this.addChild(b);
@@ -34,7 +36,31 @@ class Scene_EscMenu extends Stage {
 	}
 
 	settings() {
-		SceneManager.push(Scene_Options);
+		//SceneManager.push(Scene_Options);
+
+		this._noSettings = false;
+		const self = this;
+		this._optionsScene = new Scene_Options();
+		this._optionsScene.visible = false;
+		this._optionsScene.popScene = function() {
+			self.removeSettings();
+		};
+		this._optionsScene.create();
+		this.addChild(this._optionsScene);
+	}
+
+	removeSettings() {
+		this._noSettings = true;
+		for(const b of this._titleButtons) {
+			b.reset();
+		}
+	}
+
+	terminateSettings() {
+		this.removeChild(this._optionsScene);
+		this._optionsScene.stop();
+		this._optionsScene.terminate();
+		this._optionsScene = null;
 	}
 
 	title() {
@@ -46,6 +72,35 @@ class Scene_EscMenu extends Stage {
 	}
 
 	update() {
+		this.updateSettings();
+		this.updateTransition();
+		this.updateButtons();
+		this.updateInput();
+	}
+
+	updateSettings() {
+		if(this._noSettings && this._optionsScene) {
+			this._optionsScene.alpha -= 0.1;
+			if(this._optionsScene.alpha <= 0) {
+				this.terminateSettings();
+			}
+			return;
+		}
+
+		if(this._optionsScene) {
+			if(!this._optionsScene.isStarted()) {
+				if(this._optionsScene.isReady()) {
+					this._optionsScene.start();
+					this._optionsScene.visible = true;
+				}
+			} else {
+				this._optionsScene.update();
+			}
+			return;
+		}
+	}
+
+	updateTransition() {
 		if(this._destroyedSelf) {
 			this.alpha -= 0.1;
 			if(this.alpha <= 0) {
@@ -55,12 +110,16 @@ class Scene_EscMenu extends Stage {
 		} else if(this.alpha < 1) {
 			this.alpha += 0.1;
 		}
+	}
 
+	updateButtons() {
 		for(const button of this._titleButtons) {
 			if(this._destroyedSelf) return;
 			button.update();
 		}
+	}
 
+	updateInput() {
 		if(TouchInput.isTriggered()) {
 			if(this._currentTitleButton && this._currentTitleButton.isBeingTouched()) {
 				for(const button of this._titleButtons) {

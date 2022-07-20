@@ -1,13 +1,11 @@
 modify_Window_Options = class {
 	initialize() {
 		PP.Window_Options.initialize.apply(this, arguments);
-
-		this.contents.fontSize = 8;
 	}
 
 	resetFontSettings() {
 		this.contents.fontFace = $gameSystem.mainFontFace();
-		this.contents.fontSize = 14;
+		this.contents.fontSize = 16;
 		this.resetTextColor();
 	}
 

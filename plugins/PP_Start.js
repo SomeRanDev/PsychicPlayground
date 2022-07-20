@@ -1,3 +1,6 @@
+// Hello, welcome back. Might not do as many header comments this time, but thanks for stopping by anyway.
+// Various helper functions I reuse from other projects
+
 const TS = 32;
 const TS2 = 16;
 

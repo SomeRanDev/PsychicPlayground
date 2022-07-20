@@ -36,6 +36,7 @@ class Spikes {
 	open() {
 		this._isOpen = true;
 		this._isOpening = true;
+		this._openness = 0;
 	}
 
 	close() {

@@ -55,7 +55,7 @@ modify_Game_Map = class {
 	setupEvents() {
 		PP.Game_Map.setupEvents.apply(this, arguments);
 
-		this.buildEntities();
+		//this.buildEntities();
 	}
 
 	buildEntities() {
@@ -80,6 +80,23 @@ modify_Game_Map = class {
 					const left = transferData[4] ?? 0;
 					const right = transferData[5] ?? 0;
 					CollisionManager.addTransfer(data.x, data.y, { id, x, y, dir }, left, right);
+				}
+
+				event.erase();
+			}
+
+			if(m.Trigger && event.meetsConditions(data.pages[0])) {
+				const triggerData = JSON.parse(m.Trigger.trim());
+				if(triggerData.length > 0) {
+					const key = triggerData[0] ?? null;
+					const left = triggerData[1] ?? 0;
+					const right = triggerData[2] ?? 0;
+					const up = triggerData[3] ?? 0;
+					const down = triggerData[4] ?? 0;
+					CollisionManager.addEventTrigger(data.x, data.y, {
+						key: key,
+						list: data.pages[0].list
+					}, left, right, up, down);
 				}
 
 				event.erase();
@@ -197,6 +214,29 @@ modify_Game_Map = class {
 	removeEntity(e) {
 		$gameTemp.updateEntities.remove(e);
 		delete $gameTemp.updateEntityNames[e._name];
+	}
+
+	addSpikes(x, y) {
+		const name = "Spike_" + x + "_" + y;
+		const s = new Spikes(x, y);
+		s._name = name;
+		s.open();
+		$gameTemp.updateEntities.push(s);
+		$gameTemp.updateEntityNames[name] = s;
+	}
+
+	removeSpikes(x, y) {
+		const name = "Spike_" + x + "_" + y;
+		const s = $gameTemp.updateEntityNames[name];
+		if(s) {
+			s.close();
+		}
+	}
+
+	addRowSpikes(x1, x2, y) {
+		for(let x = x1; x <= x2; x++) {
+			this.addSpikes(x, y);
+		}
 	}
 
 	update() {

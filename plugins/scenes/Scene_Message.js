@@ -8,6 +8,10 @@ Scene_Message.prototype.messageWindowRect = function() {
 
 Scene_Message.prototype.refreshMessageWindowPos = function(event) {
 	const r = this.messageWindowRect();
+	if(!event) {
+		this._messageWindow.move(200, Graphics.height - r.height - 12, Graphics.width - 400, r.height);
+		return;
+	}
 	const x = event ? ((event._realX * TS) - (this.PPCameraX)) : 0;
 	const y = event ? ((event._realY * TS) - this.PPCameraY) : 0;
 	this._messageWindow.move(

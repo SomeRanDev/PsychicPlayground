@@ -32,6 +32,10 @@ ImageManager.lEntities = function(filename) {
 	return this.loadBitmap("img/entities/", filename);
 };
 
+ImageManager.lCursor = function(filename) {
+	return this.loadBitmap("img/cursors/", filename);
+};
+
 } else {
 
 ImageManager.lExists = function(filepath) {
@@ -76,6 +80,10 @@ ImageManager.lProjectile = function(filename) {
 
 ImageManager.lEntities = function(filename) {
 	return this.loadBitmapWTwitter("img/entities/", filename);
+};
+
+ImageManager.lCursor = function(filename) {
+	return this.loadBitmapWTwitter("img/cursors/", filename);
 };
 
 }

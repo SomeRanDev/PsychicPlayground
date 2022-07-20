@@ -36,6 +36,7 @@ modify_Scene_Map = class {
 	terminate() {
 		PP.Scene_Map.terminate.apply(this, arguments);
 		this.clearEverything();
+		this.normalCursor();
 	}
 
 	clearEverything() {
@@ -70,6 +71,10 @@ modify_Scene_Map = class {
 	start() {
 		PP.Scene_Map.start.apply(this, arguments);
 		SpriteManager.addEntity($ppPlayer);
+
+		this.cursor = new Sprite(ImageManager.lCursor("Aim"));
+		this.cursor.anchor.set(0.5);
+		this.addChild(this.cursor);
 	}
 
 	updateMain() {
@@ -77,9 +82,12 @@ modify_Scene_Map = class {
 		{
 			if(!this._isPaused) {
 				PP.Scene_Map.updateMain.apply(this, arguments);
+				this.refreshCursor();
+				this.cursor.move(TouchInput.x, TouchInput.y);
 				this.updatePPPlayer();
 				this.updatePauseInput();
 			} else {
+				this.normalCursor();
 				this.updateCameraPos();
 				this._spriteset.updateUiOnly();
 				switch(this._pauseType) {
@@ -90,6 +98,74 @@ modify_Scene_Map = class {
 			}
 			this.updateBackgroundDarken();
 		}
+	}
+
+	refreshCursor() {
+		if(!TouchInput.mouseInside) {
+			this.cursor.visible = false;
+			return;
+		}
+
+		this.cursor.visible = true;
+
+		let type = 0;
+		const inv = $ppPlayer.inventory;
+		if(inv.isMining()) {
+			type = 1;
+		} else if(inv.isSkill()) {
+			type = 2;
+		} else if(inv.isMaterial()) {
+			type = 3;
+		} else if(inv.isFood()) {
+			type = 4;
+		}
+
+		CursorManager.hide();
+
+		if(this._cursorType !== type) {
+			this._cursorType = type;
+
+			//CursorManager.showNormal();
+			this.cursor.visible = false;
+			switch(type) {
+				case 0:
+					this.cursor.bitmap = ImageManager.lCursor("Basic");
+					this.cursor.visible = true;
+					this.cursor.anchor.set(2 / 16);
+					//CursorManager.showBasic();
+					break;
+				case 1:
+					this.cursor.bitmap = ImageManager.lCursor("Mine");
+					this.cursor.visible = true;
+					this.cursor.anchor.set(2 / 30);
+					//CursorManager.showMine();
+					break;
+				case 2:
+					this.cursor.bitmap = ImageManager.lCursor("Skill");
+					this.cursor.visible = true;
+					this.cursor.anchor.set(0.5);
+					//CursorManager.showSkill();
+					break;
+				case 3:
+					this.cursor.bitmap = ImageManager.lCursor("Aim");
+					this.cursor.visible = true;
+					this.cursor.anchor.set(0.5);
+					//CursorManager.showAim();
+					break;
+				case 4:
+					this.cursor.bitmap = ImageManager.lCursor("Food");
+					this.cursor.visible = true;
+					this.cursor.anchor.set(2 / 30);
+					//CursorManager.showFood();
+					break;
+			}
+		}
+	}
+
+	normalCursor() {
+		CursorManager.showNormal();
+		this.cursor.visible = false;
+		this._cursorType = null;
 	}
 
 	updatePauseInput() {

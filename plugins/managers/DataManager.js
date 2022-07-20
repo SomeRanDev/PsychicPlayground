@@ -5,6 +5,7 @@ DataManager.__old_createGameObjects = DataManager.createGameObjects;
 DataManager.createGameObjects = function() {
 	DataManager.__old_createGameObjects.apply(this, arguments);
 	$ppPlayer = new Player();
+	$keyVars = new Game_StringVariables();
 };
 
 DataManager.__old_makeSavefileInfo = DataManager.makeSavefileInfo;
@@ -66,6 +67,7 @@ DataManager.__old_makeSaveContents = DataManager.makeSaveContents;
 DataManager.makeSaveContents = function() {
 	const contents = DataManager.__old_makeSaveContents.apply(this, arguments);
 	contents.ppplayer = $ppPlayer.saveData();
+	contents.keyVars = $keyVars.save();
 	return contents;
 };
 
@@ -76,4 +78,9 @@ DataManager.extractSaveContents = function(contents) {
 		$ppPlayer = new Player();
 	}
 	$ppPlayer.loadData(contents.ppplayer);
+
+	if(!$keyVars) {
+		$keyVars = new Game_StringVariables();
+	}
+	$keyVars.load(contents.keyVars);
 };

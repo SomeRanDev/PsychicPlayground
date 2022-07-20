@@ -21,9 +21,10 @@ class Inventory {
 
 		this.activeSkillAmmo = new Int32Array(AbilityTypes.length);
 
+		this.addActiveSkill(0);
 		this.addActiveSkill(3);
 
-		this.addMaterial(0, 10);
+		this.addMaterial(0, 65);
 		this.addMaterial(3, 256);
 
 		this.addItem(0);
@@ -97,6 +98,18 @@ class Inventory {
 
 	isMaterial() {
 		return this.hotbarIndex >= 3 && this.hotbarIndex <= 5 && this.hotbar[this.hotbarIndex] >= 0;
+	}
+
+	isSkill() {
+		return this.hotbarIndex <= 2 && this.hotbar[this.hotbarIndex] >= 0;
+	}
+
+	isFood() {
+		if(this.hotbarIndex >= 6) {
+			const itemId = this.hotbar[this.hotbarIndex];
+			return ItemTypes[itemId]?.isFood ?? false;
+		}
+		return false;
 	}
 
 	hasPlacableMaterial() {
