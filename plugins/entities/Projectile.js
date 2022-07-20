@@ -5,6 +5,8 @@ class Projectile {
 		this.dir = 0;
 		this.targetDir = 0;
 
+		this.radius = 8;
+
 		this._particles = [];
 		this._unusedParticles = [];
 		this._particleTimer = 0;
@@ -31,7 +33,7 @@ class Projectile {
 	}
 
 	calculateDirection() {
-		return Math.atan2(this.x - this.targetX, this.y - this.targetY) - (Math.PI * 0.5);
+		return Math.atan2(this.targetY - this.y, this.targetX - this.x);
 	}
 
 	refreshDirection() {
@@ -124,7 +126,7 @@ class Projectile {
 	updateMovement() {
 		this.dir = RotateTowards(this.dir, this.targetDir, 8.0);
 		const rads = this.dir * (Math.PI / 180);
-		const xSpd = -5 * Math.cos(rads);
+		const xSpd = 5 * Math.cos(rads);
 		const ySpd = 5 * Math.sin(rads);
 
 		CollisionManager.setProjectileCollisionCheck();
@@ -148,6 +150,15 @@ class Projectile {
 		if($gameTemp.projectileReactors) {
 			for(const reactors of $gameTemp.projectileReactors) {
 				if(reactors.checkProjectile(this.x, this.y)) {
+					this.onCollide();
+					return false;
+				}
+			}
+		}
+
+		if($gameTemp.enemies) {
+			for(const enemy of $gameTemp.enemies) {
+				if(enemy.checkProjectile(this, this.x, this.y)) {
 					this.onCollide();
 					return false;
 				}
@@ -215,5 +226,9 @@ class Projectile {
 				len--;
 			}
 		}
+	}
+
+	onEnemyHit(enemy) {
+		enemy.takeDamage(1, this.dir * (Math.PI / 180), 20);
 	}
 }

@@ -1,12 +1,14 @@
 class EnemyBase {
-	constructor(tileX, tileY) {
+	constructor(tileX, tileY, onDefeat = null) {
 		this.tileX = tileX;
 		this.tileY = tileY;
+
+		this.onDefeat = onDefeat;
 
 		this.x = tileX * TS;
 		this.y = tileY * TS;
 
-		this.direction = 0;
+		this.direction = Math.PI * 0;
 		this.speed = 0;
 
 		this.time = 0;
@@ -18,8 +20,23 @@ class EnemyBase {
 		this._damageDirection = 0;
 		this._damageKnockback = 4;
 
-		this.colRect = { left: 6, right: 6, top: 0, bottom: 9 };
+		this._projectiles = [];
 
+		this.setupCollisionRect();
+
+		this.setupAnimations();
+
+		this._effect = null;
+
+		SpriteManager.addEntity(this);
+		$gameTemp.enemies.push(this);
+	}
+
+	setupCollisionRect() {
+		this.colRect = { left: 6, right: 6, top: 0, bottom: 9 };
+	}
+
+	setupAnimations() {
 		this.idleAni = {
 			front: "Blump_IdleFront",
 			back: "Blump_IdleBack",
@@ -40,11 +57,6 @@ class EnemyBase {
 			frameCount: 1,
 			speed: 999
 		};
-
-		this._teleportEffect = null;
-
-		SpriteManager.addEntity(this);
-		$gameTemp.enemies.push(this);
 	}
 
 	getMaxHp() {
@@ -75,6 +87,7 @@ class EnemyBase {
 			}
 			this.updateBehavior();
 			this.updatePosition();
+			this.updateProjectiles();
 		}
 		this.updateSprite();
 		this.updateSpriteAnimation();
@@ -86,7 +99,7 @@ class EnemyBase {
 			$gameMap.isEventRunning() ||
 			$gameMessage.isBusy() ||
 			$gamePlayer.isTransferring() ||
-			!!this._teleportEffect
+			(this._effect?.disallowMovement ?? false)
 		);
 	}
 
@@ -117,9 +130,9 @@ class EnemyBase {
 			let sy = this.y;
 			const colRect = this.colRect;
 
-			// * (Math.PI / 180);
+			CollisionManager.setPlayerCollisionCheck();
 
-			const inputX = -Math.sin(dir);
+			const inputX = Math.cos(dir);
 			if(inputX < 0) {
 				sx -= colRect.left;
 			} else if(inputX > 0) {
@@ -133,7 +146,7 @@ class EnemyBase {
 			}
 
 			sx = this.x;
-			const inputY = -Math.cos(dir);
+			const inputY = Math.sin(dir);
 			if(inputY < 0) {
 				sy -= colRect.top;
 			} else if(inputY > 0) {
@@ -166,16 +179,16 @@ class EnemyBase {
 
 		this.updateAnimationFrame();
 
-		// 0  -1
-		//   . 
-		// 1  -2
+		// -2  -1
+		//    . 
+		//  1   0
 		const quad = Math.floor(this.direction / (Math.PI / 2));
 		
-		this.sprite.scale.set(quad >= 0 ? -2 : 2, 2);
+		this.sprite.scale.set((quad === -2 || quad === 1) ? -2 : 2, 2);
 
 		let animation = this.getAnimation();
 		if(animation) {
-			const img = (quad === 0 || quad === -1) ? animation.back : animation.front;
+			const img = (quad === -2 || quad === -1) ? animation.back : animation.front;
 			this.sprite.bitmap = ImageManager.loadEnemy(img);
 
 			this.setFrameCountAndRate(animation.frameCount, animation.speed);
@@ -227,20 +240,36 @@ class EnemyBase {
 	}
 
 	updateTeleport() {
-		if(this._teleportEffect) {
-			if(this._teleportEffect.update()) {
-				this._teleportEffect = null;
+		if(this._effect) {
+			if(this._effect.update()) {
+				this._effect = null;
 			}
 		}
 	}
 
 	teleportIn() {
-		this._teleportEffect = new EnemyTeleport_Effect(this.sprite);
-		this._teleportEffect.teleportIn();
+		this._effect = new EnemyTeleport_Effect(this.sprite);
+		this._effect.teleportIn();
+	}
+
+	damageEffect() {
+		if(this._effect) {
+			this._effect.sprite = null;
+			this._effect = null;
+		}
+		this._effect = new EnemyDamage_Effect(this.sprite);
+	}
+
+	deathEffect() {
+		if(this._effect) {
+			this._effect.sprite = null;
+			this._effect = null;
+		}
+		this._effect = new EnemyDeath_Effect(this, this.sprite);
 	}
 
 	setDirectionToPlayer() {
-		this.direction = Math.atan2(this.x - $ppPlayer.position.x, this.y - $ppPlayer.position.y);
+		this.direction = Math.atan2($ppPlayer.position.y - this.y, $ppPlayer.position.x - this.x);
 	}
 
 	takeDamage(amount, direction, knockbackTime = 8, knockbackSpeed = 4) {
@@ -248,10 +277,12 @@ class EnemyBase {
 		if(this.hp <= 0) {
 			this.hp = 0;
 			this.onKill();
+			this.deathEffect();
 		} else {
 			this._damageTime = knockbackTime;
 			this._damageDirection = direction;
 			this._damageKnockback = knockbackSpeed;
+			this.damageEffect();
 		}
 	}
 
@@ -263,11 +294,62 @@ class EnemyBase {
 
 	onKill() {
 	}
+
+	onDeathEffectDone() {
+		this.destroy();
+		if(this.onDefeat) {
+			this.onDefeat();
+		}
+	}
+
+	checkProjectile(projectile, x, y) {
+		const x1 = this.x - this.colRect.left;
+		const x2 = this.x + this.colRect.right;
+		const y1 = this.y - this.colRect.top;
+		const y2 = this.y + this.colRect.bottom;
+		const r = projectile.radius;
+
+		const xn = Math.max(x1, Math.min(x, x2));
+		const yn = Math.max(y1, Math.min(y, y2));
+		const dx = xn - x;
+		const dy = yn - y;
+
+		if((dx * dx + dy * dy) <= r * r) {
+			if(projectile.onEnemyHit) {
+				projectile.onEnemyHit(this);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	shootProjectile(dir, img, x = 0, y = 0) {
+		const p = EnemyProjectileObjectPool.getObject(this.x + x, this.y + y, dir, img);
+		this._projectiles.push(p);
+		p.onPlayerHit = (player) => {
+			player.takeDamage(p.damage, p.direction);
+		};
+	}
+
+	updateProjectiles() {
+		let len = this._projectiles.length;
+		for(let i = 0; i < len; i++) {
+			if(this._projectiles[i].update()) {
+				const p = this._projectiles[i];
+				this._projectiles.splice(i, 1);
+				EnemyProjectileObjectPool.removeObject(p);
+				i--;
+				len--;
+			}
+		}
+	}
 }
 
 class EnemyTeleport_Effect {
 	constructor(sprite) {
 		this.sprite = sprite;
+
+		this.disallowMovement = true;
 
 		this._isTeleporting = false;
 		this._reverseTeleport = false;
@@ -331,5 +413,76 @@ class EnemyTeleport_Effect {
 			return false;
 		}
 		return true;
+	}
+}
+
+class EnemyDamage_Effect {
+	constructor(sprite) {
+		this.sprite = sprite;
+
+		this.disallowMovement = false;
+
+		this._time = 0;
+	}
+
+	update() {
+		this._time += 0.05;
+
+		const r = this._time;
+		if(r < 0.5) {
+			const a = (r / 0.5).cubicOut();
+			this.sprite.scale.set((1 - (a * 0.3)) * 2, (1 + (a * 0.3)) * 2);
+			this.sprite.setBlendColor([a * 255, a * 125, a * 125, a * 255]);
+		} else {
+			const b = (((r - 0.5) / 0.5));
+			this.sprite.scale.set((0.7 + (b * 0.3)) * 2, (1.3 - (b * 0.3)) * 2);
+
+			const c = 1 - b;
+			this.sprite.setBlendColor([c * 255, c * 125, c * 125, c * 255]);
+		}
+
+		if(this._time >= 1) {
+			this.sprite.scale.set(2);
+			this.sprite.setBlendColor([0, 0, 0, 0]);
+			return true;
+		}
+
+		return false;
+	}
+}
+
+class EnemyDeath_Effect {
+	constructor(enemy, sprite) {
+		this.enemy = enemy;
+		this.sprite = sprite;
+
+		this.disallowMovement = true;
+
+		this._time = 0;
+	}
+
+	update() {
+		this._time += 0.05;
+		if(this._time > 1) this._time = 1;
+
+		const r = this._time;
+		if(r < 0.5) {
+			const a = (r / 0.5).cubicOut();
+			this.sprite.scale.set((1 + (a * 0.5)) * 2, (1 - (a * 0.5)) * 2);
+			this.sprite.setBlendColor([a * 255, a * 255, a * 255, a * 255]);
+		} else {
+			const b = (((r - 0.5) / 0.5));
+			this.sprite.scale.set((1.5 - (b * 1.5)) * 2, (0.5 + (b * 1.5)) * 2);
+			this.sprite.setBlendColor([255, 125, 125, 255]);
+		}
+
+		if(this._time >= 1) {
+			this.sprite.setBlendColor([255, 125, 125, 255]);
+			this.sprite.scale.set(0, 4);
+			this.enemy.onDeathEffectDone();
+			return true;
+		}
+
+		return false;
 	}
 }

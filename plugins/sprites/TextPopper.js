@@ -26,14 +26,14 @@ class TextPopper extends Sprite {
 		for(let i = 0; i < this._texts.length; i++) {
 			const text = this._texts[i];
 
-			text._progress += 0.03;
+			text._progress += 0.01;
 			if(text._progress > 1) text._progress = 1;
 
 			const p = text._progress;
 
-			text.style.letterSpacing = p < 0.5 ? ((p / 0.5).cubicOut() * 2) : (1 - ((p - 0.5) / 0.3)).cubicOut() * 2;
+			text.style.letterSpacing = p < 0.3 ? ((p / 0.3).cubicOut() * 2) : (1 - ((p - 0.3) / 0.6)).cubicOut() * 2;
 			text.y = text._baseY - (p.cubicOut() * 15);
-			text.alpha = (p > 0.75) ? (1 - ((p - 0.6) / 0.4)) : 1;
+			text.alpha = (p > 0.75) ? (1 - ((p - 0.75) / 0.25)) : 1;
 
 			if(p >= 1) {
 				this._texts.remove(text);

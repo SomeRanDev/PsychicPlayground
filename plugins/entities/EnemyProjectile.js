@@ -5,6 +5,8 @@ class EnemyProjectile {
 		this.direction = direction;
 		this._imageUrl = imageUrl;
 
+		this.damage = 1;
+
 		this.radius = 5;
 
 		SpriteManager.addEntity(this);

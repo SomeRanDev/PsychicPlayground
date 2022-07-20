@@ -239,6 +239,12 @@ modify_Game_Map = class {
 		}
 	}
 
+	removeRowSpikes(x1, x2, y) {
+		for(let x = x1; x <= x2; x++) {
+			this.removeSpikes(x, y);
+		}
+	}
+
 	update() {
 		PP.Game_Map.update.apply(this, arguments);
 

@@ -6,6 +6,8 @@ class Player {
 
 		this._walkTime = 0;
 
+		this.hp = 10;
+
 		this.TURN_RATE = 9.0;
 
 		this.targetDirection = 0;
@@ -31,6 +33,12 @@ class Player {
 		this.making = 1;
 
 		this.inventory = new Inventory();
+
+		// --- no save ---
+
+		this._damageTime = 0;
+		this._damageDirection = 0;
+		this._damageKnockback = 0;
 	}
 
 	makeSprite() {
@@ -64,6 +72,8 @@ class Player {
 		this.moving = data.moving;
 
 		this._walkTime = data._walkTime;
+
+		this.hp = data.hp;
 
 		this.TURN_RATE = data.TURN_RATE;
 
@@ -99,6 +109,8 @@ class Player {
 		result.moving = this.moving;
 
 		result._walkTime = this._walkTime;
+
+		result.hp = this.hp;
 
 		result.TURN_RATE = this.TURN_RATE;
 
@@ -197,6 +209,13 @@ class Player {
 		this.playerEffect = new BedLeaveEffect(this);
 	}
 
+	damageEffect() {
+		this.playerEffect = new DamageEffect(this);
+	}
+
+	deathEffect() {
+	}
+
 	removeEffect(effect) {
 		if(this.playerEffect === effect) {
 			this.playerEffect = null;
@@ -235,11 +254,29 @@ class Player {
 		this.moving = this.isMoving();
 		const lastDirection = this.currentDirection;
 
-		if(this.moving && this.canMove()) {
+		if((this.moving || this._damageTime > 0) && this.canMove()) {
 			this.updateTargetDirection();
 
+			let isKnockback = false;
+			if(this._damageTime > 0) {
+				this._damageTime--;
+				isKnockback = true;
+				if(this._damageTime <= 0) {
+					this.onDamageKnockbackComplete();
+				}
+			}
+
 			this._walkTime += 1;
-			let speed = 3;// + (this._walkTime.clamp(0, 90) / 90);
+
+			let speed = 3;
+			let inputX = Input.InputVector.x;
+			let inputY = Input.InputVector.y;
+
+			if(isKnockback) {
+				speed = this._damageKnockback;
+				inputX = Math.cos(this._damageDirection);
+				inputY = Math.sin(this._damageDirection);
+			}
 
 			CollisionManager.setPlayerCollisionCheck();
 
@@ -247,7 +284,7 @@ class Player {
 			let sy = this.position.y;
 			const colRect = this._collisionRect;
 
-			const inputX = Input.InputVector.x;
+			
 			if(inputX < 0) {
 				sx -= colRect.left;
 			} else if(inputX > 0) {
@@ -261,7 +298,6 @@ class Player {
 			}
 
 			sx = this.position.x;
-			const inputY = Input.InputVector.y;
 			if(inputY < 0) {
 				sy -= colRect.top;
 			} else if(inputY > 0) {
@@ -353,6 +389,8 @@ class Player {
 	}
 
 	updateProjectileInput() {
+		if(!this.canMove()) return;
+
 		const isPressed = TouchInput.isPressed();
 
 		if(TouchInput.isTriggered()) {
@@ -429,6 +467,26 @@ class Player {
 			return true;
 		}
 		return false;
+	}
+
+	takeDamage(amount, direction, knockbackTime = 8, knockbackSpeed = 4) {
+		this.hp -= amount;
+		if(this.hp <= 0) {
+			this.hp = 0;
+			this.onKill();
+			this.deathEffect();
+		} else {
+			this._damageTime = knockbackTime;
+			this._damageDirection = direction;
+			this._damageKnockback = knockbackSpeed;
+			this.damageEffect();
+		}
+	}
+
+	onKill() {
+	}
+
+	onDamageKnockbackComplete() {
 	}
 }
 

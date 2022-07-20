@@ -33,6 +33,11 @@ modify_Spriteset_Map = class {
 		this._ppLayer.addChild(spr);
 	}
 
+	removePPEntity(eSpr) {
+		this._ppEntities.remove(eSpr);
+		this._ppLayer.removeChild(eSpr);
+	}
+
 	_sortPPChildren() {
 		if((this._sortTimer++) > 30) {
 			this._sortTimer = 0;
@@ -290,6 +295,14 @@ class SpriteManager {
 			SceneManager._scene._spriteset.createPPEntity(e);
 		} else {
 			this.entities.push(e);
+		}
+	}
+
+	static removeEntity(e) {
+		if(SceneManager._scene?._spriteset?._ppEntities) {
+			SceneManager._scene._spriteset.removePPEntity(e.sprite);
+		} else {
+			this.entities.remove(e);
 		}
 	}
 

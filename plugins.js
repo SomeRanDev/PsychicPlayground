@@ -85,6 +85,7 @@ var $plugins =
 {"name":"effects/TeleportEffect","status":true,"description":"","parameters":{}},
 {"name":"effects/BedEffect","status":true,"description":"","parameters":{}},
 {"name":"effects/BedLeaveEffect","status":true,"description":"","parameters":{}},
+{"name":"effects/DamageEffect","status":true,"description":"","parameters":{}},
 {"name":"---","status":false,"description":"","parameters":{}},
 {"name":"other/DisableDefault","status":true,"description":"","parameters":{}},
 {"name":"other/Bitmap","status":true,"description":"","parameters":{}},

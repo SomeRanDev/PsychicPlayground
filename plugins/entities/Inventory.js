@@ -169,6 +169,7 @@ class Inventory {
 	}
 
 	updateHotbarInput() {
+		if(!$ppPlayer.canMove()) return;
 		if(TouchInput.wheelScrolled > 0) {
 			this.incrementHotbarIndex();
 		} else if(TouchInput.wheelScrolled < 0) {
