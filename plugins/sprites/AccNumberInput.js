@@ -11,7 +11,7 @@ class AccNumberInput extends ChoiceInput {
 	pointsRemaining() {
 		let total = 0;
 		for(const o of this._others) {
-			total += o.getNumber() - this._min;
+			total += o.getNumber() - o._min;
 		}
 		return this._totalMax - total;
 	}
@@ -27,6 +27,10 @@ class AccNumberInput extends ChoiceInput {
 		return this._number;
 	}
 
+	getTextTint() {
+		return this.canLeft() ? 0xeecc44 : 0xffffff;
+	}
+
 	setNumber(n) {
 		this._number = n;
 		this.updateText();
@@ -40,10 +44,10 @@ class AccNumberInput extends ChoiceInput {
 		let total = 0;
 		for(const o of this._others) {
 			if(this !== o) {
-				total += o.getNumber() - this._min;
+				total += o.getNumber() - o._min;
 			}
 		}
-		return this._number < Math.min(this._totalMax - total + 1, this._max);
+		return (this._number - this._min) < Math.min(this._totalMax - total, this._max - this._min);
 	}
 
 	onChangeChoice(dir) {
@@ -52,5 +56,6 @@ class AccNumberInput extends ChoiceInput {
 
 	updateText() {
 		this.text.text = "" + this._number;
+		this.text.style.fill = this.getTextTint();
 	}
 }

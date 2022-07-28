@@ -4,11 +4,13 @@ class PlayerHealth extends Sprite {
 
 		this._hearts = [];
 		this.makeHealthText();
-		this.refreshHearts();
+		this.refreshHeartSprites();
+		this.refreshHeartStatus();
 
 		this._hunger = [];
 		this.makeHungerText();
-		this.refreshHunger();
+		this.refreshHungerSprites();
+		this.refreshHungerStatus();
 
 		this.makeExpContainer();
 		this.makeExpText();
@@ -30,7 +32,7 @@ class PlayerHealth extends Sprite {
 
 		const heart = HeartObjectPool.getObject("Heart");
 		heart.move((index * 18) + offsetX, offsetY);
-		this._hearts.push(index);
+		this._hearts.push(heart);
 		this.addChild(heart);
 	}
 
@@ -46,7 +48,7 @@ class PlayerHealth extends Sprite {
 
 		const hunger = HeartObjectPool.getObject("Hunger");
 		hunger.move((index * 18) + offsetX, offsetY);
-		this._hunger.push(index);
+		this._hunger.push(hunger);
 		this.addChild(hunger);
 	}
 
@@ -80,6 +82,36 @@ class PlayerHealth extends Sprite {
 		this._exp.scale.set(2);
 		this._exp.move(1, 1);
 		this.addChild(this._exp);
+
+		this._expValue = new TilingSprite(ImageManager.lUi("EXP"));
+		this._expValue.move(9, 5);
+		this._exp.addChild(this._expValue);
+		this._expRatio = 0;
+		this.refreshExp();
+	}
+
+	refreshExp() {
+		this._targetExpRatio = $ppPlayer.expRatio();
+		this.refreshExpGauge();
+	}
+
+	refreshExpGauge() {
+		const bw = this._expValue.bitmap.width;
+		const bh = this._expValue.bitmap.height;
+		const h = Math.round(bh * this._expRatio);
+		this._expValue.move(9, 5 + (bh - h), bw, h);
+	}
+
+	update() {
+		super.update();
+
+		if(this._expRatio !== 0 || this._targetExpRatio !== 0) {
+			if(this._expRatio !== this._targetExpRatio) {
+				this._expRatio = PP.lerp(this._expRatio, this._targetExpRatio, 0.1);
+				this.refreshExpGauge();
+			}
+			this._expValue.origin.y += 0.2;
+		}
 	}
 
 	makeExpText() {
@@ -90,22 +122,48 @@ class PlayerHealth extends Sprite {
 	}
 
 	heartCount() {
-		return 8;
+		return Math.floor($ppPlayer.maxHp / 10);
 	}
 
-	refreshHearts() {
+	refreshHeartSprites() {
 		for(let i = this._hearts.length; i < this.heartCount(); i++) {
 			this.makeHeart(i);
 		}
 	}
 
-	hungerCount() {
-		return 8;
+	refreshHeartStatus() {
+		const hp = Math.floor($ppPlayer.hp / 10);
+		const maxHp = this.heartCount();
+		for(let i = 1; i <= maxHp; i++) {
+			const h = this._hearts[i - 1];
+			if(i <= hp) {
+				h.unbreak();
+			} else {
+				h.break();
+			}
+		}
 	}
 
-	refreshHunger() {
+	hungerCount() {
+		return Math.floor($ppPlayer.maxHunger / 10);
+	}
+
+	refreshHungerSprites() {
 		for(let i = this._hunger.length; i < this.hungerCount(); i++) {
 			this.makeHunger(i);
+		}
+	}
+
+	refreshHungerStatus() {
+		const hunger = Math.floor($ppPlayer.hunger / 10);
+		const maxHunger = this.hungerCount();
+		for(let i = 1; i <= maxHunger; i++) {
+			const h = this._hunger[i - 1];
+			if(i <= hunger) {
+				h.unbreak();
+			} else {
+				h.break();
+			}
 		}
 	}
 }

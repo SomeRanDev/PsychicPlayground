@@ -34,8 +34,8 @@ class PlayerSprite extends Sprite {
 	}
 
 	makeHud() {
-		this._hotbar = new Hotbar();
 		this._healthHud = new PlayerHealth();
+		this._hotbar = new Hotbar();
 
 		this._map = new Map(256, 256);
 		this._map.setupCorner();
@@ -47,6 +47,12 @@ class PlayerSprite extends Sprite {
 
 		this._invKey = new Key("E", "Inventory");
 		this._invKey.move(Graphics.width - 100, Graphics.height - 28);
+
+		/*
+		this._coords = PP.makeText("0, 0", 18);
+		this._coords.move(720, 120);
+		SpriteManager.addUi(this._coords);
+		*/
 	}
 
 	refreshSpritePosition(startIndex = 0) {
@@ -142,6 +148,8 @@ class PlayerSprite extends Sprite {
 		this.x = $ppPlayer.position.x + $ppPlayer.spriteOffsetX;
 		this.y = $ppPlayer.position.y + $ppPlayer.spriteOffsetY;
 
+		//this._coords.text = Math.round($ppPlayer.position.x / TS) + ", " + Math.round($ppPlayer.position.y / TS);
+
 		const tileY = Math.floor(this.y / 16);
 		if(this._lastYTile !== tileY) {
 			this._lastYTile = tileY;
@@ -151,5 +159,25 @@ class PlayerSprite extends Sprite {
 
 	addText(text) {
 		this._textPopper.addText(text);
+	}
+
+	addTextEx(text, color) {
+		this._textPopper.addTextEx(text, color);
+	}
+
+	onHpChange() {
+		this._healthHud.refreshHeartStatus();
+	}
+
+	onMaxHpChange() {
+		this._healthHud.refreshHeartSprites();
+	}
+
+	onHungerChange() {
+		this._healthHud.refreshHungerStatus();
+	}
+
+	onMaxHungerChange() {
+		this._healthHud.refreshHungerSprites();
 	}
 }

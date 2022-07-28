@@ -36,6 +36,10 @@ ImageManager.lCursor = function(filename) {
 	return this.loadBitmap("img/cursors/", filename);
 };
 
+ImageManager.lStruct = function(filename) {
+	return this.loadBitmap("img/structs/", filename);
+};
+
 } else {
 
 ImageManager.lExists = function(filepath) {
@@ -84,6 +88,10 @@ ImageManager.lEntities = function(filename) {
 
 ImageManager.lCursor = function(filename) {
 	return this.loadBitmapWTwitter("img/cursors/", filename);
+};
+
+ImageManager.lStruct = function(filename) {
+	return this.loadBitmap("img/structs/", filename);
 };
 
 }

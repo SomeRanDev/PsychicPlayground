@@ -14,20 +14,25 @@ class InteractableIndicator extends Sprite {
 }
 
 class Interactable {
-	constructor(x, y, event, imgPath, frames, frameSpeed, eventsList) {
+	constructor(x, y, event, imgPath, frames, frameSpeed, eventsListOrCommonEventId) {
 		this.x = x;
 		this.y = y;
 		this._event = event;
 		this._imgPath = imgPath;
 		this._frames = frames;
 		this._aniSpeed = frameSpeed / 1000;
-		this._eventsList = eventsList;
 
-		this._eventsList.splice(this._eventsList.length - 1, 0, {
-			code: 355,
-			indent: 0,
-			parameters: ["$gameMap.endCurrentlyRunningEvent();"]
-		});
+		if(typeof eventsListOrCommonEventId === "number") {
+			this._commonEventId = eventsListOrCommonEventId;
+		} else if(Array.isArray(eventsListOrCommonEventId)) {
+			this._eventsList = eventsListOrCommonEventId;
+			this._eventsList.splice(this._eventsList.length - 1, 0, {
+				code: 355,
+				indent: 0,
+				parameters: ["$gameMap.endCurrentlyRunningEvent();"]
+			});
+		} else {
+		}
 
 		this._intKeyAni = 0;
 		this._intTeleAni = 0;
@@ -64,8 +69,9 @@ class Interactable {
 		if(this.sprite && this.sprite.bitmap.isReady() && f >= 0 && f < this._frames) {
 			if(!this._frameWidth) {
 				this._frameWidth = this.sprite.bitmap.width / this._frames;
+				this._frameHeight = this.sprite.bitmap.height;
 			}
-			this.sprite.setFrame(f * this._frameWidth, 0, this._frameWidth, this._frameWidth);
+			this.sprite.setFrame(f * this._frameWidth, 0, this._frameWidth, this._frameHeight);
 			this.sprite.visible = true;
 		}
 	}
@@ -167,7 +173,7 @@ class Interactable {
 	}
 
 	updateInput() {
-		if(this._isClose && !this.currentExists() && this._eventsList && Input.isTriggeredEx("space")) {
+		if(this._isClose && !this.currentExists() && (this._eventsList || this._commonEventId) && Input.isTriggeredEx("space")) {
 			this.startEvent();
 		}
 	}
@@ -195,7 +201,11 @@ class Interactable {
 	}
 
 	runEvent() {
-		$gameMap._interpreter.setup(this._eventsList);
+		if(this._commonEventId) {
+			$gameTemp.reserveCommonEvent(this._commonEventId);
+		} else {
+			$gameMap._interpreter.setup(this._eventsList);
+		}
 	}
 
 	endEvent() {

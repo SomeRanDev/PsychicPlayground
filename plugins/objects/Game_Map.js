@@ -79,7 +79,19 @@ modify_Game_Map = class {
 					const dir = transferData[3] ?? 2;
 					const left = transferData[4] ?? 0;
 					const right = transferData[5] ?? 0;
-					CollisionManager.addTransfer(data.x, data.y, { id, x, y, dir }, left, right);
+					const fadeType = transferData[6] ?? 0;
+					CollisionManager.addTransfer(data.x, data.y, { id, x, y, dir, fadeType }, left, right);
+				}
+
+				event.erase();
+			}
+
+			if(m.OverworldTransfer) {
+				const transferData = m.OverworldTransfer === true ? [] : JSON.parse(m.OverworldTransfer.trim());
+				if(transferData.length >= 0) {
+					const left = transferData[0] ?? 0;
+					const right = transferData[1] ?? 0;
+					CollisionManager.addOverworldTransfer(data.x, data.y, { id: 1, x: 0, y: 0, dir: 8, fadeType: 1 }, left, right);
 				}
 
 				event.erase();
@@ -102,7 +114,7 @@ modify_Game_Map = class {
 				event.erase();
 			}
 
-			if(m.Spikes) {
+			if(m.Spikes && event.meetsConditions(data.pages[0])) {
 				const s = new Spikes(data.x, data.y);
 				s._name = data.name;
 				$gameTemp.updateEntities.push(s);
@@ -155,6 +167,21 @@ modify_Game_Map = class {
 
 			if(m.TriInt) {
 				$gameTemp.triggerEntities[data.name] = event;
+				event.erase();
+			}
+
+			if(m.Chest) {
+				let chestData = [];
+				if(m.Chest) {
+					chestData = JSON.parse(m.Chest.trim());
+				}
+
+				const c = new Chest(data.x, data.y, "", chestData[0], chestData[1], chestData[2]);
+
+				c._name = data.name;
+				$gameTemp.updateEntities.push(c);
+				$gameTemp.updateEntityNames[c._name] = c;
+
 				event.erase();
 			}
 		}

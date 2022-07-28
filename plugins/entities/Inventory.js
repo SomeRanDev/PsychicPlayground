@@ -25,9 +25,9 @@ class Inventory {
 		this.addActiveSkill(3);
 
 		this.addMaterial(0, 65);
-		this.addMaterial(3, 256);
+		//this.addMaterial(3, 256);
 
-		this.addItem(0);
+		//this.addItem(0);
 
 		this.hotbarIndex = 0;
 		this.hotbar = new Int32Array(Inventory.HotBarItems);
@@ -104,6 +104,22 @@ class Inventory {
 		return this.hotbarIndex <= 2 && this.hotbar[this.hotbarIndex] >= 0;
 	}
 
+	holdingItem() {
+		if(this.hotbarIndex >= 6) {
+			const itemId = this.hotbar[this.hotbarIndex];
+			return itemId;
+		}
+		return -1;
+	}
+
+	hasUsableItem() {
+		const holdingItemId = this.holdingItem();
+		if(holdingItemId !== -1) {
+			return ItemTypes[holdingItemId]?.behavior ?? null;
+		}
+		return null;
+	}
+
 	isFood() {
 		if(this.hotbarIndex >= 6) {
 			const itemId = this.hotbar[this.hotbarIndex];
@@ -148,12 +164,27 @@ class Inventory {
 		if(this.hotbarIndex >= 3 && this.hotbarIndex <= 5) {
 			const matId = this.hotbar[this.hotbarIndex];
 			const matData = MaterialTypes[matId];
-			const buildCost = matData?.buildCost ?? 0;
-			if(this.hasMaterial(matId, MaterialTypes[matId]?.buildCost ?? 0)) {
+			const buildCost = $ppPlayer.calcBuildCost(matData?.buildCost ?? 0);
+			if(this.hasMaterial(matId, buildCost)) {
 				this.addMaterial(matId, -(buildCost * count));
 				$ppPlayer.showPopup("-" + (buildCost * count) + " " + matData.name);
 			} else {
-				$ppPlayer.showPopup("Not enough " + matData.name + ".");
+				const name = matData.name;
+				if(!this._lastNoMaterial) {
+					this._lastNoMaterial = {
+						mat: name,
+						time: -9999
+					};
+				}
+				if(
+					this._lastNoMaterial.name !== name ||
+					this._lastNoMaterial.time + 40 < Graphics.frameCount
+				) {
+					$ppPlayer.showPopup("Not enough " + name + ".");
+
+					this._lastNoMaterial.name = name;
+					this._lastNoMaterial.time = Graphics.frameCount;
+				}
 			}
 		}
 	}
@@ -249,7 +280,8 @@ class Inventory {
 		} else if(slotIndex <= 5) {
 			return this.materials[id];
 		} else if(slotIndex <= 8) {
-			return null;
+			const count = this.getItemCount(id);
+			return count > 1 ? count : null;
 		}
 		return null;
 	}
@@ -300,6 +332,7 @@ class Inventory {
 			if($ppPlayer && !ImageManager.IsTwitter) {
 				this.verifyHotbarOptions();
 				$ppPlayer.refreshHotbarIcons();
+				$ppPlayer.refreshInventorySlots();
 			}
 		}
 		if($ppPlayer && !ImageManager.IsTwitter) {
@@ -317,7 +350,21 @@ class Inventory {
 		if(emptyIndex !== -1) {
 			this.items[emptyIndex] = itemId;
 			this.sortItems();
+			this.refreshAllHotbar();
 			return true;
+		}
+		return false;
+	}
+
+	removeItem(itemId) {
+		if(this.hasItem(itemId)) {
+			const index = this.items.indexOf(itemId);
+			if(index >= 0) {
+				this.items[index] = -1;
+				this.sortItems();
+				this.refreshAllHotbar();
+				return true;
+			}
 		}
 		return false;
 	}
@@ -334,6 +381,28 @@ class Inventory {
 		});
 	}
 
+	getItemCount(itemId) {
+		let result = 0;
+		for(let i = 0; i < this.items.length; i++) {
+			if(this.items[i] === itemId) {
+				result++;
+			}
+		}
+		return result;
+	}
+
+	hasRoomForItem() {
+		return this.hasItem(-1);
+	}
+
+	consumeHotbarItem() {
+		const item = this.holdingItem();
+		this.removeItem(item);
+		if(!this.hasItem(item)) {
+			this.clearHotbarIndex(this.hotbarIndex);
+		}
+	}
+
 	onHotbar(index, id) {
 		for(let i = index * 3; i < (index + 1) * 3; i++) {
 			if(this.hotbar[i] === id) {
@@ -345,6 +414,7 @@ class Inventory {
 
 	clearHotbarIndex(index) {
 		this.hotbar[index] = -1;
+		this.refreshAllHotbar();
 	}
 
 	setHotbarIndex(index, id) {
@@ -360,5 +430,44 @@ class Inventory {
 			this.hotbar[oldSlot] = this.hotbar[index];
 		}
 		this.hotbar[index] = id;
+		this.refreshAllHotbar();
+	}
+
+	refreshAllHotbar() {
+		if($ppPlayer && !ImageManager.IsTwitter) {
+			this.verifyHotbarOptions();
+			$ppPlayer.refreshHotbarNumbers();
+			$ppPlayer.refreshHotbarIcons();
+		}
+	}
+
+	getRandomNewSkill() {
+		if(this.activeSkills.includes(-1)) {
+			const unknownSkills = [];
+			for(let i = 3; i < AbilityTypes.length; i++) {
+				if(!this.activeSkills.includes(i)) {
+					unknownSkills.push(i);
+				}
+			}
+			if(unknownSkills.length > 0) {
+				return unknownSkills[Math.floor(Math.random() * unknownSkills.length)];
+			}
+		}
+		return -1;
+	}
+
+	getRandomItem() {
+		if(this.activeSkills.includes(-1)) {
+			const possibleItems = [];
+			for(let i = 0; i < ItemTypes.length; i++) {
+				if(ItemTypes[i].allowChestFind) {
+					possibleItems.push(i);
+				}
+			}
+			if(possibleItems.length > 0) {
+				return possibleItems[Math.floor(Math.random() * possibleItems.length)];
+			}
+		}
+		return -1;
 	}
 }

@@ -46,6 +46,13 @@ class Heart extends Sprite {
 		this._shouldBreak = true;
 	}
 
+	unbreak() {
+		this._shouldBreak = false;
+		this._animationCount = 0;
+		this._animationFrame = 0;
+		this.setAnimationFrame(0);
+	}
+
 	onPoolRemove() {
 		if(this.parent) {
 			this.parent.removeChild(this);

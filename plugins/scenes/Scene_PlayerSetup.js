@@ -77,16 +77,24 @@ class Scene_PlayerSetup extends Scene_Base {
 		this.addChild(this.classInput);
 	}
 
-	createStatInputs() {
-		this.statInputs = [];
-		const stats = ["Focusing", "Moving", "Shooting", "Breaking", "Making"];
-		const statDescs = [
+	static getStatNames() {
+		return ["Power", "Speed", "Aiming", "Breaking", "Making"];
+	}
+
+	static getStatDescs() {
+		return [
 			"Increases damage done by abilities\nand materials",
-			"Increases movement speed and\nprojectile speed.",
-			"Increases shoot frequency and\nreduces cooldown times.",
+			"Increases movement speed and\nshoot frequency.",
+			"Increases shoot accuracy and\nreduces cooldown times.",
 			"Increases speed at which structures\ncan be mined.",
 			"Decreases material cost of\nbuilding structures."
 		];
+	}
+
+	createStatInputs() {
+		this.statInputs = [];
+		const stats = Scene_PlayerSetup.getStatNames();
+		const statDescs = Scene_PlayerSetup.getStatDescs();
 		const len = stats.length;
 		for(let i = 0; i < len; i++) {
 			const input = new AccNumberInput(stats[i], 100, 30);
@@ -95,7 +103,7 @@ class Scene_PlayerSetup extends Scene_Base {
 			} else {
 				input.move(80 + (i === 3 ? 0.5 : 1.5) * 120, 350);
 			}
-			input.setNumber(2);
+			input.setNumber(3);
 			input.onChange = this.updateStatCount.bind(this);
 			input.onHover = (h) => {
 				if(!h && this._statDesc === statDescs[i]) {

@@ -37,6 +37,11 @@ class Hotbar extends Sprite {
 		this.refreshIcons();
 		this.refreshNumbers();
 
+		this.statMenu = new PlayerStatMenu();
+		this.statMenu.y = -140;
+		this.statMenu.visible = false;
+		this.addChild(this.statMenu);
+
 		SpriteManager.addUi(this);
 	}
 
@@ -243,14 +248,27 @@ class Hotbar extends Sprite {
 		if(this._menuOpen !== $gameMap.isInvPause()) {
 			this._menuOpen = $gameMap.isInvPause();
 			if(this._menuOpen) {
-				this.refreshInventoryListSlots();
+				this.onMenuOpen();
 			} else {
 				this.onMenuClose();
 			}
 		}
 	}
 
+	onMenuOpen() {
+		this._showStatMenu = $ppPlayer.statPoints > 0;
+		if(this._showStatMenu) {
+			this.statMenu.refreshStatInputs();
+		}
+
+		this.refreshInventoryListSlots();
+	}
+
 	onMenuClose() {
+		if(this._showStatMenu) {
+			this.statMenu.applyStatInputs();
+		}
+
 		this.closeAllToolTips();
 	}
 
@@ -311,6 +329,7 @@ class Hotbar extends Sprite {
 				const text = inv.getSlotNumber(i);
 				const textSpr = this._hotbarSlots[i]._text;
 				if(text === null) {
+					textSpr.text = "";
 					textSpr.visible = false;
 				} else {
 					textSpr.text = text;
@@ -332,6 +351,11 @@ class Hotbar extends Sprite {
 			this._menuOpenness = r;
 
 			const rc = this._menuOpen ? r.cubicOut() : r.cubicIn();
+
+			if(this._showStatMenu) {
+				this.statMenu.y = -675 + (300 * rc);
+				this.statMenu.visible = r !== 0;
+			}
 
 			let i = 0;
 			for(const piece of this._pieces) {
@@ -458,12 +482,12 @@ class Hotbar extends Sprite {
 				const itemId = inv.items[i];
 				const slot = this._itemListSlots[i];
 				slot._dataId = itemId;
-				if(itemId === -1) continue;
-				const itemData = ItemTypes[itemId];
+				const itemData = itemId === -1 ? null : ItemTypes[itemId];
 				if(itemData) {
 					slot.bitmap = ImageManager.lIcon(itemData.icon);
 					slot.visible = true;
 				} else {
+					slot.bitmap = null;
 					slot.visible = false;
 				}
 				slot.tint = inv.onHotbar(2, itemId) ? 0x444444 : 0xffffff;
@@ -477,6 +501,9 @@ class Hotbar extends Sprite {
 
 	updateMenuInteraction() {
 		if(this.canInteractWithMenu()) {
+			if(this._showStatMenu) {
+				this.statMenu.update();
+			}
 			this.updateMenuHover();
 		} else if(this._dragItem !== null) {
 			this.updateMenuDrag();

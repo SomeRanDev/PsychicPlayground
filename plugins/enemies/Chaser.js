@@ -3,37 +3,22 @@ class Chaser extends EnemyBase {
 		return 3;
 	}
 
+	bodyDamage() {
+		return 10;
+	}
+
+	exp() {
+		return 10;
+	}
+
 	setupCollisionRect() {
 		this.colRect = { left: 9, right: 9, top: 6, bottom: 9 };
 	}
 
 	setupAnimations() {
-		this.idleAni = {
-			front: "Blump_IdleFront",
-			back: "Blump_IdleBack",
-			frameCount: 12,
-			speed: 12
-		};
-
-		this.walkAni = {
-			front: "Blump_WalkFront",
-			back: "Blump_WalkBack",
-			frameCount: 2,
-			speed: 5
-		};
-
-		this.damageAni = {
-			front: "Blump_DamageFront",
-			back: "Blump_DamageBack",
-			frameCount: 1,
-			speed: 999
-		};
-	}
-
-	setupSprite() {
-		super.setupSprite();
-
-		this.sprite.bitmap = ImageManager.loadEnemy("Test");
+		this.idleAni = this.buildAnimation("Blump_IdleFront", "Blump_IdleBack", 12, 12);
+		this.walkAni = this.buildAnimation("Blump_WalkFront", "Blump_WalkBack", 2, 5);
+		this.damageAni = this.buildAnimation("Blump_DamageFront", "Blump_DamageBack", 1, 999);
 	}
 
 	updateBehavior() {
@@ -45,7 +30,8 @@ class Chaser extends EnemyBase {
 			this.speed = 0;
 			this.time = 0;
 
-			this.shootProjectile(90, "Teleport");
+			//const p = this.shootProjectile(90, "Attack");
+			//p.startAnimationSpeed = 0.2;
 		}
 	}
 

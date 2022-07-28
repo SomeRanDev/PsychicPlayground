@@ -1,6 +1,7 @@
 class Biome_Base {
 	constructor() {
 		this.plainGrassId = (255 << 24) | (4 << 8) | 200;
+		this.name = "Plains";
 	}
 
 	checkPath(globalX, globalY) {

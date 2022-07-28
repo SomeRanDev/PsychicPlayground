@@ -6,8 +6,6 @@ class Player {
 
 		this._walkTime = 0;
 
-		this.hp = 10;
-
 		this.TURN_RATE = 9.0;
 
 		this.targetDirection = 0;
@@ -26,11 +24,25 @@ class Player {
 
 		this._collisionRect = { left: 6, right: 6, bottom: 0, top: 12 };
 
-		this.focusing = 1;
-		this.moving = 1;
-		this.shooting = 1;
-		this.breaking = 1;
-		this.making = 1;
+		this._lastOverworldX = 0;
+		this._lastOverworldY = 1;
+
+		this.fastTravelSpots = [];
+
+		this.powerStat = 1;
+		this.speedStat = 1;
+		this.aimingStat = 1;
+		this.breakingStat = 1;
+		this.makingStat = 1;
+
+		this.exp = 0;
+		this.level = 1;
+		this.statPoints = 0;
+
+		this.hp = 80;
+		this.maxHp = 80;
+		this.hunger = 80;
+		this.maxHunger = 80;
 
 		this.inventory = new Inventory();
 
@@ -39,6 +51,8 @@ class Player {
 		this._damageTime = 0;
 		this._damageDirection = 0;
 		this._damageKnockback = 0;
+
+		this._invincibilityTime = 0;
 	}
 
 	makeSprite() {
@@ -47,11 +61,22 @@ class Player {
 	}
 
 	setAllStats(allStats) {
-		this.focusing = allStats[0];
-		this.moving = allStats[1];
-		this.shooting = allStats[2];
-		this.breaking = allStats[3];
-		this.making = allStats[4];
+		this.powerStat = allStats[0];
+		this.speedStat = allStats[1];
+		this.aimingStat = allStats[2];
+		this.breakingStat = allStats[3];
+		this.makingStat = allStats[4];
+	}
+
+	getStatFromIndex(index) {
+		switch(index) {
+			case 0: return this.powerStat;
+			case 1: return this.speedStat;
+			case 2: return this.aimingStat;
+			case 3: return this.breakingStat;
+			case 4: return this.makingStat;
+		}
+		return 0;
 	}
 
 	refreshHotbarIcons() {
@@ -63,6 +88,12 @@ class Player {
 	refreshHotbarNumbers() {
 		if(this.sprite) {
 			this.sprite._hotbar.refreshNumbers();
+		}
+	}
+
+	refreshInventorySlots() {
+		if(this.sprite) {
+			this.sprite._hotbar.refreshInventoryListSlots();
 		}
 	}
 
@@ -93,11 +124,21 @@ class Player {
 
 		this._collisionRect = data._collisionRect;
 
-		this.focusing = data.focusing ?? 1;
-		this.moving = data.moving ?? 1;
-		this.shooting = data.shooting ?? 1;
-		this.breaking = data.breaking ?? 1;
-		this.making = data.making ?? 1;
+		this._lastOverworldX = data._lastOverworldX;
+		this._lastOverworldY = data._lastOverworldY;
+
+		this.fastTravelSpots = data.fastTravelSpots;
+
+		this.powerStat = data.powerStat ?? 1;
+		this.speedStat = data.speedStat ?? 1;
+		this.aimingStat = data.aimingStat ?? 1;
+		this.breakingStat = data.breakingStat ?? 1;
+		this.makingStat = data.makingStat ?? 1;
+
+		this.hp = data.hp ?? 80;
+		this.maxHp = data.maxHp ?? 80;
+		this.hunger = data.hunger ?? 80;
+		this.maxHunger = data.maxHunger ?? 80;
 
 		this.inventory.loadData(data.inventory);
 	}
@@ -130,11 +171,23 @@ class Player {
 
 		result._collisionRect = this._collisionRect;
 
-		result.focusing = this.focusing;
-		result.moving = this.moving;
-		result.shooting = this.shooting;
-		result.breaking = this.breaking;
-		result.making = this.making;
+		result._lastOverworldX = this._lastOverworldX;
+		result._lastOverworldY = this._lastOverworldY;
+
+		result.fastTravelSpots = this.fastTravelSpots;
+
+		result.fastTravelSpots = [];
+
+		result.powerStat = this.powerStat;
+		result.speedStat = this.speedStat;
+		result.aimingStat = this.aimingStat;
+		result.breakingStat = this.breakingStat;
+		result.makingStat = this.makingStat;
+
+		result.hp = this.hp;
+		result.maxHp = this.maxHp;
+		result.hunger = this.hunger;
+		result.maxHunger = this.maxHunger;
 
 		result.inventory = this.inventory.saveData();
 
@@ -150,7 +203,7 @@ class Player {
 	}
 
 	showMapCursor() {
-		return this.inventory.isMaterial();
+		return this.inventory.isMaterial() && this.canMove();
 	}
 
 	showEnabledCursor() {
@@ -167,6 +220,10 @@ class Player {
 
 	showPopup(text) {
 		this.sprite.addText(text);
+	}
+
+	showPopupEx(text, color) {
+		this.sprite.addTextEx(text, color);
 	}
 
 	gainMaterial(blockId) {
@@ -213,6 +270,10 @@ class Player {
 		this.playerEffect = new DamageEffect(this);
 	}
 
+	healEffect() {
+		this.playerEffect = new HealEffect(this);
+	}
+
 	deathEffect() {
 	}
 
@@ -240,6 +301,8 @@ class Player {
 		this.updateMovement();
 		this.updateProjectileInput();
 		this.updateProjectiles();
+		this.updateItemInput();
+		this.updateInvincibility();
 	}
 
 	enableTileCursorPlacement(b) {
@@ -248,6 +311,34 @@ class Player {
 
 	canMove() {
 		return !($gameMap.isEventRunning() || $gameMessage.isBusy() || $gamePlayer.isTransferring() || this.playerEffect?.disallowMovement);
+	}
+
+	calcExtraDamage() {
+		return (this.powerStat) * 0.25;
+	}
+
+	calcSpeed() {
+		return 2 + (this.speedStat * 0.2);
+	}
+
+	calcShootFrequency() {
+		return Math.floor(24 - (this.speedStat * 0.5)).clamp(4, 999);
+	}
+
+	calcProjectileRotationSpeed() {
+		return 8 + (this.aimingStat * 0.25);
+	}
+
+	calcProjectileAccuracy() {
+		return Math.round(12 - (this.aimingStat * 0.1));
+	}
+
+	calcMiningSpeed() {
+		return 0.06 + (this.breakingStat * 0.001);
+	}
+
+	calcBuildCost(normalBuildCost) {
+		return Math.round(normalBuildCost - (this.makingStat)).clamp(1, 999);
 	}
 
 	updateMovement() {
@@ -268,7 +359,7 @@ class Player {
 
 			this._walkTime += 1;
 
-			let speed = 3;
+			let speed = this.calcSpeed();
 			let inputX = Input.InputVector.x;
 			let inputY = Input.InputVector.y;
 
@@ -310,7 +401,14 @@ class Player {
 				this.position.y = Math.round(finalY);
 			}
 
-			CollisionManager.checkForResponse(Math.floor(this.position.x / TS), Math.floor(this.position.y / TS));
+			const tileX = Math.floor(this.position.x / TS);
+			const tileY = Math.floor(this.position.y / TS);
+			if(CollisionManager.checkForResponse(tileX, tileY)) {
+				if($gameMap.isGenerated()) {
+					this._lastOverworldX = tileX;
+					this._lastOverworldY = tileY;
+				}
+			}
 		} else {
 			this._walkTime = 0;
 		}
@@ -389,7 +487,16 @@ class Player {
 	}
 
 	updateProjectileInput() {
-		if(!this.canMove()) return;
+		if(!this.canMove()) {
+			this._pressedWhileUnavailable = TouchInput.isPressed();
+			return;
+		} else if(this._pressedWhileUnavailable) {
+			if(TouchInput.isPressed()) {
+				return;
+			} else {
+				this._pressedWhileUnavailable = false;
+			}
+		}
 
 		const isPressed = TouchInput.isPressed();
 
@@ -406,7 +513,7 @@ class Player {
 			}
 		}
 		if(isPressed || this._projectileTime > 0) {
-			if(this._projectileTime++ > this.shootFrequency) {
+			if(this._projectileTime++ > this.calcShootFrequency()) {
 				this._projectileTime = 0;
 			}
 		}
@@ -422,10 +529,11 @@ class Player {
 				TouchInput.worldX,
 				TouchInput.worldY,
 				materialId,
-				materialData.damage,
+				materialData.damage + this.calcExtraDamage(),
 				180,
 				{
-					directionRefreshAcc: 12
+					directionRefreshAcc: this.calcProjectileAccuracy(),
+					rotateSpeed: this.calcProjectileRotationSpeed()
 				}
 			);
 			this._projectiles.push(projectile);
@@ -449,6 +557,10 @@ class Player {
 	}
 
 	checkProjectile(projectile, x, y) {
+		if(this.isInvincible()) {
+			return false;
+		}
+
 		const x1 = this.position.x - this._collisionRect.left;
 		const x2 = this.position.x + this._collisionRect.right;
 		const y1 = this.position.y - this._collisionRect.top;
@@ -469,13 +581,37 @@ class Player {
 		return false;
 	}
 
+	updateItemInput() {
+		if(TouchInput.isTriggered()) {
+			const itemBehavior = this.inventory.hasUsableItem();
+			if(itemBehavior) {
+				if(!itemBehavior()) {
+					this.inventory.consumeHotbarItem();
+				}
+			}
+		}
+	}
+
+	updateInvincibility() {
+		if(this._invincibilityTime > 0) {
+			this._invincibilityTime--;
+
+			const tone = this._invincibilityTime % 16 > 8 ? [-60, -60, -60, 60] : [0, 0, 0, 0];
+			this.sprite.setColorTone(tone);
+		}
+	}
+
+	isInvincible() {
+		return this._invincibilityTime > 0;
+	}
+
 	takeDamage(amount, direction, knockbackTime = 8, knockbackSpeed = 4) {
-		this.hp -= amount;
-		if(this.hp <= 0) {
-			this.hp = 0;
+		this.addHp(-amount);
+		if(this.hp === 0) {
 			this.onKill();
 			this.deathEffect();
 		} else {
+			this._invincibilityTime = 64;
 			this._damageTime = knockbackTime;
 			this._damageDirection = direction;
 			this._damageKnockback = knockbackSpeed;
@@ -488,7 +624,203 @@ class Player {
 
 	onDamageKnockbackComplete() {
 	}
+
+	collisionBox() {
+		return {
+			left: this.position.x - this._collisionRect.left,
+			right: this.position.x + this._collisionRect.right,
+			top: this.position.y - this._collisionRect.top,
+			bottom: this.position.y + this._collisionRect.bottom
+		};
+	}
+
+	setHp(hp) {
+		this.hp = hp.clamp(0, this.maxHp);
+		this.onHpChange();
+	}
+
+	addHp(hp) {
+		this.setHp(this.hp + hp);
+	}
+
+	setHunger(hunger) {
+		this.hunger = hunger.clamp(0, this.maxHunger);
+		this.onHungerChange();
+	}
+
+	addHunger(hunger) {
+		this.setHunger(this.hunger + hunger);
+	}
+
+	onHpChange() {
+		this.sprite.onHpChange();
+	}
+
+	onMaxHpChange() {
+		this.sprite.onMaxHpChange();
+	}
+
+	onHungerChange() {
+		this.sprite.onHungerChange();
+	}
+
+	onMaxHungerChange() {
+		this.sprite.onMaxHungerChange();
+	}
+
+	incrementMaxHp() {
+		this.maxHp += 10;
+		this.hp = this.maxHp;
+		this.onMaxHpChange();
+		this.onHpChange();
+	}
+
+	incrementMaxHunger() {
+		this.maxHunger += 10;
+		this.hunger = this.maxHunger;
+		this.onMaxHungerChange();
+		this.onHungerChange();
+	}
+
+	addHpFromItem(hp) {
+		if(hp === 0) return;
+		this.addHp(hp);
+		if(hp > 0) {
+			this.healEffect();
+			this.showPopupEx("+" + Math.floor(hp / 10) + " Hearts", 0xbbffdd);
+		} else {
+			this.damageEffect();
+			this.showPopupEx("-" + Math.floor(hp / -10) + " Hearts", 0xffbbdd);
+		}
+	}
+
+	addHungerFromItem(hunger) {
+		if(hunger === 0) return;
+		this.addHunger(hunger);
+		if(hunger > 0) {
+			if(!this.playerEffect) this.healEffect();
+			this.showPopupEx("+" + Math.floor(hunger / 10) + " Hunger", 0xbbffdd);
+		} else {
+			if(!this.playerEffect) this.damageEffect();
+			this.showPopupEx("-" + Math.floor(hunger / -10) + " Hunger", 0xffbbdd);
+		}
+	}
+
+	addExp(exp) {
+		if(exp <= 0) return;
+
+		let _exp = exp;
+		let levelsGained = 0;
+		let maxExp = this.maxExp();
+		while(this.exp + _exp >= maxExp) {
+			_exp -= (maxExp - this.exp);
+			this.exp = 0;
+			levelsGained++;
+			maxExp = this.maxExp(this.level + levelsGained);
+		}
+		this.exp += _exp;
+		if(levelsGained > 0) {
+			this.addLevels(levelsGained);
+		}
+		this.onExpChange();
+
+		this.showPopupEx("+" + exp + " EXP", 0xbbffdd);
+		if(levelsGained > 0) {
+			const lvlText = "+" + levelsGained + " Level" + (levelsGained === 1 ? "" : "s");
+			this.showPopupEx(lvlText, 0xbbddff);
+		}
+	}
+
+	expRatio() {
+		return this.exp / this.maxExp();
+	}
+
+	addLevels(levels) {
+		if(levels <= 0) return;
+
+		this.level += levels;
+		this.statPoints += levels;
+
+		this.onLevelChange();
+	}
+
+	maxExp(level) {
+		level = level ?? this.level;
+		if(level <= 5) {
+			return 20;
+		} else if(level <= 10) {
+			return 50;
+		} else if(level <= 15) {
+			return 75;
+		}
+		return 100;
+	}
+
+	onExpChange() {
+		this.sprite._healthHud.refreshExp();
+	}
+
+	onLevelChange() {
+	}
+
+	addFastTravelSpot() {
+		const newX = this._lastOverworldX;
+		const newY = this._lastOverworldY;
+
+		let canAdd = this.fastTravelSpots.length <= 0;
+		if(!canAdd) {
+			let exists = false;
+			for(const spot of this.fastTravelSpots) {
+				if(Math.abs(spot[0] - newX) < 3 && Math.abs(spot[1] - newY) < 3) {
+					exists = true;
+					break;
+				}
+			}
+
+			canAdd = !exists;
+		}
+
+		if(canAdd)  {
+			this.fastTravelSpots.push([newX, newY, $generation.getLocationName(newX, newY)]);
+			return true;
+		}
+
+		return false;
+	}
+
+	canFastTravel() {
+		return this.fastTravelSpots?.length > 1;
+	}
+
+	mostRecentTravelSpot() {
+		if(this.fastTravelSpots.length <= 0) {
+			return "";
+		}
+		return this.fastTravelSpots[this.fastTravelSpots.length - 1][2];
+	}
+
+	setFastTravelIndex(i) {
+		const spot = this.fastTravelSpots[i];
+		this._lastOverworldX = spot[0];
+		this._lastOverworldY = spot[1];
+
+		$gameVariables.setValue(26, spot[2]);
+	}
+
+	setupFastTravelChoices(interpreter) {
+		$gameMessage.add("\"Gree\\..\\..\\.. tings, \\!where do you want to travel?\"");
+
+		$gameMessage.setChoices(this.fastTravelSpots.map((c, i) => ((i + 1) + ") " + c[2])), 0, -2);
+		$gameMessage.setChoiceBackground(0);
+		$gameMessage.setChoicePositionType(3);
+		$gameMessage.setChoiceCallback(n => {
+			$ppPlayer.setFastTravelIndex(n);
+		});
+
+		interpreter.setWaitMode("message");
+	}
 }
+
 
 function RotateTowards(Curr, Target, Spd) {
 	var Offset = Math.abs(Curr - Target);

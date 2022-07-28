@@ -8,15 +8,52 @@ class Map extends Sprite {
 
 		this.anchor.set(0.5);
 
+		this.flags = [];
+		for(let i = 0; i < 3; i++) {
+			const flag = new Sprite(ImageManager.loadPicture("FlagCursor"));
+			flag.anchor.set(0.5, 1);
+			this.addChild(flag);
+			this.flags.push(flag);
+			flag.visible = true;
+		}
+
+		this.mapStore = new Sprite(ImageManager.loadPicture("MapStore"));
+		this.mapStore.anchor.set(0.5, 1);
+		this.addChild(this.mapStore);
+
+		this.foodStore = new Sprite(ImageManager.loadPicture("FoodStore"));
+		this.foodStore.anchor.set(0.5, 1);
+		this.addChild(this.foodStore);
+
+		this.orbCave = new Sprite(ImageManager.loadPicture("OrbCave"));
+		this.orbCave.anchor.set(0.5, 1);
+		this.addChild(this.orbCave);
+
 		this.cursor = new Sprite(ImageManager.loadPicture("PlayerCursor"));
 		this.cursor.anchor.set(0.5, 1);
 		this.addChild(this.cursor);
+
+		this.refreshStaticPos();
 
 		this._displayRatio = 0;
 
 		SpriteManager.addUi(this);
 
-		//this.generate();
+		this.generate();
+	}
+
+	onOpen() {
+		this.children.sort((a, b) => {
+			if (a.z !== b.z) {
+				return a.z - b.z;
+			} else if (a.y !== b.y) {
+				return a.y - b.y;
+			} else if (a.x !== b.x) {
+				return a.x - b.x;
+			} else {
+				return a.spriteId - b.spriteId;
+			}
+		});
 	}
 
 	setScale(s) {
@@ -33,6 +70,7 @@ class Map extends Sprite {
 	update() {
 		this.updatePlayerPosCursor();
 		this.updatePauseInflate();
+		this.refreshStaticPos();
 	}
 
 	updatePlayerPosCursor() {
@@ -41,10 +79,59 @@ class Map extends Sprite {
 		const px = ($ppPlayer.position.x + (globalWidth / 2)) / (globalWidth);
 		const py = ($ppPlayer.position.y + (globalHeight / 2)) / (globalHeight);
 		this.cursor.move((px * (this.width)) - (this.width / 2), (py * (this.height)) - (this.height / 2));
+		//this.mapStore
+	}
+
+	refreshStaticPos() {
+		if(this._isReady) return;
+
+		this._isReady = true;
+
+		const makePos = (x, y) => {
+			const rx = (x + (GenerationManager.OFFSET_X * GenerationManager.TILES_X)) / GenerationManager.GLOBAL_WIDTH;
+			const ry = (y + (GenerationManager.OFFSET_Y * GenerationManager.TILES_Y)) / GenerationManager.GLOBAL_HEIGHT;
+			return [(rx * (this.width)) - (this.width / 2), (ry * (this.height)) - (this.height / 2)];
+		};
+
+		const pos = [$generation.redTarget, $generation.greenTarget, $generation.blueTarget];
+		for(let i = 0; i < 3; i++) {
+			const f = this.flags[i];
+
+			if(!pos[i]) {
+				this._isReady = false;
+				continue;
+			}
+
+			const pxy = makePos(pos[i][0], pos[i][1]);
+			f.move(pxy[0], pxy[1]);
+		}
+
+		const opxy = makePos(0, 0);
+		this.orbCave.move(opxy[0], opxy[1]);
+
+		if($generation.mapStorePos) {
+			const mpxy = makePos($generation.mapStorePos[0], $generation.mapStorePos[1]);
+			this.mapStore.move(mpxy[0], mpxy[1]);
+		} else {
+			this._isReady = false;
+		}
+
+		if($generation.foodStorePos) {
+			const fpxy = makePos($generation.foodStorePos[0], $generation.foodStorePos[1]);
+			this.foodStore.move(fpxy[0], fpxy[1]);
+		} else {
+			this._isReady = false;
+		}
 	}
 
 	updatePauseInflate() {
 		const isPaused = $gameMap.isMapPause();
+		if(this._wasPaused !== isPaused) {
+			this._wasPaused = isPaused;
+			if(isPaused) {
+				this.onOpen();
+			}
+		}
 		const newRatio = this._displayRatio.moveTowardsCond(isPaused, 0, 1, 0.05);
 		if(this._displayRatio !== newRatio) {
 			this._displayRatio = newRatio;
@@ -90,7 +177,6 @@ class Map extends Sprite {
 					const topTile = ((tile & 0xff0000) >> 16);
 					const midTile = ((tile & 0x00ff00) >> 8);
 
-					// if mid tile is empty...
 					if(block === 99) {
 						col = 0x000000;
 					/*} else if(block === 0) {
@@ -98,20 +184,32 @@ class Map extends Sprite {
 						this.bitmap.fillRect(x, y - 1, 1, 1, "#9c805d");
 						alpha = 0.7;
 					} */
-					} else if(block === 1 || block === 2) {
+					} else if(block === 1) {
 						col = 0x57404e;
-						if(this.bitmap.getPixelNumber(x, y - 1) !== 0) {
+						if(block === 1 && this.bitmap.getPixelNumber(x, y - 1) !== 0) {
 							this.bitmap.fastFillRect(x, y - 1, 1, 1, "rgba(111, 227, 163, " + alpha + ")");
 						}
+					} else if(block === 2) {
+						col = 0x57404e;
 					} else if(topTile === 220) {
 						col = 0xffffff;
 					} else if(midTile === 255) {
 						const lowTile = (tile & 0x0000ff);
 						if(lowTile === 200) {
 							col = 0xe6cc8a;
+						} else if(lowTile === 201) {
+							col = 0x99c2db;
+						} else if(lowTile === 203) {
+							col = 0xd877a6;
+						} else if(Math.floor(lowTile / 13) === 0) {
+							col = 0x78b392;
 						}
-					} else if(Math.floor(midTile / 13) === 0) {
-						col = 0x78b392;
+					} else {
+						const midAuto = Math.floor(midTile / 13);
+						//console.log("MID AUTO: " , midAuto);
+						if(midAuto === 0) col = 0x78b392;
+						else if(midAuto === 1) col = 0x4c8f82;
+						else if(midAuto === 2) col = 0x372840;
 					}
 
 				} else {

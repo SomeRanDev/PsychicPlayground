@@ -36,7 +36,7 @@ DataManager.makeSavefileInfo = function() {
 };
 
 DataManager.saveGame = async function(savefileId) {
-	await StorageManager.saveObject(this.makeWorldSavename(savefileId), $generation);
+	await StorageManager.saveObject(this.makeWorldSavename(savefileId), $generation.save());
 
 	const contents = this.makeSaveContents();
 	const saveName = this.makeSavename(savefileId);
@@ -48,7 +48,8 @@ DataManager.saveGame = async function(savefileId) {
 };
 
 DataManager.loadGame = async function(savefileId) {
-	$generation = await StorageManager.loadObject(this.makeWorldSavename(savefileId));
+	const worldData = await StorageManager.loadObject(this.makeWorldSavename(savefileId));
+	$generation.load(worldData);
 
 	const saveName = this.makeSavename(savefileId);
 	return StorageManager.loadObject(saveName).then(contents => {

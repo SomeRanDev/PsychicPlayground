@@ -16,6 +16,14 @@ Number.prototype.quadIn = function() {
 	return Easing.Quadratic.In(this);
 };
 
+Number.prototype.quinticOut = function() {
+	return Easing.Quintic.Out(this);
+};
+
+Number.prototype.quinticIn = function() {
+	return Easing.Quintic.In(this);
+};
+
 Number.prototype.backOut = function() {
 	return Easing.Back.Out(this);
 };

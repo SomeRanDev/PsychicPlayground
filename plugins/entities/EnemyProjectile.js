@@ -5,7 +5,7 @@ class EnemyProjectile {
 		this.direction = direction;
 		this._imageUrl = imageUrl;
 
-		this.damage = 1;
+		this.damage = 10;
 
 		this.radius = 5;
 
@@ -39,6 +39,7 @@ class EnemyProjectile {
 		this._animation = 0;
 
 		this._startAnimation = 0;
+		this.startAnimationSpeed = 0.05;
 
 		// refresh sprite
 		this.sprite.scale.set(0);
@@ -107,7 +108,7 @@ class EnemyProjectile {
 
 	updateStartAnimation() {
 		if(this._startAnimation < 1) {
-			this._startAnimation += 0.05;
+			this._startAnimation += this.startAnimationSpeed;
 			if(this._startAnimation > 1) this._startAnimation = 1;
 
 			const r = this._startAnimation;

@@ -78,6 +78,17 @@ class Chunk {
 			}
 		}
 
+		if(this.structs) {
+			for(const s of this.structs) {
+				s.destroy();
+			}
+		}
+		this.structs = [];
+
+		this._animatedTiles = [];
+		this._animationCounter = 0;
+		this._animationFrame = 0;
+
 		this.generateAllTiles();
 	}
 
@@ -85,6 +96,16 @@ class Chunk {
 		this.generateSomeTiles();
 		for(const block of this.blocks) {
 			block.update();
+		}
+		if(this._animatedTiles.length > 0) {
+			const frame = Graphics.frameCount % 72;
+			const aniFrame = Math.floor(frame / 24);
+			if(this._animationFrame !== aniFrame) {
+				this._animationFrame = aniFrame;
+				for(const a of this._animatedTiles) {
+					a.setFrame(20 * this._animationFrame, 0, 20, 20);
+				}
+			}
 		}
 	}
 
@@ -106,6 +127,27 @@ class Chunk {
 	generateAllTiles() {
 		this._generatedTiles = 0;
 		this._maxTiles = (GenerationManager.TILES_X * GenerationManager.TILES_Y);
+		this.generateStructs();
+	}
+
+	generateStructs() {
+		const chunkXPos = this.chunkX + GenerationManager.OFFSET_X;
+		const chunkYPos = this.chunkY + GenerationManager.OFFSET_Y;
+		const chunkIndex = (chunkYPos * GenerationManager.CHUNKS_X) + chunkXPos;
+		const structs = $generation.Structs[chunkIndex];
+		if(structs && structs.length > 0) {
+			for(const s of structs) {
+				const sId = s[2];
+				if(AllStructs[sId]) {
+					const structEntity = AllStructs[sId].spawn(this, s[0], s[1]);
+					if(structEntity.makeBackgroundSprite) {
+						const backSprite = structEntity.makeBackgroundSprite();
+						SpriteManager.belowLayer().addChild(backSprite);
+					}
+					this.structs.push(structEntity);
+				}
+			}
+		}
 	}
 
 	generateSomeTiles() {
@@ -232,6 +274,12 @@ class Chunk {
 		return spr;
 	}
 
+	middleTileExists(x, y) {
+		const i = (y * GenerationManager.TILES_X) + x;
+		if(!this.tileSprites[i]) return false;
+		return this.tileSprites[i].visible && this.tileSprites[i].bitmap;
+	}
+
 	getSpriteFromIndex(x, y, collection, layer, unused) {
 		const i = (y * GenerationManager.TILES_X) + x;
 		let spr;
@@ -291,6 +339,7 @@ class Chunk {
 		if(!tileData) {
 			console.warn("TILE DATA INVALID??\nisAuto: " + isAuto + ", raw tile: " + tile + ", tile: " + (isAuto ? Math.floor(tile / 13) : tile));
 		}
+
 		const texture = this.getTexture(Array.isArray(tileData.name) ? tileData.name[Math.floor(Math.random() * tileData.name.length)] : tileData.name);
 		spr.bitmap = texture;
 
@@ -301,9 +350,23 @@ class Chunk {
 			const tr = 0.85 + (GenerationManager.hyperFastNoise.GetPerlinNoise(gx * 32, gy * 32) * 0.05);
 			spr.tint = ((0xff * tr) << 16) | ((0xff * tr) << 8) | ((0xff * tr));
 		}*/
+
+		if(tileData.cantWalk) {
+			const localX = Math.floor(spr.x / 16);
+			const localY = Math.floor(spr.y / 16);
+			if(!this.middleTileExists(localX, localY)) {
+				const x = ((this.chunkX + GenerationManager.OFFSET_X) * GenerationManager.TILES_X) + localX;
+				const y = ((this.chunkY + GenerationManager.OFFSET_Y) * GenerationManager.TILES_Y) + localY;
+				CollisionManager.registerCantWalkTileCollision(x, y);
+			}
+		}
 		
 
-		if(isAuto) {
+		if(tileData.isAnimated) {
+			spr.setFrame(0, 0, 20, 20);
+			this._animatedTiles.push(spr);
+			return tileData.renderBelow ?? true;
+		} else if(isAuto) {
 			const autoType = tile % 13;
 			let sx = 1;
 			let sy = 1;

@@ -15,6 +15,8 @@ class Mineable {
 		this._selected = false;
 		this._pressed = false;
 
+		this._miningSpeed = 0.06;
+
 		this._mined = false;
 
 		this._spawnAnimation = 1;
@@ -191,7 +193,7 @@ class Mineable {
 				this._mineAnimation = 0;
 				this._mined = false;
 			} else if(this._mineAnimation < 1) {
-				this._mineAnimation += 0.06;
+				this._mineAnimation += this._miningSpeed;
 				if(this._mineAnimation > 1) this._mineAnimation = 1;
 			}
 
@@ -221,6 +223,8 @@ class Mineable {
 	setPressed(s) {
 		if(this._pressed !== s) {
 			this._pressed = s;
+
+			this._miningSpeed = $ppPlayer.calcMiningSpeed();
 
 			if(s && this.heartContainer) {
 				this.heartContainer.alpha = 1;

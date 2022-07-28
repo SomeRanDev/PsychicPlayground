@@ -52,6 +52,8 @@ class Scene_WorldLoad extends Scene_Base {
 		this._genWidth = 256;
 		this._genIndex = 0;
 		this._genEnd = this._genWidth * this._genWidth;
+
+		$generation.beginGeneration();
 	}
 
 	update() {
@@ -61,7 +63,7 @@ class Scene_WorldLoad extends Scene_Base {
 			while(this._genIndex < next) {
 				const x = (this._genIndex % this._genWidth);
 				const y = Math.floor(this._genIndex / this._genWidth);
-				$generation.getTileRatio(x / this._genWidth, y / this._genWidth);
+				$generation.preGenerateFromRatio(x / this._genWidth, y / this._genWidth);
 				this._genIndex++;
 			}
 
@@ -121,6 +123,8 @@ class Scene_WorldLoad extends Scene_Base {
 	}
 
 	commandNewGame() {
+		$generation.endGeneration();
+
 		DataManager.setupNewGame();
 		this.fadeOutAll();
 

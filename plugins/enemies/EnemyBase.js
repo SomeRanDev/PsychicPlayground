@@ -20,6 +20,8 @@ class EnemyBase {
 		this._damageDirection = 0;
 		this._damageKnockback = 4;
 
+		this._enemyHpBarAppear = 0;
+
 		this._projectiles = [];
 
 		this.setupCollisionRect();
@@ -37,29 +39,20 @@ class EnemyBase {
 	}
 
 	setupAnimations() {
-		this.idleAni = {
-			front: "Blump_IdleFront",
-			back: "Blump_IdleBack",
-			frameCount: 12,
-			speed: 12
-		};
+		this.idleAni = this.buildAnimation("Blump_IdleFront", "Blump_IdleBack", 12, 12);
+		this.walkAni = this.buildAnimation("Blump_WalkFront", "Blump_WalkBack", 2, 5);
+		this.damageAni = this.buildAnimation("Blump_DamageFront", "Blump_DamageBack", 1, 999);
+	}
 
-		this.walkAni = {
-			front: "Blump_WalkFront",
-			back: "Blump_WalkBack",
-			frameCount: 2,
-			speed: 6
-		};
-
-		this.damageAni = {
-			front: "Blump_DamageFront",
-			back: "Blump_DamageBack",
-			frameCount: 1,
-			speed: 999
-		};
+	buildAnimation(front, back, frameCount, speed) {
+		return { front, back, frameCount, speed };
 	}
 
 	getMaxHp() {
+		return 10;
+	}
+
+	exp() {
 		return 10;
 	}
 
@@ -71,6 +64,11 @@ class EnemyBase {
 	makeSprite() {
 		this.sprite = new Sprite();
 		this.setupSprite();
+
+		this.hpBar = new EnemyHpBar();
+		this.hpBar.move(0, -20);
+		this.sprite.addChild(this.hpBar);
+
 		return this.sprite;
 	}
 
@@ -88,9 +86,11 @@ class EnemyBase {
 			this.updateBehavior();
 			this.updatePosition();
 			this.updateProjectiles();
+			this.updatePlayerTouch();
 		}
 		this.updateSprite();
 		this.updateSpriteAnimation();
+		this.updateHpBar();
 		this.updateTeleport();
 	}
 
@@ -184,7 +184,9 @@ class EnemyBase {
 		//  1   0
 		const quad = Math.floor(this.direction / (Math.PI / 2));
 		
-		this.sprite.scale.set((quad === -2 || quad === 1) ? -2 : 2, 2);
+		const reverse = (quad === -2 || quad === 1);
+		this.sprite.scale.set(reverse ? -2 : 2, 2);
+		this.hpBar.scale.set(reverse ? -1 : 1, 1);
 
 		let animation = this.getAnimation();
 		if(animation) {
@@ -239,6 +241,17 @@ class EnemyBase {
 		}
 	}
 
+	updateHpBar() {
+		const newAlpha = this.hpBar.alpha.moveTowardsCond(this._enemyHpBarAppear > 0, 0, 1, 0.1);
+		if(this.hpBar.alpha !== newAlpha) {
+			this.hpBar.alpha = newAlpha;
+		}
+
+		this.hpBar.setRatio(this.hp / this.maxHp);
+
+		if(this._enemyHpBarAppear > 0) this._enemyHpBarAppear--;
+	}
+
 	updateTeleport() {
 		if(this._effect) {
 			if(this._effect.update()) {
@@ -273,16 +286,20 @@ class EnemyBase {
 	}
 
 	takeDamage(amount, direction, knockbackTime = 8, knockbackSpeed = 4) {
-		this.hp -= amount;
-		if(this.hp <= 0) {
-			this.hp = 0;
-			this.onKill();
-			this.deathEffect();
-		} else {
-			this._damageTime = knockbackTime;
-			this._damageDirection = direction;
-			this._damageKnockback = knockbackSpeed;
-			this.damageEffect();
+		if(this.hp > 0) {
+			this.hp -= amount;
+			if(this.hp <= 0) {
+				this.hp = 0;
+				this._enemyHpBarAppear = 0;
+				this.onKill();
+				this.deathEffect();
+			} else {
+				this._damageTime = knockbackTime;
+				this._damageDirection = direction;
+				this._damageKnockback = knockbackSpeed;
+				this._enemyHpBarAppear = 300;
+				this.damageEffect();
+			}
 		}
 	}
 
@@ -293,6 +310,7 @@ class EnemyBase {
 	}
 
 	onKill() {
+		$ppPlayer.addExp(this.exp());
 	}
 
 	onDeathEffectDone() {
@@ -323,12 +341,13 @@ class EnemyBase {
 		return false;
 	}
 
-	shootProjectile(dir, img, x = 0, y = 0) {
+	shootProjectile(dir, img = "Attack", x = 0, y = 0) {
 		const p = EnemyProjectileObjectPool.getObject(this.x + x, this.y + y, dir, img);
 		this._projectiles.push(p);
 		p.onPlayerHit = (player) => {
 			player.takeDamage(p.damage, p.direction);
 		};
+		return p;
 	}
 
 	updateProjectiles() {
@@ -342,6 +361,36 @@ class EnemyBase {
 				len--;
 			}
 		}
+	}
+
+	updatePlayerTouch() {
+		if($ppPlayer.isInvincible()) {
+			return;
+		}
+
+		const col1 = this.collisionBox();
+		const col2 = $ppPlayer.collisionBox();
+		if(col1.left < col2.right &&
+			col1.right > col2.left &&
+			col1.top < col2.bottom &&
+			col1.bottom > col2.top) {
+
+			const dir = Math.atan2($ppPlayer.position.y - this.y, $ppPlayer.position.x - this.x);
+			$ppPlayer.takeDamage(this.bodyDamage(), dir);
+		}
+	}
+
+	bodyDamage() {
+		return 10;
+	}
+
+	collisionBox() {
+		return {
+			left: this.x - this.colRect.left,
+			right: this.x + this.colRect.right,
+			top: this.y - this.colRect.top,
+			bottom: this.y + this.colRect.bottom
+		};
 	}
 }
 

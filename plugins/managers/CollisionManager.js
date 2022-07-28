@@ -14,6 +14,20 @@ class CollisionManager {
 		this.setTriggers(colId, globalTileX, globalTileY, left, right, up, down);
 	}
 
+	static addOverworldTransfer(globalTileX, globalTileY, transferData, left = 0, right = 0, up = 0, down = 0) {
+		transferData.type = 0;
+
+		transferData.overworld = true;
+		transferData.x = $ppPlayer._lastOverworldX;
+		transferData.y = $ppPlayer._lastOverworldY;
+		transferData.dir = 8;
+
+		this.responseData.push(transferData);
+
+		const colId = this.responseData.length;
+		this.setTriggers(colId, globalTileX, globalTileY, left, right, up, down);
+	}
+
 	static addEventTrigger(globalTileX, globalTileY, triggerData, left = 0, right = 0, up = 0, down = 0) {
 		triggerData.type = 1;
 		this.responseData.push(triggerData);
@@ -25,31 +39,48 @@ class CollisionManager {
 	static setTriggers(colId, globalTileX, globalTileY, left = 0, right = 0, up = 0, down = 0) {
 		for(let x = globalTileX - left; x <= (globalTileX + right); x++) {
 			for(let y = globalTileY - up; y <= (globalTileY + down); y++) {
-				const globalIndex = x + ($gameMap.width() * y);
+				const globalIndex = this._getIndex(x, y);
 				this.triggers[globalIndex] = colId;
 			}
 		}
 	}
 
 	static checkForResponse(globalTileX, globalTileY) {
-		const globalIndex = globalTileX + ($gameMap.width() * globalTileY);
+		if($gameMap.isGenerated()) {
+			globalTileX += GenerationManager.OFFSET_X * GenerationManager.TILES_X;
+			globalTileY += GenerationManager.OFFSET_Y * GenerationManager.TILES_Y;
+		}
+		const globalIndex = this._getIndex(globalTileX, globalTileY);
 		if(this.triggers[globalIndex] > 0) {
 			const id = this.triggers[globalIndex];
 			const data = this.responseData[id - 1];
 			switch(data.type) {
 				case 0: {
-					$gamePlayer.reserveTransfer(data.id, data.x, data.y, data.dir, 0);
+					if(data.overworld) {
+						data.x = $ppPlayer._lastOverworldX;
+						data.y = $ppPlayer._lastOverworldY;
+					}
+					$gamePlayer.reserveTransfer(data.id, data.x, data.y, data.dir, data.fadeType);
 					$gamePlayer._setPPPlayerPos = true;
-					break;
+					return false;
 				}
 				case 1: {
 					if(!data.key || $keyVars.off(data.key)) {
 						$gameMap._interpreter.setup(data.list);
+						return false;
 					}
 					break;
 				}
 			}
 		}
+		return true;
+	}
+
+	static _getIndex(globalTileX, globalTileY) {
+		if(!$gameMap.isGenerated()) {
+			return globalTileX + ($gameMap.width() * globalTileY);
+		}
+		return $generation.globalCoordsToIndex(globalTileX, globalTileY);
 	}
 
 	static clearAll() {
@@ -62,17 +93,34 @@ class CollisionManager {
 	}
 
 	static registerMineableCollision(globalX, globalY) {
-		const globalIndex = (!$gameMap.isGenerated()) ? (globalX + ($gameMap.width() * globalY)) : $generation.globalCoordsToIndex(globalX, globalY);
+		const globalIndex = this._getIndex(globalX, globalY);
 		this.collisions[globalIndex] = 3;
 	}
 
+	static registerStructCollision(globalTileX, globalTileY) {
+		const globalIndex = this._getIndex(globalTileX, globalTileY);
+		this.collisions[globalIndex] = 7;
+	}
+
 	static registerSpikeCollision(globalX, globalY) {
-		const globalIndex = (!$gameMap.isGenerated()) ? (globalX + ($gameMap.width() * globalY)) : $generation.globalCoordsToIndex(globalX, globalY);
+		const globalIndex = this._getIndex(globalX, globalY);
+		this.collisions[globalIndex] = 1;
+	}
+
+	static registerCantWalkTileCollision(globalX, globalY) {
+		const globalIndex = this._getIndex(globalX, globalY);
 		this.collisions[globalIndex] = 1;
 	}
 
 	static clearCollision(globalX, globalY) {
-		const globalIndex = (!$gameMap.isGenerated()) ? (globalX + ($gameMap.width() * globalY)) : $generation.globalCoordsToIndex(globalX, globalY);
+		const globalIndex = this._getIndex(globalX, globalY);
+		if(this.collisions[globalIndex] < 7) {
+			this.collisions[globalIndex] = 0;
+		}
+	}
+
+	static clearStructCollision(globalX, globalY) {
+		const globalIndex = this._getIndex(globalX, globalY);
 		this.collisions[globalIndex] = 0;
 	}
 
@@ -108,6 +156,13 @@ class CollisionManager {
 		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
 		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
 		const globalIndex = $generation.globalCoordsToIndex(globalX + width2, globalY + height2);
+		return (this.collisions[globalIndex] & this.CollisionType) === 0;
+	}
+
+	static canMoveToTile(globalTileX, globalTileY) {
+		const width2 = (GenerationManager.GLOBAL_WIDTH / 2);
+		const height2 = (GenerationManager.GLOBAL_HEIGHT / 2);
+		const globalIndex = $generation.globalCoordsToIndex(globalTileX + width2, globalTileY + height2);
 		return (this.collisions[globalIndex] & this.CollisionType) === 0;
 	}
 

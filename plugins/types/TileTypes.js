@@ -2,11 +2,29 @@ const TileTypes = {
 	0: {
 		name: "Grass"
 	},
+	1: {
+		name: "DarkGrass"
+	},
+	2: {
+		name: "EvilGrass"
+	},
 	200: {
 		name: "Sand", renderBelow: false
 	},
 	201: {
-		name: "Water", renderBelow: false
+		name: "Water",
+		renderBelow: false,
+		isAnimated: true,
+		cantWalk: true
+	},
+	202: {
+		name: "AloneGrass", renderBelow: false
+	},
+	203: {
+		name: "Lava",
+		renderBelow: false,
+		isAnimated: true,
+		cantWalk: true
 	},
 	210: {
 		name: "Flowers1", renderBelow: false

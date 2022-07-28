@@ -1,4 +1,9 @@
 class Biome_Desert extends Biome_Base {
+	constructor() {
+		super();
+		this.name = "Desert";
+	}
+
 	getUpperType(globalX, globalY, globalIndex, low, mid, block, total) {
 		if(this.generatePath(globalX, globalY, globalIndex)) {
 			return 220;

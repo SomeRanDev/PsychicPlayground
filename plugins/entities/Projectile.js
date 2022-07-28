@@ -46,6 +46,7 @@ class Projectile {
 		this.targetX = targetX;
 		this.targetY = targetY;
 		this.dir = (Math.PI * 2 * Math.random()) * (180 / Math.PI);
+		this.rotateSpeed = otherOptions.rotateSpeed ?? 8.0;
 		this.refreshDirection();
 
 		this.collided = 0;
@@ -124,7 +125,7 @@ class Projectile {
 	}
 
 	updateMovement() {
-		this.dir = RotateTowards(this.dir, this.targetDir, 8.0);
+		this.dir = RotateTowards(this.dir, this.targetDir, this.rotateSpeed);
 		const rads = this.dir * (Math.PI / 180);
 		const xSpd = 5 * Math.cos(rads);
 		const ySpd = 5 * Math.sin(rads);
@@ -229,6 +230,6 @@ class Projectile {
 	}
 
 	onEnemyHit(enemy) {
-		enemy.takeDamage(1, this.dir * (Math.PI / 180), 20);
+		enemy.takeDamage(this._damage, this.dir * (Math.PI / 180), 20);
 	}
 }

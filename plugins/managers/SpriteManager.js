@@ -66,6 +66,7 @@ modify_Spriteset_Map = class {
 		this.clearChildrenSprites();
 		this.createPPLayer();
 		this.createChunksLayer();
+		this.belowEntities();
 		this.createPPEntities();
 		this.createMapCursor();
 		this.createMapCursorContainer();
@@ -79,6 +80,12 @@ modify_Spriteset_Map = class {
 			this._tilemap.removeChild(sprite);
 		}
 		this._characterSprites = [];
+	}
+
+	belowEntities() {
+		this._belowLayer = new Sprite();
+		this._belowLayer.z = -80;
+		this._ppLayer.addChild(this._belowLayer);
 	}
 
 	createChunksLayer() {
@@ -250,6 +257,10 @@ class SpriteManager {
 			}
 		}
 		return result;
+	}
+
+	static belowLayer() {
+		return SceneManager._scene._spriteset._belowLayer;
 	}
 
 	static addUi(ui) {

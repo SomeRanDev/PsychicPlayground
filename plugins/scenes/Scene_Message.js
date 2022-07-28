@@ -23,11 +23,11 @@ Scene_Message.prototype.refreshMessageWindowPos = function(event) {
 };
 
 Window_Base.prototype.makeFontBigger = function() {
-    this.contents.fontSize += 6;
+	this.contents.fontSize += 6;
 };
 
 Window_Base.prototype.makeFontSmaller = function() {
-    this.contents.fontSize -= 6;
+	this.contents.fontSize -= 6;
 };
 
 modify_Window_ChoiceList = class {
@@ -37,11 +37,51 @@ modify_Window_ChoiceList = class {
 	}
 
 	windowX() {
+		const positionType = $gameMessage.choicePositionType();
+		if(positionType === 3) {
+			return this._messageWindow.x + (this._messageWindow.width / 2) - (this.width / 2);
+		}
 		return this._messageWindow.x + this._messageWindow.width;
 	}
 
 	windowY() {
+		const positionType = $gameMessage.choicePositionType();
+		if(positionType === 3) {
+			return this._messageWindow.y + (this._messageWindow.height);
+		}
 		return this._messageWindow.y;
+	}
+
+	windowWidth() {
+		const positionType = $gameMessage.choicePositionType();
+		if(positionType === 3) {
+			return 280;
+		}
+		return PP.Window_ChoiceList.windowWidth.apply(this, arguments);
+	}
+
+	maxLines() {
+		if($gameMessage.choicePositionType() === 3) {
+			return 7;
+		}
+		return PP.Window_ChoiceList.maxLines.apply(this, arguments);
+	};
+
+	lineHeight() {
+		if($gameMessage.choicePositionType() === 3) {
+			return 20;
+		}
+		return PP.Window_ChoiceList.lineHeight.apply(this, arguments);
+	}
+
+	resetFontSettings() {
+		if($gameMessage.choicePositionType() === 3) {
+			this.contents.fontFace = $gameSystem.mainFontFace();
+			this.contents.fontSize = $gameSystem.mainFontSize() - 5;
+			this.resetTextColor();
+		} else {
+			PP.Window_ChoiceList.resetFontSettings.apply(this, arguments);
+		}
 	}
 }
 

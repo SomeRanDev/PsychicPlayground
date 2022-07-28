@@ -75,17 +75,19 @@ modify_Scene_Map = class {
 		this.cursor = new Sprite(ImageManager.lCursor("Aim"));
 		this.cursor.anchor.set(0.5);
 		this.addChild(this.cursor);
+
+		$generation.generateAllSyncIfNotGenerated();
 	}
 
 	updateMain() {
 		PP.Time += PP.WS;
 		{
 			if(!this._isPaused) {
-				PP.Scene_Map.updateMain.apply(this, arguments);
 				this.refreshCursor();
 				this.cursor.move(TouchInput.x, TouchInput.y);
 				this.updatePPPlayer();
 				this.updatePauseInput();
+				PP.Scene_Map.updateMain.apply(this, arguments);
 			} else {
 				this.normalCursor();
 				this.updateCameraPos();
@@ -289,7 +291,7 @@ modify_Scene_Map = class {
 	updateLoadedChunks() {
 		const minX = Math.floor(this.PPCameraX / GenerationManager.CHUNK_SIZE_X) - 1;
 		const minY = Math.floor(this.PPCameraY / GenerationManager.CHUNK_SIZE_Y) - 1;
-		const maxX = minX + 4;
+		const maxX = minX + 5;
 		const maxY = minY + 3;
 
 		if(this._lastMinX !== minX || this._lastMinY !== minY || this._lastMaxX !== maxX || this._lastMaxY !== maxY) {
