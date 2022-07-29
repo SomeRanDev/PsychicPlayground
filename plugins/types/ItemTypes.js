@@ -49,9 +49,3 @@ const ItemTypes = {
 		}
 	}
 };
-
-/*damageEffect() {
-		this.playerEffect = new DamageEffect(this);
-	}
-
-	healEffect*/

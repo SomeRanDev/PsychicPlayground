@@ -19,12 +19,13 @@ class Inventory {
 		this.materials.fill(-1);
 		this.items.fill(-1);
 
-		this.activeSkillAmmo = new Int32Array(AbilityTypes.length);
+		this.activeSkillAmmo = new Float32Array(AbilityTypes.length);
+		this.activeSkillAmmo.fill(100);
 
-		this.addActiveSkill(0);
-		this.addActiveSkill(3);
+		//this.addActiveSkill(0);
+		//this.addActiveSkill(3);
 
-		this.addMaterial(0, 65);
+		//this.addMaterial(0, 65);
 		//this.addMaterial(3, 256);
 
 		//this.addItem(0);
@@ -33,12 +34,14 @@ class Inventory {
 		this.hotbar = new Int32Array(Inventory.HotBarItems);
 		for(let i = 0; i < this.hotbar.length; i++) this.hotbar[i] = -1;
 
+		/*
 		this.hotbar[0] = 0;
 		this.hotbar[2] = 3;
 		this.hotbar[3] = 0;
 		this.hotbar[4] = 1;
 		this.hotbar[5] = 2;
 		this.hotbar[6] = 0;
+		*/
 
 		this.verifyHotbarOptions();
 	}
@@ -81,7 +84,7 @@ class Inventory {
 		this.activeSkills = Int32Array.from(data[1]);
 		this.materials = Int32Array.from(data[2]);
 		this.items = Int32Array.from(data[3]);
-		this.activeSkillAmmo = Int32Array.from(data[4]);
+		this.activeSkillAmmo = Float32Array.from(data[4]);
 
 		this.hotbarIndex = data[5];
 
@@ -90,6 +93,24 @@ class Inventory {
 
 	update() {
 		this.updateHotbarInput();
+		this.updateCooldowns();
+	}
+
+	updateCooldowns() {
+		let changed = false;
+		const len = this.activeSkillAmmo.length;
+		for(let i = 0; i < len; i++) {
+			if(this.activeSkillAmmo[i] < 100) {
+				this.activeSkillAmmo[i] += ((AbilityTypes[i].cooldownSpeed ?? 1) * $ppPlayer.calcCooldownMultiplier());
+				if(this.activeSkillAmmo[i] > 100) {
+					this.activeSkillAmmo[i] = 100;
+				}
+				changed = true;
+			}
+		}
+		if(changed) {
+			$ppPlayer.refreshHotbarNumbers();
+		}
 	}
 
 	isMining() {
@@ -102,6 +123,35 @@ class Inventory {
 
 	isSkill() {
 		return this.hotbarIndex <= 2 && this.hotbar[this.hotbarIndex] >= 0;
+	}
+
+	holdingSkill() {
+		if(this.hotbarIndex <= 2) {
+			const skillId = this.hotbar[this.hotbarIndex];
+			return skillId;
+		}
+		return -1;
+	}
+
+	hasUsableSkill() {
+		const holdingSkillId = this.holdingSkill();
+		if(holdingSkillId !== -1) {
+			const abilityData = AbilityTypes[holdingSkillId];
+			if(abilityData?.isBool) {
+				if(TouchInput.isTriggered()) {
+					return abilityData?.behavior ?? null;
+				}
+			} else if(abilityData?.requireNoCooldown) {
+				if(this.getSkillCooldown(holdingSkillId) >= 100) {
+					return abilityData?.behavior ?? null;
+				} else {
+					return null;
+				}
+			} else {
+				return abilityData?.behavior ?? null;
+			}
+		}
+		return null;
 	}
 
 	holdingItem() {
@@ -287,8 +337,11 @@ class Inventory {
 	}
 
 	getAbilityNumber(skillId) {
+		if(AbilityTypes[skillId]?.isBool) {
+			return AbilityTypes[skillId].getBool() ? "ON" : "OFF";
+		}
 		if(this.activeSkillAmmo[skillId] < 100) {
-			return this.activeSkillAmmo[skillId] + "%";
+			return Math.floor(this.activeSkillAmmo[skillId]) + "%";
 		}
 		return null;
 	}
@@ -401,6 +454,30 @@ class Inventory {
 		if(!this.hasItem(item)) {
 			this.clearHotbarIndex(this.hotbarIndex);
 		}
+	}
+
+	startCooldownSkill() {
+		const skill = this.holdingSkill();
+		if(this.hasActiveSkill(skill)) {
+			this.setSkillCooldown(skill, 0);
+		}
+	}
+
+	getSkillCooldown(skillId) {
+		return this.activeSkillAmmo[skillId];
+	}
+
+	setSkillCooldown(skillId, cooldownAmount) {
+		this.activeSkillAmmo[skillId] = cooldownAmount;
+		if(this.activeSkillAmmo[skillId] < 0) {
+			this.activeSkillAmmo[skillId] = 0;
+		}
+		$ppPlayer.refreshHotbarNumbers();
+		return this.activeSkillAmmo[skillId] !== 0;
+	}
+
+	addSkillCooldown(skillId, cooldownChange) {
+		return this.setSkillCooldown(skillId, this.activeSkillAmmo[skillId] + cooldownChange);
 	}
 
 	onHotbar(index, id) {

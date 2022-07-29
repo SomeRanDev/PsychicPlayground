@@ -1,5 +1,7 @@
 class Projectile {
-	constructor(x, y, targetX, targetY, matId, damage, lifetime, otherOptions) {
+	constructor(x, y, targetX, targetY, matId, damage, lifetime, otherOptions, owner) {
+		this.owner = owner;
+
 		this.x = 0;
 		this.y = 0;
 		this.dir = 0;
@@ -45,9 +47,11 @@ class Projectile {
 		this.y = y;
 		this.targetX = targetX;
 		this.targetY = targetY;
-		this.dir = (Math.PI * 2 * Math.random()) * (180 / Math.PI);
+		this.dir = (otherOptions.exactTarget ? this.calculateDirection() : (Math.PI * 2 * Math.random())) * (180 / Math.PI);
 		this.rotateSpeed = otherOptions.rotateSpeed ?? 8.0;
 		this.refreshDirection();
+
+		this.speed = otherOptions.speed ?? 5;
 
 		this.collided = 0;
 
@@ -74,16 +78,27 @@ class Projectile {
 			this.refreshBitmap();
 		}
 		this._damage = damage;
+
+		this.update();
 	}
 
 	refreshBitmap() {
-		const matData = MaterialTypes[this._materialId];
-		if(this.mainSpr && matData) {
-			//this.sprite.bitmap = ImageManager.lProjectile(matData.name);
-			this.mainSpr.bitmap = ImageManager.lIcon(matData.name);
-			this.mainSpr.rotation = Math.floor(Math.random() * 4) * 90;
-			this.mainSpr.scale.set(2);
-			this.mainSpr.alpha = 1;
+		if(typeof this._materialId === "number") {
+			const matData = MaterialTypes[this._materialId];
+			if(this.mainSpr && matData) {
+				//this.sprite.bitmap = ImageManager.lProjectile(matData.name);
+				this.mainSpr.bitmap = ImageManager.lIcon(matData.name);
+				this.mainSpr.rotation = Math.floor(Math.random() * 4) * 90;
+				this.mainSpr.scale.set(2);
+				this.mainSpr.alpha = 1;
+			}
+		} else if(typeof this._materialId === "object") {
+			if(this.mainSpr) {
+				this.mainSpr.bitmap = ImageManager.lIcon(this._materialId.icon);
+				this.mainSpr.rotation = Math.floor(Math.random() * 4) * 90;
+				this.mainSpr.scale.set(2);
+				this.mainSpr.alpha = 1;
+			}
 		}
 	}
 
@@ -127,8 +142,8 @@ class Projectile {
 	updateMovement() {
 		this.dir = RotateTowards(this.dir, this.targetDir, this.rotateSpeed);
 		const rads = this.dir * (Math.PI / 180);
-		const xSpd = 5 * Math.cos(rads);
-		const ySpd = 5 * Math.sin(rads);
+		const xSpd = this.speed * Math.cos(rads);
+		const ySpd = this.speed * Math.sin(rads);
 
 		CollisionManager.setProjectileCollisionCheck();
 
@@ -190,6 +205,11 @@ class Projectile {
 
 		this.time++;
 		this.lifetime--;
+
+		if(this.lifetime < 8) {
+			this.mainSpr.alpha = this.lifetime / 8;
+		}
+
 		return this.lifetime <= 0;
 	}
 

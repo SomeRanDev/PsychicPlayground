@@ -136,6 +136,24 @@ class Scene_WorldLoad extends Scene_Base {
 
 		$ppPlayer.setAllStats(this._playerSettings.playerStats);
 
+		switch(this._playerSettings.playerClass) {
+			case 0: {
+				$ppPlayer.inventory.addActiveSkill(20);
+				$ppPlayer.inventory.addActiveSkill(25);
+				break;
+			}
+			case 1: {
+				$ppPlayer.inventory.addActiveSkill(3);
+				$ppPlayer.inventory.addActiveSkill(23);
+				break;
+			}
+			case 2: {
+				$ppPlayer.inventory.addActiveSkill(30);
+				//$ppPlayer.inventory.addActiveSkill(0);
+				break;
+			}
+		}
+
 		SceneManager.goto(Scene_Map);
 	}
 

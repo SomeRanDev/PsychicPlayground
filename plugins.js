@@ -91,6 +91,7 @@ var $plugins =
 {"name":"enemies/TeleportDispenser","status":true,"description":"","parameters":{}},
 {"name":"enemies/Chaser","status":true,"description":"","parameters":{}},
 {"name":"---","status":false,"description":"","parameters":{}},
+{"name":"effects/GenericEffect","status":true,"description":"","parameters":{}},
 {"name":"effects/TeleportEffect","status":true,"description":"","parameters":{}},
 {"name":"effects/BedEffect","status":true,"description":"","parameters":{}},
 {"name":"effects/BedLeaveEffect","status":true,"description":"","parameters":{}},

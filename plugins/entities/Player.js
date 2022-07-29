@@ -44,9 +44,18 @@ class Player {
 		this.hunger = 80;
 		this.maxHunger = 80;
 
+		this.buffs = {};
+		this.buffIds = [];
+		this.statBuffs = [0, 0, 0, 0, 0];
+
+		this._pairkinesis = false;
+
 		this.inventory = new Inventory();
 
 		// --- no save ---
+
+		this._showInvincibleColorTone = false;
+		this.effectsTone = null;
 
 		this._damageTime = 0;
 		this._damageDirection = 0;
@@ -140,6 +149,12 @@ class Player {
 		this.hunger = data.hunger ?? 80;
 		this.maxHunger = data.maxHunger ?? 80;
 
+		this.buffs = data.buffs ?? {};
+		this.buffIds = data.buffIds ?? [];
+		this.statBuffs = data.statBuffs ?? [0, 0, 0, 0, 0];
+
+		this._pairkinesis = data._pairkinesis ?? false;
+
 		this.inventory.loadData(data.inventory);
 	}
 
@@ -188,6 +203,12 @@ class Player {
 		result.maxHp = this.maxHp;
 		result.hunger = this.hunger;
 		result.maxHunger = this.maxHunger;
+
+		result.buffs = this.buffs;
+		result.buffIds = this.buffIds;
+		result.statBuffs = this.statBuffs;
+
+		result._pairkinesis = this._pairkinesis;
 
 		result.inventory = this.inventory.saveData();
 
@@ -277,6 +298,10 @@ class Player {
 	deathEffect() {
 	}
 
+	genericEffect(color, onMid = null) {
+		this.playerEffect = new GenericEffect(this, color, onMid);
+	}
+
 	removeEffect(effect) {
 		if(this.playerEffect === effect) {
 			this.playerEffect = null;
@@ -301,7 +326,9 @@ class Player {
 		this.updateMovement();
 		this.updateProjectileInput();
 		this.updateProjectiles();
+		this.updateAbilityInput();
 		this.updateItemInput();
+		this.updateBuffs();
 		this.updateInvincibility();
 	}
 
@@ -314,31 +341,42 @@ class Player {
 	}
 
 	calcExtraDamage() {
-		return (this.powerStat) * 0.25;
+		return (this.powerStat + this.statBuffs[0]) * 0.25;
 	}
 
 	calcSpeed() {
-		return 2 + (this.speedStat * 0.2);
+		return 2 + ((this.speedStat + this.statBuffs[1]) * 0.2);
 	}
 
 	calcShootFrequency() {
-		return Math.floor(24 - (this.speedStat * 0.5)).clamp(4, 999);
+		return Math.floor(24 - ((this.speedStat + this.statBuffs[1]) * 0.5)).clamp(4, 999);
 	}
 
 	calcProjectileRotationSpeed() {
-		return 8 + (this.aimingStat * 0.25);
+		return 8 + ((this.aimingStat + this.statBuffs[2]) * 0.25);
 	}
 
 	calcProjectileAccuracy() {
-		return Math.round(12 - (this.aimingStat * 0.1));
+		return Math.round(12 - ((this.aimingStat + this.statBuffs[2]) * 0.1));
 	}
 
 	calcMiningSpeed() {
-		return 0.06 + (this.breakingStat * 0.001);
+		return 0.06 + ((this.breakingStat + this.statBuffs[3]) * 0.001);
 	}
 
 	calcBuildCost(normalBuildCost) {
-		return Math.round(normalBuildCost - (this.makingStat)).clamp(1, 999);
+		return Math.round(normalBuildCost - (this.makingStat + this.statBuffs[4])).clamp(1, 999);
+	}
+
+	calcCooldownMultiplier() {
+		return 1;
+	}
+
+	calcDamageRatio() {
+		if(this.buffs[3]) {
+			return 0.5;
+		}
+		return 1;
 	}
 
 	updateMovement() {
@@ -489,6 +527,7 @@ class Player {
 	updateProjectileInput() {
 		if(!this.canMove()) {
 			this._pressedWhileUnavailable = TouchInput.isPressed();
+			this._isPressed = false;
 			return;
 		} else if(this._pressedWhileUnavailable) {
 			if(TouchInput.isPressed()) {
@@ -498,7 +537,7 @@ class Player {
 			}
 		}
 
-		const isPressed = TouchInput.isPressed();
+		this._isPressed = TouchInput.isPressed();
 
 		if(TouchInput.isTriggered()) {
 			this._projectileTriggeredTime = 10;
@@ -507,12 +546,12 @@ class Player {
 		}
 
 		if(this._projectileTime === 0) {
-			if(isPressed || (this._projectileTriggeredTime > 0)) {
+			if(this._isPressed || (this._projectileTriggeredTime > 0)) {
 				this._projectileTime = 1;
 				this.shoot();
 			}
 		}
-		if(isPressed || this._projectileTime > 0) {
+		if(this._isPressed || this._projectileTime > 0) {
 			if(this._projectileTime++ > this.calcShootFrequency()) {
 				this._projectileTime = 0;
 			}
@@ -534,13 +573,32 @@ class Player {
 				{
 					directionRefreshAcc: this.calcProjectileAccuracy(),
 					rotateSpeed: this.calcProjectileRotationSpeed()
-				}
+				},
+				this
 			);
 			this._projectiles.push(projectile);
 			projectile.owner = this;
 
 			this.inventory.addMaterial(materialId, -(materialData.shootCost ?? 1));
 		}
+	}
+
+	makeAndShootProjectile(options) {
+		const projectile = ProjectileObjectPool.getObject(
+			this.position.x,
+			this.position.y,
+			options.targetX ?? TouchInput.worldX,
+			options.targetY ?? TouchInput.worldY,
+			{ icon: options.icon },
+			options.setDamage ?? ((options.damage ?? 1) + this.calcExtraDamage()),
+			options.lifetime ?? 180,
+			{
+				exactTarget: true,
+				speed: options.speed ?? 5
+			},
+			this
+		);
+		this._projectiles.push(projectile);
 	}
 
 	updateProjectiles() {
@@ -581,8 +639,19 @@ class Player {
 		return false;
 	}
 
+	updateAbilityInput() {
+		if(this._isPressed && TouchInput.isPressed()) {
+			const skillBehavior = this.inventory.hasUsableSkill();
+			if(skillBehavior) {
+				if(!skillBehavior()) {
+					this.inventory.startCooldownSkill();
+				}
+			}
+		}
+	}
+
 	updateItemInput() {
-		if(TouchInput.isTriggered()) {
+		if(this.canMove() && TouchInput.isTriggered()) {
 			const itemBehavior = this.inventory.hasUsableItem();
 			if(itemBehavior) {
 				if(!itemBehavior()) {
@@ -596,9 +665,135 @@ class Player {
 		if(this._invincibilityTime > 0) {
 			this._invincibilityTime--;
 
-			const tone = this._invincibilityTime % 16 > 8 ? [-60, -60, -60, 60] : [0, 0, 0, 0];
-			this.sprite.setColorTone(tone);
+			const newTone = (this._invincibilityTime % 16 > 8);
+			if(this._showInvincibleColorTone !== newTone) {
+				this._showInvincibleColorTone = newTone;
+				this.refreshTone();
+			}
 		}
+	}
+
+	updateBuffs() {
+		if(this.buffIds.length > 0) {
+			let refresh = false;
+			const len = this.buffIds.length;
+			for(let i = 0; i < len; i++) {
+				const id = this.buffIds[i];
+				if(this.buffs[id]) {
+					this.buffs[id][0]--;
+
+					const time = this.buffs[id][0];
+					if(time < 80 && (time % 8) === 0) {
+						refresh = true;
+					}
+
+					if(this.buffs[id][0] <= 0) {
+						delete this.buffs[id];
+						this.buffIds.splice(i, 1);
+						i--;
+						this.onBuffRemove(id);
+						refresh = true;
+					}
+				}
+			}
+
+			if(refresh) {
+				this.refreshTone();
+			}
+		}
+	}
+
+	addBuff(buffId, time, color = null) {
+		if(!this.buffs[buffId]) {
+			this.buffs[buffId] = [time, color];
+			this.buffIds.push(buffId);
+			this.refreshTone();
+		} else {
+			this.buffs[buffId][0] = time;
+		}
+
+		this.genericEffect([180, 180, 180, 180], () => {
+			this.refreshTone();
+		});
+	}
+
+	onBuffRemove(buffId) {
+		switch(buffId) {
+			case 0: {
+				this.statBuffs[0] -= 5;
+				this.statBuffs[1] -= 5;
+				this.showPopupEx("-5 Power", 0xffbbdd);
+				this.showPopupEx("-5 Speed", 0xffbbdd);
+				break;
+			}
+			case 1: {
+				this.statBuffs[1] -= 10;
+				this.showPopupEx("-10 Speed", 0xffbbdd);
+				break;
+			}
+			case 2: {
+				this.statBuffs[3] -= 10;
+				this.showPopupEx("-10 Breaking", 0xffbbdd);
+				break;
+			}
+			case 3: {
+				this.showPopupEx("-Fire Armor", 0xffbbdd);
+				break;
+			}
+		}
+	}
+
+	addTelekineticBuff() {
+		this.addBuff(0, 400, [60, 0, 60, 0]);
+		this.statBuffs[0] += 5;
+		this.statBuffs[1] += 5;
+		this.showPopupEx("+5 Power", 0xbbddff);
+		this.showPopupEx("+5 Speed", 0xbbddff);
+	}
+
+	addSpeedBuff() {
+		this.addBuff(1, 400, [0, 60, 60, 0]);
+		this.statBuffs[1] += 10;
+		this.showPopupEx("+10 Speed", 0xbbddff);
+	}
+
+	addBreakingBuff() {
+		this.addBuff(2, 400, [60, 60, 0, 0]);
+		this.statBuffs[3] += 10;
+		this.showPopupEx("+10 Breaking", 0xbbddff);
+	}
+
+	addHeatArmor() {
+		this.addBuff(3, 400, [90, 30, 30, 0]);
+		this.showPopupEx("+Fire Armor", 0xbbddff);
+	}
+
+	refreshTone() {
+		const tone = this._showInvincibleColorTone ? [-60, -60, -60, 60] : [0, 0, 0, 0];
+
+		if(this.buffIds.length > 0) {
+			const len = this.buffIds.length;
+			for(let i = 0; i < len; i++) {
+				const id = this.buffIds[i];
+				if(this.buffs[id] && Array.isArray(this.buffs[id][1])) {
+					const time = this.buffs[id][0];
+					if(time > 80 || time % 16 < 8) {
+						const t = this.buffs[id][1];
+						for(let i = 0; i < 4; i++) {
+							tone[i] += t[i];
+						}
+					}
+				}
+			}
+		}
+
+		if(this.effectsTone) {
+			for(let i = 0; i < 4; i++) {
+				tone[i] += this.effectsTone[i];
+			}
+		}
+
+		this.sprite.setColorTone(tone);
 	}
 
 	isInvincible() {
@@ -606,7 +801,7 @@ class Player {
 	}
 
 	takeDamage(amount, direction, knockbackTime = 8, knockbackSpeed = 4) {
-		this.addHp(-amount);
+		this.addHp(-(amount * this.calcDamageRatio()));
 		if(this.hp === 0) {
 			this.onKill();
 			this.deathEffect();
@@ -818,6 +1013,15 @@ class Player {
 		});
 
 		interpreter.setWaitMode("message");
+	}
+
+	getPairkinesis() {
+		return this._pairkinesis;
+	}
+
+	togglePairkinesis() {
+		this._pairkinesis = !this._pairkinesis;
+		this.refreshHotbarNumbers();
 	}
 }
 

@@ -92,6 +92,8 @@ class EnemyBase {
 		this.updateSpriteAnimation();
 		this.updateHpBar();
 		this.updateTeleport();
+
+		this.hpBar.scale.set(this.sprite.scale.x > 0 ? -1 : 1, 1);
 	}
 
 	canMove() {
@@ -186,7 +188,6 @@ class EnemyBase {
 		
 		const reverse = (quad === -2 || quad === 1);
 		this.sprite.scale.set(reverse ? -2 : 2, 2);
-		this.hpBar.scale.set(reverse ? -1 : 1, 1);
 
 		let animation = this.getAnimation();
 		if(animation) {
@@ -265,12 +266,12 @@ class EnemyBase {
 		this._effect.teleportIn();
 	}
 
-	damageEffect() {
+	damageEffect(doTone = true) {
 		if(this._effect) {
 			this._effect.sprite = null;
 			this._effect = null;
 		}
-		this._effect = new EnemyDamage_Effect(this.sprite);
+		this._effect = new EnemyDamage_Effect(this.sprite, doTone);
 	}
 
 	deathEffect() {
@@ -298,7 +299,7 @@ class EnemyBase {
 				this._damageDirection = direction;
 				this._damageKnockback = knockbackSpeed;
 				this._enemyHpBarAppear = 300;
-				this.damageEffect();
+				this.damageEffect(amount !== 0);
 			}
 		}
 	}
@@ -466,8 +467,9 @@ class EnemyTeleport_Effect {
 }
 
 class EnemyDamage_Effect {
-	constructor(sprite) {
+	constructor(sprite, doTone) {
 		this.sprite = sprite;
+		this.doTone = doTone;
 
 		this.disallowMovement = false;
 
@@ -481,18 +483,18 @@ class EnemyDamage_Effect {
 		if(r < 0.5) {
 			const a = (r / 0.5).cubicOut();
 			this.sprite.scale.set((1 - (a * 0.3)) * 2, (1 + (a * 0.3)) * 2);
-			this.sprite.setBlendColor([a * 255, a * 125, a * 125, a * 255]);
+			if(this.doTone) this.sprite.setBlendColor([a * 255, a * 125, a * 125, a * 255]);
 		} else {
 			const b = (((r - 0.5) / 0.5));
 			this.sprite.scale.set((0.7 + (b * 0.3)) * 2, (1.3 - (b * 0.3)) * 2);
 
 			const c = 1 - b;
-			this.sprite.setBlendColor([c * 255, c * 125, c * 125, c * 255]);
+			if(this.doTone) this.sprite.setBlendColor([c * 255, c * 125, c * 125, c * 255]);
 		}
 
 		if(this._time >= 1) {
 			this.sprite.scale.set(2);
-			this.sprite.setBlendColor([0, 0, 0, 0]);
+			if(this.doTone) this.sprite.setBlendColor([0, 0, 0, 0]);
 			return true;
 		}
 
