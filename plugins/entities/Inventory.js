@@ -370,6 +370,17 @@ class Inventory {
 		return false;
 	}
 
+	addActiveSkillFromName(name) {
+		const len = AbilityTypes.length;
+		for(let i = 0; i < len; i++) {
+			if(AbilityTypes[i]?.name === name) {
+				this.addActiveSkill(i);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	hasActiveSkill(skillId) {
 		return this.activeSkills.includes(skillId);
 	}

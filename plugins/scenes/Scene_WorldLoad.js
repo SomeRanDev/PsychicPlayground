@@ -136,20 +136,22 @@ class Scene_WorldLoad extends Scene_Base {
 
 		$ppPlayer.setAllStats(this._playerSettings.playerStats);
 
+		$gameTemp._isNewGame = true;
+
 		switch(this._playerSettings.playerClass) {
 			case 0: {
-				$ppPlayer.inventory.addActiveSkill(20);
-				$ppPlayer.inventory.addActiveSkill(25);
+				$ppPlayer.inventory.addActiveSkillFromName("Mind Boost");
+				$ppPlayer.inventory.addActiveSkillFromName("Pairkinesis");
 				break;
 			}
 			case 1: {
-				$ppPlayer.inventory.addActiveSkill(3);
-				$ppPlayer.inventory.addActiveSkill(23);
+				$ppPlayer.inventory.addActiveSkillFromName("Pyrokinesis");
+				$ppPlayer.inventory.addActiveSkillFromName("Heat Armor");
 				break;
 			}
 			case 2: {
-				$ppPlayer.inventory.addActiveSkill(30);
-				//$ppPlayer.inventory.addActiveSkill(0);
+				$ppPlayer.inventory.addActiveSkillFromName("Chaoskinesis");
+				$ppPlayer.inventory.addActiveSkillFromName("Vitakinesis");
 				break;
 			}
 		}

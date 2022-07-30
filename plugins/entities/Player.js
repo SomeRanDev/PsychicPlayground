@@ -66,6 +66,12 @@ class Player {
 
 	makeSprite() {
 		this.sprite = new PlayerSprite(this);
+
+		if($gameTemp._isNewGame) {
+			this.hopOnBedInit();
+			$gameTemp._isNewGame = false;
+		}
+
 		return this.sprite;
 	}
 
@@ -281,6 +287,10 @@ class Player {
 				y: $gameTemp.currentlyRunning.y * TS + (TS * 1.5)
 			});
 		}
+	}
+
+	hopOnBedInit() {
+		this.leaveBed();
 	}
 
 	leaveBed() {
@@ -740,6 +750,10 @@ class Player {
 				this.showPopupEx("-Fire Armor", 0xffbbdd);
 				break;
 			}
+			case 4: {
+				this.showPopupEx("-Invincibility", 0xffbbdd);
+				break;
+			}
 		}
 	}
 
@@ -766,6 +780,11 @@ class Player {
 	addHeatArmor() {
 		this.addBuff(3, 400, [90, 30, 30, 0]);
 		this.showPopupEx("+Fire Armor", 0xbbddff);
+	}
+
+	addFastShield() {
+		this.addBuff(4, 120, [30, 30, 90, 0]);
+		this.showPopupEx("+Invincibility", 0xbbddff);
 	}
 
 	refreshTone() {
@@ -800,17 +819,23 @@ class Player {
 		return this._invincibilityTime > 0;
 	}
 
+	canTakeDamage() {
+		return !this.buffs[4];
+	}
+
 	takeDamage(amount, direction, knockbackTime = 8, knockbackSpeed = 4) {
-		this.addHp(-(amount * this.calcDamageRatio()));
-		if(this.hp === 0) {
-			this.onKill();
-			this.deathEffect();
-		} else {
-			this._invincibilityTime = 64;
-			this._damageTime = knockbackTime;
-			this._damageDirection = direction;
-			this._damageKnockback = knockbackSpeed;
-			this.damageEffect();
+		if(this.canTakeDamage()) {
+			this.addHp(-(amount * this.calcDamageRatio()));
+			if(this.hp === 0) {
+				this.onKill();
+				this.deathEffect();
+			} else {
+				this._invincibilityTime = 64;
+				this._damageTime = knockbackTime;
+				this._damageDirection = direction;
+				this._damageKnockback = knockbackSpeed;
+				this.damageEffect();
+			}
 		}
 	}
 

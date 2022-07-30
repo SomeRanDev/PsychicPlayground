@@ -305,9 +305,6 @@ const AbilityTypes = [
 	},
 	{
 		// 15
-		// to be another combat skill
-
-		//Chaoskinesis
 		name: "Chaoskinesis",
 		isActive: true,
 		icon: "Chaoskinesis",
@@ -397,7 +394,15 @@ const AbilityTypes = [
 	},
 	{
 		// 24
-		// to be another combat skill
+		name: "Fast Shield",
+		isActive: true,
+		icon: "FastShield",
+		desc: "Invincible for\n2 seconds.",
+		cooldownSpeed: 0.1,
+		requireNoCooldown: true,
+		behavior: function() {
+			$ppPlayer.addFastShield();
+		}
 	},
 	{
 		// 25

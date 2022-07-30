@@ -73,9 +73,9 @@ class GenerationManager {
 	static TILE_HEIGHT = 32;
 
 	save() {
-		return [
-			this.HasTileData,
-			this.AllTileData,
+		return JSON.stringify([
+			Array.from(this.HasTileData),
+			Array.from(this.AllTileData),
 			this.Structs,
 			this.ReadRotation,
 			this.GenerationMapString,
@@ -89,10 +89,12 @@ class GenerationManager {
 			this.mapStorePos,
 			this.foodStorePos,
 			this.initFastTravelPos
-		];
+		]);
 	}
 
-	load(data) {
+	load(stringData) {
+		const data = JSON.parse(stringData);
+
 		this.HasTileData = Int8Array.from(data[0]);
 		this.AllTileData = Uint32Array.from(data[1]);
 
@@ -138,6 +140,8 @@ class GenerationManager {
 		if(!GenerationManager.hyperFaseNoise) {
 			GenerationManager.hyperFastNoise = require("./js/nativelibs/HyperFastNoise.node");
 		}
+
+		$generation = this;
 
 		this.seed = seed;
 		if(!seed || seed.length <= 0) {
@@ -237,23 +241,25 @@ class GenerationManager {
 
 		AllStructs[0].addToData(0, 0);
 
-		this.mapStorePos = this.generateRandomTownPosition(10, 11, 15);
+		this.mapStorePos = this.generateRandomTownPosition(10, 8, 12);
 		AllStructs[5].addToData(this.mapStorePos[0], this.mapStorePos[1]);
 
-		this.foodStorePos = this.generateRandomTownPosition(12, 11, 15, 0, 0, this.mapStorePos[2] + (Math.PI * 2 * 0.333));
+		console.log(this.mapStorePos[2] * (180 / Math.PI));
+
+		this.foodStorePos = this.generateRandomTownPosition(12, 8, 12, 0, 0, this.mapStorePos[2] + (Math.PI * 2 * 0.333));
 		AllStructs[6].addToData(this.foodStorePos[0], this.foodStorePos[1]);
 
-		this.initFastTravelPos = this.generateRandomTownPosition(14, 11, 15, 0, 0, this.mapStorePos[2] + (Math.PI * 2 * 0.666));
+		this.initFastTravelPos = this.generateRandomTownPosition(14, 8, 12, 0, 0, this.mapStorePos[2] + (Math.PI * 2 * 0.666));
 		AllStructs[7].addToData(this.initFastTravelPos[0], this.initFastTravelPos[1]);
 
 		
 		for(let i = 11; i <= 13; i++) {
 			let index = 0;
-			let x = -15 + Math.floor(30 * this.getRandomNumber(((i * 2) + (index++))));
-			let y = -15 + Math.floor(30 * this.getRandomNumber(((i * 3) + (index++))));
-			while(!CollisionManager.canMoveToTile(x, y)) {
-				x = -15 + Math.floor(30 * this.getRandomNumber(((i * 4) + (index++))));
-				y = -15 + Math.floor(30 * this.getRandomNumber(((i * 5) + (index++))));
+			let x = -12 + Math.floor(24 * this.getRandomNumber(((i * 2) + (index++))));
+			let y = -12 + Math.floor(24 * this.getRandomNumber(((i * 3) + (index++))));
+			while(!CollisionManager.canMoveToTile(x, y) && (x > -5 && x < 5 && y > 0 && y < 8)) {
+				x = -12 + Math.floor(24 * this.getRandomNumber(((i * 4) + (index++))));
+				y = -12 + Math.floor(24 * this.getRandomNumber(((i * 5) + (index++))));
 				if(index > 100) break;
 			}
 			if(index <= 100) {
@@ -535,7 +541,13 @@ class GenerationManager {
 	}
 
 	getRandomNumber(offset) {
-		return (GenerationManager.getPerlinNoise(offset * 20, offset * -20, offset * offset) + 1) / 2;
+		// https://stackoverflow.com/a/47593316
+		var t = (offset + this.hash) + 0x6D2B79F5;
+		t = Math.imul(t ^ t >>> 15, t | 1);
+		t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+		return ((t ^ t >>> 14) >>> 0) / 4294967296;
+
+		//return (GenerationManager.getPerlinNoise(offset * 20, offset * -20, 0) + 1) / 2;
 		/*const n = this.hash + offset;
 		return ((n - (((Math.sin(n) + 1) / 2) * 10000)) % 5784394) / 5784394.0;*/
 	}

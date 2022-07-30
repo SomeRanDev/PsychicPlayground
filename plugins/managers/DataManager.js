@@ -35,8 +35,24 @@ DataManager.makeSavefileInfo = function() {
 	return info;
 };
 
+StorageManager.saveString = function(saveName, str) {
+	if (this.isLocalMode()) {
+		return this.saveToLocalFile(saveName, str);
+	} else {
+		return this.saveToForage(saveName, str);
+	}
+};
+
+StorageManager.loadString = function(saveName) {
+	if (this.isLocalMode()) {
+		return this.loadFromLocalFile(saveName);
+	} else {
+		return this.loadFromForage(saveName);
+	}
+};
+
 DataManager.saveGame = async function(savefileId) {
-	await StorageManager.saveObject(this.makeWorldSavename(savefileId), $generation.save());
+	await StorageManager.saveString(this.makeWorldSavename(savefileId), $generation.save());
 
 	const contents = this.makeSaveContents();
 	const saveName = this.makeSavename(savefileId);
@@ -48,7 +64,7 @@ DataManager.saveGame = async function(savefileId) {
 };
 
 DataManager.loadGame = async function(savefileId) {
-	const worldData = await StorageManager.loadObject(this.makeWorldSavename(savefileId));
+	const worldData = await StorageManager.loadString(this.makeWorldSavename(savefileId));
 	$generation.load(worldData);
 
 	const saveName = this.makeSavename(savefileId);

@@ -1,6 +1,6 @@
 class Chaser extends EnemyBase {
 	getMaxHp() {
-		return 3;
+		return 12;
 	}
 
 	bodyDamage() {
