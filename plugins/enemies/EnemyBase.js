@@ -13,6 +13,8 @@ class EnemyBase {
 
 		this.time = 0;
 
+		this.noticedPlayer = false;
+
 		this.hp = this.getMaxHp();
 		this.maxHp = this.hp;
 
@@ -32,6 +34,10 @@ class EnemyBase {
 
 		SpriteManager.addEntity(this);
 		$gameTemp.enemies.push(this);
+	}
+
+	randomizeDir() {
+		this.direction = Math.PI * 2 * Math.random();
 	}
 
 	setupCollisionRect() {
@@ -83,6 +89,7 @@ class EnemyBase {
 			if(!this.takingDamage) {
 				this.updateTime();
 			}
+			this.updateNoticedPlayer();
 			this.updateBehavior();
 			this.updatePosition();
 			this.updateProjectiles();
@@ -107,6 +114,51 @@ class EnemyBase {
 
 	updateTime() {
 		this.time++;
+	}
+
+	getDistanceToPlayer() {
+		return Math.sqrt(
+			Math.pow($ppPlayer.position.y - this.y, 2) +
+			Math.pow($ppPlayer.position.x - this.x, 2)
+		);
+	}
+
+	setNoticedPlayer(n) {
+		if(this.noticedPlayer !== n) {
+			this.noticedPlayer = n;
+			this.onNoticeChanged();
+		}
+	}
+
+	onNoticeChanged() {
+		if(this.noticedPlayer) {
+			this.setEffect(new EnemyNotice_Effect(this.sprite));
+			this.onNotice();
+		}
+	}
+
+	onNotice() {
+	}
+
+	updateNoticedPlayer() {
+		const dist = this.getDistanceToPlayer();
+		if(this.noticedPlayer) {
+			if(dist > this.forgetDistance()) {
+				this.setNoticedPlayer(false);
+			}
+		} else {
+			if(dist < this.noticeDistance()) {
+				this.setNoticedPlayer(true);
+			}
+		}
+	}
+
+	noticeDistance() {
+		return 120;
+	}
+
+	forgetDistance() {
+		return 240;
 	}
 
 	updateBehavior() {
@@ -184,7 +236,8 @@ class EnemyBase {
 		// -2  -1
 		//    . 
 		//  1   0
-		const quad = Math.floor(this.direction / (Math.PI / 2));
+		let quad = Math.floor(this.direction / (Math.PI / 2));
+		while(quad >= 2) quad -= 4;
 		
 		const reverse = (quad === -2 || quad === 1);
 		this.sprite.scale.set(reverse ? -2 : 2, 2);
@@ -262,28 +315,33 @@ class EnemyBase {
 	}
 
 	teleportIn() {
-		this._effect = new EnemyTeleport_Effect(this.sprite);
+		this.setEffect(new EnemyTeleport_Effect(this.sprite));
 		this._effect.teleportIn();
 	}
 
 	damageEffect(doTone = true) {
-		if(this._effect) {
-			this._effect.sprite = null;
-			this._effect = null;
-		}
-		this._effect = new EnemyDamage_Effect(this.sprite, doTone);
+		this.setEffect(new EnemyDamage_Effect(this.sprite, doTone));
 	}
 
 	deathEffect() {
-		if(this._effect) {
-			this._effect.sprite = null;
-			this._effect = null;
-		}
-		this._effect = new EnemyDeath_Effect(this, this.sprite);
+		this.setEffect(new EnemyDeath_Effect(this, this.sprite));
 	}
 
-	setDirectionToPlayer() {
+	setEffect(e) {
+		if(this._effect) {
+			this._effect.onRemove();
+			this._effect.sprite = null
+			this._effect = null;
+		}
+		this._effect = e;
+	}
+
+	setDirectionToPlayer(rand = 0) {
 		this.direction = Math.atan2($ppPlayer.position.y - this.y, $ppPlayer.position.x - this.x);
+		if(rand > 0) {
+			const v = Math.PI * 2 * rand;
+			this.direction += (v / -2) + (Math.random() * v);
+		}
 	}
 
 	takeDamage(amount, direction, knockbackTime = 8, knockbackSpeed = 4) {
@@ -300,11 +358,13 @@ class EnemyBase {
 				this._damageKnockback = knockbackSpeed;
 				this._enemyHpBarAppear = 300;
 				this.damageEffect(amount !== 0);
+				this.onDamage();
 			}
 		}
 	}
 
 	onDamage() {
+		this.setNoticedPlayer(true);
 	}
 
 	onDamageKnockbackComplete() {
@@ -393,6 +453,25 @@ class EnemyBase {
 			bottom: this.y + this.colRect.bottom
 		};
 	}
+
+	isWithinChunk(chunk) {
+		const x = this.x - chunk.globalTilePixelStartX;
+		if(x < 0 || x > 256) return false;
+		const y = this.y - chunk.globalTilePixelStartY;
+		return y >= 0 && y <= 256;
+	}
+
+	checkDespawn() {
+		if(Math.abs($ppPlayer.position.x - this.x) > 600) {
+			this.destroy();
+			$generation.enemies.remove(this);
+			return;
+		} else if(Math.abs($ppPlayer.position.y - this.y) > 600) {
+			this.destroy();
+			$generation.enemies.remove(this);
+			return;
+		}
+	}
 }
 
 class EnemyTeleport_Effect {
@@ -427,6 +506,14 @@ class EnemyTeleport_Effect {
 
 		this.sprite.scale.set(2);
 		this.sprite.setBlendColor([0, 0, 0, 0]);
+	}
+
+	onRemove() {
+		if(this._reverseTeleport) {
+			this.endTeleportIn();
+		} else {
+			this.endTeleport();
+		}
 	}
 
 	update() {
@@ -493,12 +580,16 @@ class EnemyDamage_Effect {
 		}
 
 		if(this._time >= 1) {
-			this.sprite.scale.set(2);
-			if(this.doTone) this.sprite.setBlendColor([0, 0, 0, 0]);
+			this.onRemove();
 			return true;
 		}
 
 		return false;
+	}
+
+	onRemove() {
+		this.sprite.scale.set(2);
+		if(this.doTone) this.sprite.setBlendColor([0, 0, 0, 0]);
 	}
 }
 
@@ -528,12 +619,53 @@ class EnemyDeath_Effect {
 		}
 
 		if(this._time >= 1) {
-			this.sprite.setBlendColor([255, 125, 125, 255]);
-			this.sprite.scale.set(0, 4);
-			this.enemy.onDeathEffectDone();
+			this.onRemove();
 			return true;
 		}
 
 		return false;
+	}
+
+	onRemove() {
+		this.sprite.setBlendColor([255, 125, 125, 255]);
+		this.sprite.scale.set(0, 4);
+		this.enemy.onDeathEffectDone();
+	}
+}
+
+class EnemyNotice_Effect {
+	constructor(sprite) {
+		this.sprite = sprite;
+
+		this.noticeSprite = new Sprite(ImageManager.lUi("Notice"));
+		this.noticeSprite.anchor.set(0.5, 1);
+		this.startY = -3;
+		this.noticeSprite.y = this.startY;
+		this.noticeSprite.alpha = 0;
+		this.sprite.addChild(this.noticeSprite);
+
+		this.disallowMovement = false;
+
+		this._time = 0;
+	}
+
+	update() {
+		this._time += 0.03;
+
+		const r = this._time;
+		this.noticeSprite.alpha = r < 0.9 ? (r / 0.4).clamp(0, 1) : (1 - ((r - 0.9) / 0.1));
+		this.noticeSprite.scale.set(this.noticeSprite.alpha, 1);
+		this.noticeSprite.y = this.startY - (16 * (r / 0.7).clamp(0, 1).cubicOut());
+
+		if(this._time >= 1) {
+			this.onRemove();
+			return true;
+		}
+
+		return false;
+	}
+
+	onRemove() {
+		this.sprite.removeChild(this.noticeSprite);
 	}
 }

@@ -14,7 +14,7 @@ class Map extends Sprite {
 			flag.anchor.set(0.5, 1);
 			this.addChild(flag);
 			this.flags.push(flag);
-			flag.visible = true;
+			flag.visible = $gameVariables.value(30) === 1;
 		}
 
 		this.mapStore = new Sprite(ImageManager.loadPicture("MapStore"));
@@ -138,7 +138,7 @@ class Map extends Sprite {
 
 			const r = isPaused ? newRatio.cubicOut() : newRatio.cubicIn();
 			this.move(PP.lerp(720, (Graphics.width / 2), r), PP.lerpEx(66, (Graphics.height / 2), r));
-			this.setScale(0.3 + (0.7 * r));
+			this.setScale(0.3 + (1.2 * r));
 		}
 	}
 

@@ -1,4 +1,10 @@
 class Chaser extends EnemyBase {
+	constructor(tileX, tileY, onDefeat = null) {
+		super(tileX, tileY, onDefeat);
+
+		this._continueBehavior = false;
+	}
+
 	getMaxHp() {
 		return 12;
 	}
@@ -9,6 +15,10 @@ class Chaser extends EnemyBase {
 
 	exp() {
 		return 10;
+	}
+
+	noticeDistance() {
+		return 120;
 	}
 
 	setupCollisionRect() {
@@ -22,17 +32,47 @@ class Chaser extends EnemyBase {
 	}
 
 	updateBehavior() {
+		if(this.time === 1) {
+			this.checkDespawn();
+		}
+		if(this._continueBehavior) {
+			this.behaveAttack();
+		} else {
+			this.behaveIdle();
+		}
+	}
+
+	behaveAttack() {
 		if(this.time === 90) {
-			this.setDirectionToPlayer();
+			this.setDirectionToPlayer(0.05);
 			this.speed = 4;
 		}
-		if(this.time === 110) {
+		if(this.time === 120) {
 			this.speed = 0;
 			this.time = 0;
-
-			//const p = this.shootProjectile(90, "Attack");
-			//p.startAnimationSpeed = 0.2;
+			if(!this.noticedPlayer) {
+				this._continueBehavior = false;
+			}
 		}
+	}
+
+	behaveIdle() {
+		if(this.time === 90) {
+			this.randomizeDir();
+			this.speed = 2;
+			this._final = 100 + Math.floor(Math.random() * 30);
+		}
+		if(this.time === this._final) {
+			this.speed = 0;
+			this.time = 0;
+		}
+	}
+
+	onNotice() {
+		this._continueBehavior = true;
+		this.time = 60;
+		this.speed = 0;
+		this.setDirectionToPlayer();
 	}
 
 	onDamage() {

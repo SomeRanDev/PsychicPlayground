@@ -29,7 +29,7 @@ class Biome_Base_Tree extends Biome_Base {
 			return 255;
 		}
 
-		if(GenerationManager.getPerlinNoise((globalX * 80) + 3000, (globalY * 80) + 3000, globalIndex) >= 0.1) {
+		if(GenerationManager.getPerlinNoise((globalX * 80) + 3000, (globalY * 80) + 3000, globalIndex) >= 0.4) {
 			return 1;
 		}
 

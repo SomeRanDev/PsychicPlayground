@@ -60,6 +60,9 @@ class GenerationManager {
 	//static HasTileData;
 	RefreshTile = false;
 
+	chunkCounter = 0;
+	enemies = [];
+
 	static CHUNKS_X = 128;
 	static CHUNKS_Y = 128;
 
@@ -71,6 +74,17 @@ class GenerationManager {
 
 	static TILE_WIDTH = 32;
 	static TILE_HEIGHT = 32;
+
+	shouldSpawnEnemies() {
+		if(this.enemies.length > 12) {
+			return false;
+		}
+		if((this.chunkCounter++) > 2) {
+			this.chunkCounter = 0;
+			return true;
+		}
+		return false;
+	}
 
 	save() {
 		return JSON.stringify([
@@ -122,7 +136,15 @@ class GenerationManager {
 	}
 
 	isReady() {
-		return GenerationManager.GenerationMap.isReady() && GenerationManager.GenerationMapPath.isReady();
+		return GenerationManager.GenerationMap.isReady() && GenerationManager.GenerationMapPath.isReady() && this.Structs?.length > 0;
+	}
+
+	onceReady(callback) {
+		if(this.isReady()) {
+			callback();
+		} else {
+			this._onceReady = callback;
+		}
 	}
 
 	static start() {
@@ -232,6 +254,10 @@ class GenerationManager {
 		GenerationManager.GenerationMap.addLoadListener(() => {
 			GenerationManager.GenerationMapPath.addLoadListener(() => {
 				this.onGeneratorReady();
+				if(this._onceReady) {
+					this._onceReady();
+					this._onceReady = null;
+				}
 			});
 		});
 	}
@@ -241,10 +267,14 @@ class GenerationManager {
 
 		AllStructs[0].addToData(0, 0);
 
+		/*
+
+		// this code randomly generates the location of initial town's 
+		// buildings and NPCs. I think it will be better to have them
+		// be manually placed though.
+
 		this.mapStorePos = this.generateRandomTownPosition(10, 8, 12);
 		AllStructs[5].addToData(this.mapStorePos[0], this.mapStorePos[1]);
-
-		console.log(this.mapStorePos[2] * (180 / Math.PI));
 
 		this.foodStorePos = this.generateRandomTownPosition(12, 8, 12, 0, 0, this.mapStorePos[2] + (Math.PI * 2 * 0.333));
 		AllStructs[6].addToData(this.foodStorePos[0], this.foodStorePos[1]);
@@ -266,9 +296,113 @@ class GenerationManager {
 				AllStructs[i].addToData(x, y);
 			}
 		}
+		*/
+
+		const sandTile = this.makeTile(255, 255, 255, 200);
+		const treeTile = this.makeTile(3, 255, 4, 200);
+
+		const makeSmallTree = (x, y) => {
+			this.setTileGlobal(x, y, treeTile);
+		};
+
+		const makeTree = (x, y) => {
+			this.setTileGlobal(x, y, this.makeTile(1, 255, 4, 200));
+		};
+
+		const makeBush = (x, y) => {
+			this.setTileGlobal(x, y, this.makeTile(4, 255, 4, 200));
+		};
+
+		const makeRock = (x, y) => {
+			this.setTileGlobal(x, y, this.makeTile(5, 255, 4, 200));
+		};
+
+		const makeDownPath = (x, y) => {
+			this.setTileGlobal(x, y, sandTile);
+			this.setTileGlobal(x + 1, y, this.makeTile(255, 255, 3, 200));
+			this.setTileGlobal(x - 1, y, this.makeTile(255, 255, 5, 200));
+		};
+
+		const makePathEnd = (x, y) => {
+			this.setTileGlobal(x, y, sandTile);
+			this.setTileGlobal(x + 1, y, this.makeTile(255, 255, 3, 200));
+			this.setTileGlobal(x - 1, y, this.makeTile(255, 255, 5, 200));
+			this.setTileGlobal(x, y + 1, this.makeTile(255, 255, 1, 200));
+			this.setTileGlobal(x - 1, y + 1, this.makeTile(255, 255, 11, 200));
+			this.setTileGlobal(x + 1, y + 1, this.makeTile(255, 255, 12, 200));
+		};
+
+		// Buildings
+		AllStructs[5].addToData(8, 8);
+		makePathEnd(8, 9);
+		for(let i = 3; i <= 7; i++) {
+			makeSmallTree(8 - 5, i);
+			makeSmallTree(8 + 5, i);
+		}
+		for(let i = 2; i <= 5; i++) {
+			makeBush(8 - i, 8);
+			makeBush(8 + i, 8);
+		}
+
+		{
+			const x = -10;
+			const y = 6;
+			AllStructs[6].addToData(x, y);
+			makeDownPath(x, y + 1);
+			makePathEnd(x, y + 2);
+			for(let i = 1; i <= 4; i++) {
+				if(this.getRandomNumber((i + 10) * 2) < 0.7) makeRock(x - i, y);
+				if(this.getRandomNumber((i + 10) * 3) < 0.7) makeRock(x + i, y);
+			}
+
+			this.setTileGlobal(x, y, this.makeTile(0, 255, 255, 200));
+		}
+
+		{
+			const x = -4;
+			const y = 14;
+			AllStructs[7].addToData(x, y);
+			makePathEnd(x, y + 1);
+		}
+
+		{
+			const x = 3;
+			const y = 15;
+			AllStructs[12].addToData(x + 1, y + 2);
+			for(let xx = x - 2; xx <= (x + 3); xx++) {
+				for(let yy = y - 2; yy <= (y + 2); yy++) {
+					if((xx !== x && (xx - 1) !== x) || yy !== y) {
+						if(this.getRandomNumber(xx * yy) < 0.9) {
+							makeRock(xx, yy);
+						}
+					}
+				}
+			}
+		}
+
+		AllStructs[11].addToData(-11, 12);
+		this.addCarpet(-12, 10);
+
+		{
+			const x = -5;
+			const y = 20;
+
+			AllStructs[13].addToData(x, y + 1);
+			makeTree(x - 2, y);
+			makeTree(x + 2, y);
+			makeTree(x, y - 2);
+		}
 
 		// NPCs
 		AllStructs[10].addToData(2, 2);
+	}
+
+	addCarpet(x, y) {
+		for(let i = 0; i < 9; i++) {
+			const xoff = (i % 3);
+			const yoff = Math.floor(i / 3);
+			this.setTileGlobal(x + xoff, y + yoff, this.makeTile(255, (5 * 13) + i, 4, 200));
+		}
 	}
 
 	generateRandomTownPosition(index, minDist, maxDist, offsetX = 0, offsetY = 0, dir = -999) {
@@ -520,18 +654,22 @@ class GenerationManager {
 		this._possibleBlueTargets = null;
 	}
 
-	generateAllSync() {
-		this.beginGeneration();
+	generateAllSync(callback) {
+		this.onceReady(() => {
+			this.beginGeneration();
 
-		const w = 256;
-		const end = w * w;
-		for(let i = 0; i < end; i++) {
-			const x = (i % w);
-			const y = Math.floor(i / w);
-			this.preGenerateFromRatio(x / w, y / w);
-		}
+			const w = 256;
+			const end = w * w;
+			for(let i = 0; i < end; i++) {
+				const x = (i % w);
+				const y = Math.floor(i / w);
+				this.preGenerateFromRatio(x / w, y / w);
+			}
 
-		this.endGeneration();
+			this.endGeneration();
+
+			if(callback) callback();
+		});
 	}
 
 	generateAllSyncIfNotGenerated() {
@@ -613,6 +751,14 @@ class GenerationManager {
 		}
 
 		this.Structs[globalIndex].push([localTileX, localTileY, struct.id]);
+	}
+
+	// Used only in initial Struct generation
+	setTileGlobal(globalTileX, globalTileY, tileData) {
+		const globalTileXPos = globalTileX + (GenerationManager.OFFSET_X * GenerationManager.TILES_X);
+		const globalTileYPos = globalTileY + (GenerationManager.OFFSET_Y * GenerationManager.TILES_Y);
+		const globalIndex = (globalTileYPos * GenerationManager.GLOBAL_WIDTH) + globalTileXPos;
+		this.setData(globalIndex, tileData);
 	}
 
 	getTileGlobal(globalX, globalY, globalIndex) {

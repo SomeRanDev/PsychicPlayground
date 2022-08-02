@@ -13,6 +13,7 @@ class Chunk {
 	refreshTiles = [];
 
 	blocks = [];
+	enemies = [];
 
 	constructor(chunkX, chunkY) {
 		this.baseSprite = new Sprite();
@@ -84,6 +85,16 @@ class Chunk {
 			}
 		}
 		this.structs = [];
+
+		this.globalTilePixelStartX = (this.chunkX * GenerationManager.TILES_X) * TS;
+		this.globalTilePixelStartY = (this.chunkY * GenerationManager.TILES_Y) * TS;
+		if($generation.enemies) {
+			for(const e of $generation.enemies) {
+				if(e.isWithinChunk(this)) {
+					e.destroy();
+				}
+			}
+		}
 
 		this._animatedTiles = [];
 		this._animationCounter = 0;
@@ -164,39 +175,50 @@ class Chunk {
 
 			SpriteManager.validate();
 
+			this.generateEnemies();
+
 			if(this.blocks.length > 0) {
-				/*
-				let parent = this.blocks[0].parent;
-
-				if(parent) {
-					let smallestY = 999999999;
-					let smallestYBlock = null;
-					for(let i = 0; i < this.blocks.length; i++) {
-						if(this.blocks[i].realY < smallestY) {
-							smallestYBlock = this.blocks[i];
-							smallestY = smallestYBlock.realY;
-						}
-					}
-
-					SpriteManager.sort();
-
-					const startIndex = parent.children.indexOf(smallestYBlock);
-					for(const b in this.blocks) {
-						b.refreshSpritePosition(startIndex);
-					}
-				}
-				*/
 			}
 		}
+	}
 
-		//this.refreshSpritePosition();
-		/*else if(this.refreshTiles.length > 0) {
-			for(const tile of this.refreshTiles) {
-				this.generateTile(tile[0], tile[1], false);
-			}
-			this.refreshTiles = [];
+	generateEnemies() {
+		const genOffset = () => {
+			return -0.3 + (Math.random() * 0.6);
 		}
-		*/
+
+		if(this.canSpawnEnemies() && $generation.shouldSpawnEnemies()) {
+			let x = Math.floor(Math.random() * 8);
+			let y = Math.floor(Math.random() * 8);
+			this.spawnEnemyAtLocalTile(x, y);
+			while(Math.random() < 0.3) {
+				x += 1;
+				y += 1 - Math.floor(Math.random() * 2);
+				this.spawnEnemyAtLocalTile(x + genOffset(), y + genOffset());
+			}
+			while(Math.random() < 0.3) {
+				x -= 1;
+				y += 1 - Math.floor(Math.random() * 2);
+				this.spawnEnemyAtLocalTile(x + genOffset(), y + genOffset());
+			}
+		}
+	}
+
+	spawnEnemyAtLocalTile(localTileX, localTileY) {
+		const globalX = (GenerationManager.TILES_X * this.chunkX) + localTileX;
+		const globalY = (GenerationManager.TILES_Y * this.chunkY) + localTileY;
+		if(CollisionManager.canMoveToTile(globalX, globalY)) {
+			const enemy = new Chaser(globalX, globalY);
+			enemy.randomizeDir()
+			$generation.enemies.push(enemy);
+			return true;
+		}
+		return false;
+	}
+
+	canSpawnEnemies() {
+		if(this.chunkY < -2) return true;
+		return Math.abs(this.chunkX * this.chunkY) > 9;
 	}
 
 	generateTile(x, y, allowRefresh = true) {

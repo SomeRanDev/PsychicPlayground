@@ -4,7 +4,7 @@ const MineableTypes = {
 		hitBox: [0.5, 0.5, 2, 1],
 		hp: 12,
 		res: 25,
-		hpIcon: "Rock",
+		hpIcon: "Sand",
 		material: 1,
 		materialGainMin: 8,
 		materialGainMax: 12
@@ -38,6 +38,26 @@ const MineableTypes = {
 		material: 3,
 		materialGainMin: 8,
 		materialGainMax: 12
+	},
+	4: {
+		name: "Bush",
+		hitBox: [0.5, 0.5, 0, 1],
+		hp: 3,
+		res: 30,
+		hpIcon: "Stick",
+		material: 3,
+		materialGainMin: 3,
+		materialGainMax: 5
+	},
+	5: {
+		name: "Rock",
+		hitBox: [0.5, 0.5, 0, 1],
+		hp: 3,
+		res: 30,
+		hpIcon: "Rock",
+		material: 2,
+		materialGainMin: 3,
+		materialGainMax: 5
 	},
 	99: {
 		name: "GodColumn",

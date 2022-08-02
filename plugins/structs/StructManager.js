@@ -11,8 +11,8 @@ const AllStructs = [
 	null, // building 4 input
 	null, // building 5 input
 	new Struct_NPC(10, "SittingNPC1", 2, 16, 3),
-	new Struct_NPC(11, "SittingNPC3", 4, 14, 6),
+	new Struct_NPC(11, "SittingNPC3", 4, 14, 6, true),
 	new Struct_NPC(12, "SittingNPC4", 4, 16, 7),
-	new Struct_NPC(13, "StandingNPC2", 3, 10, 8)
+	new Struct_NPC(13, "StandingNPC2", 3, 10, 8, true)
 ];
 

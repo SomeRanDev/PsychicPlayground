@@ -68,6 +68,16 @@ modify_Scene_Map = class {
 		}
 	}
 
+	create() {
+		PP.Scene_Map.create.apply(this, arguments);
+
+		$generation.generateAllSyncIfNotGenerated();
+	}
+
+	isReady() {
+		return $generation.isReady() && PP.Scene_Map.isReady.apply(this, arguments);
+	}
+
 	start() {
 		PP.Scene_Map.start.apply(this, arguments);
 		SpriteManager.addEntity($ppPlayer);
@@ -75,8 +85,6 @@ modify_Scene_Map = class {
 		this.cursor = new Sprite(ImageManager.lCursor("Aim"));
 		this.cursor.anchor.set(0.5);
 		this.addChild(this.cursor);
-
-		$generation.generateAllSyncIfNotGenerated();
 	}
 
 	updateMain() {
@@ -584,10 +592,11 @@ modify_Scene_Map = class {
 		if(SpriteManager.darken) {
 			SpriteManager.darken.move(this.PPCameraX + (Graphics.width / 2), this.PPCameraY + (Graphics.height / 2));
 			if(this._isPaused) {
-				if(SpriteManager.darken.alpha < 0.3) {
+				const finalAlpha = this._pauseType === 0 ? 0.3 : 0.5;
+				if(SpriteManager.darken.alpha < finalAlpha) {
 					SpriteManager.darken.alpha += 0.02;
-					if(SpriteManager.darken.alpha > 0.3) {
-						SpriteManager.darken.alpha = 0.3;
+					if(SpriteManager.darken.alpha > finalAlpha) {
+						SpriteManager.darken.alpha = finalAlpha;
 					}
 				}
 			} else {

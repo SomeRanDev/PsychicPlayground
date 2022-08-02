@@ -8,6 +8,10 @@ const TileTypes = {
 	2: {
 		name: "EvilGrass"
 	},
+	5: {
+		name: "Carpet",
+		renderBelow: true
+	},
 	200: {
 		name: "Sand", renderBelow: false
 	},

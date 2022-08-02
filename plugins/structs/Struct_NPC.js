@@ -1,11 +1,13 @@
 class Struct_NPC extends Struct_Base {
-	constructor(id, imgPath, frameCount, animationSpeed, commonEvent) {
+	constructor(id, imgPath, frameCount, animationSpeed, commonEvent, offsetHalfX = false) {
 		super(id);
 
 		this.imgPath = imgPath;
 		this.frameCount = frameCount;
 		this.animationSpeed = animationSpeed;
 		this.commonEvent = commonEvent;
+
+		this.offsetHalfX = offsetHalfX;
 	}
 
 	addToData(globalTileX, globalTileY) {
@@ -32,7 +34,7 @@ class Struct_NPC extends Struct_Base {
 		const globalX = (chunk.chunkX * GenerationManager.TILES_X) + localTileX;
 		const globalY = (chunk.chunkY * GenerationManager.TILES_Y) + localTileY;
 
-		const name = "temp";
+		const name = "NPC_" + chunk.chunkX + "_" + chunk.chunkY + "_" + localTileX + "_" + localTileY;
 		const i = new Interactable(globalX, globalY, {
 			_realX: globalX,
 			_realY: globalY
@@ -42,7 +44,7 @@ class Struct_NPC extends Struct_Base {
 		$gameTemp.updateEntities.push(i);
 		$gameTemp.updateEntityNames[i._name] = i;
 
-		return new StructEntity_NPC(i, name);
+		return new StructEntity_NPC(i, name, this.offsetHalfX);
 	}
 
 	imgPath() {
@@ -59,12 +61,16 @@ class Struct_NPC extends Struct_Base {
 }
 
 class StructEntity_NPC {
-	constructor(interactable, name) {
+	constructor(interactable, name, offsetHalfX) {
 		this.interactable = interactable;
 		this.name = name;
+		if(offsetHalfX) {
+			this.interactable.addPosition(0.5, 0);
+		}
 	}
 
 	destroy() {
+		this.interactable.destroy();
 		$gameTemp.updateEntities.remove(this.interactable);
 		delete $gameTemp.updateEntityNames[this.name];
 	}

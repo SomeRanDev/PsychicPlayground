@@ -45,6 +45,19 @@ class Interactable {
 		SpriteManager.addEntity(this);
 	}
 
+	destroy() {
+		SpriteManager.removeEntity(this);
+	}
+
+	addPosition(x, y) {
+		this.x += x;
+		this.y += y;
+		if(this.sprite) {
+			this.sprite.x = this.x * TS;
+			this.sprite.y = this.y * TS;
+		}
+	}
+
 	makeSprite() {
 		this.sprite = new Sprite(ImageManager.lEntities(this._imgPath));
 		this.sprite.anchor.set(0.5, 1);
