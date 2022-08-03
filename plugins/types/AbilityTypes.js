@@ -149,7 +149,7 @@ const AbilityTypes = [
 				if(Math.floor($ppPlayer.inventory.getSkillCooldown(8)) % 6 === 0) {
 					$ppPlayer.makeAndShootProjectile({
 						icon: "Combokinesis",
-						setDamage: 0.4,
+						setDamage: 0.4 + ($ppPlayer.calcExtraDamage() / 10),
 						lifetime: 40,
 						targetX: TouchInput.worldX - 10 + Math.floor(Math.random() * 20),
 						targetY: TouchInput.worldY - 10 + Math.floor(Math.random() * 20)
@@ -171,7 +171,7 @@ const AbilityTypes = [
 				const coords = MakeNewPoint(10, Math.PI * 2 * (Math.round($ppPlayer.inventory.getSkillCooldown(9)) % 15) / 15);
 				$ppPlayer.makeAndShootProjectile({
 					icon: "Electrokinesis",
-					setDamage: 1,
+					setDamage: 1 + ($ppPlayer.calcExtraDamage() / 10),
 					lifetime: 40,
 					targetX: coords[0],
 					targetY: coords[1]
@@ -294,7 +294,7 @@ const AbilityTypes = [
 				const coords = MakeNewPoint(50, Math.PI * 2 * Math.random());
 				$ppPlayer.makeAndShootProjectile({
 					icon: "Typhokinesis",
-					setDamage: 1,
+					setDamage: 1 + ($ppPlayer.calcExtraDamage() / 10),
 					lifetime: 40,
 					targetX: coords[0],
 					targetY: coords[1]
@@ -457,6 +457,22 @@ const AbilityTypes = [
 			} else {
 				return true;
 			}
+		}
+	},
+	{
+		// 31
+		name: "Biokinesis",
+		isActive: true,
+		icon: "Biokinesis",
+		desc: "Randomly change\nhearts/hunger.",
+		cooldownSpeed: 0.25,
+		requireNoCooldown: true,
+		behavior: function() {
+			let hp = -30 + (Math.floor(Math.random() * 6) * 10);
+			let hunger = -10 + (Math.floor(Math.random() * 3) * 10);
+			if(hp === 0) hp = 10;
+			$ppPlayer.addHpFromItem(hp);
+			$ppPlayer.addHungerFromItem(hunger);
 		}
 	},
 ];

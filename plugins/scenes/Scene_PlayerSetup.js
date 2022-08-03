@@ -158,8 +158,6 @@ moving, and other core motion abilities.
 
 (Excellent choice for beginners)
 
-+3 Thinking
-+3 Shooting
 +Mind Boost Ability
 +Pairkinesis Ability`,
 
@@ -170,8 +168,6 @@ can conjure combative flames from nothing.
 
 (You can also mine charcoal from trees)
 
-+3 Moving
-+3 Breaking
 +Pyrokinesis Ability
 +Overheat Armor Ability`,
 
@@ -182,10 +178,8 @@ Who knows how things will turn out...
 
 (Normal abilties still work the same)
 
-+3 Shooting
-+3 Making
 +Chaoskinesis Ability
-+Vitakinesis Ability`
++Biokinesis Ability`
 		];
 
 		this.classText.text = descs[this.classInput.getChoice()];

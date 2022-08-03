@@ -17,6 +17,9 @@ modify_Scene_Map = class {
 
 		this._targetCameraX = null;
 		this._targetCameraY = null;
+
+		this.playerKilled = false;
+		this.playerKilledTransition = 0;
 	}
 
 	onMapLoaded() {
@@ -93,9 +96,18 @@ modify_Scene_Map = class {
 			if(!this._isPaused) {
 				this.refreshCursor();
 				this.cursor.move(TouchInput.x, TouchInput.y);
-				this.updatePPPlayer();
-				this.updatePauseInput();
-				PP.Scene_Map.updateMain.apply(this, arguments);
+
+				if(this.playerKilled) {
+
+					this.updatePlayerKilled();
+
+				} else {
+
+					this.updatePPPlayer();
+					this.updatePauseInput();
+					PP.Scene_Map.updateMain.apply(this, arguments);
+
+				}
 			} else {
 				this.normalCursor();
 				this.updateCameraPos();
@@ -648,5 +660,55 @@ modify_Scene_Map = class {
 		if(chunk) {
 			chunk.addBlock(mineableId, globalTileX, globalTileY);
 		}
+	}
+
+	onPlayerKill() {
+		this.playerKilled = true;
+		SpriteManager.deathDarken.move(this.PPCameraX + (Graphics.width / 2), this.PPCameraY + (Graphics.height / 2));
+		SpriteManager.deathDarken.visible = true;
+		SpriteManager.deathDarken.alpha = 0;
+	}
+
+	startPlayerDeathTransition() {
+		this.playerKilledTransition = 100;
+		SpriteManager.deathTransition.visible = true;
+		SpriteManager.deathTransition.scale.set(0);
+	}
+
+	updatePlayerKilled() {
+		$ppPlayer.update();
+
+		if(SpriteManager.deathDarken.alpha < 0.5) {
+			SpriteManager.deathDarken.alpha += 0.05;
+		}
+
+		if(this.playerKilledTransition > 0) {
+			this.playerKilledTransition--;
+			SpriteManager.deathTransition.scale.set(8 * (1 - (this.playerKilledTransition / 100).cubicOut()));
+			if(this.playerKilledTransition <= 0) {
+				this.completePlayerKillTransition();
+			}
+		}
+	}
+
+	completePlayerKillTransition() {
+		// fade out music?
+		// go to respawn
+		$ppPlayer.gotoRespawn();
+		$ppPlayer.clearDeathEffect();
+		$ppPlayer.bedHealHp();
+		$ppPlayer.setInvincible(128);
+
+		this.playerKilled = false;
+
+		this.startFadeIn(90, false);
+
+		SpriteManager.deathDarken.visible = false;
+		SpriteManager.deathDarken.alpha = 0;
+
+		this.playerKilledTransition = 0;
+
+		SpriteManager.deathTransition.visible = false;
+		SpriteManager.deathTransition.scale.set(0);
 	}
 }

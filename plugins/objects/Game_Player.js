@@ -6,6 +6,7 @@ modify_Game_Player = class {
 			$ppPlayer.position = new Vector2(0, 0);
 			$ppPlayer.position.x = (x * 32) + 16;
 			$ppPlayer.position.y = (y * 32) + 24;
+			$ppPlayer.setRespawn((x * 32) + 16, (y * 32) + 24);
 			this._setPPPlayerPos = false;
 		}
 

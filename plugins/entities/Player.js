@@ -50,9 +50,14 @@ class Player {
 
 		this._pairkinesis = false;
 
+		this.respawnX = 0;
+		this.respawnY = 32 + 24;
+
 		this.inventory = new Inventory();
 
 		// --- no save ---
+
+		this.isKilled = false;
 
 		this._showInvincibleColorTone = false;
 		this.effectsTone = null;
@@ -161,6 +166,9 @@ class Player {
 
 		this._pairkinesis = data._pairkinesis ?? false;
 
+		this.respawnX = data.respawnX;
+		this.respawnY = data.respawnY;
+
 		this.inventory.loadData(data.inventory);
 	}
 
@@ -216,9 +224,27 @@ class Player {
 
 		result._pairkinesis = this._pairkinesis;
 
+		result.respawnX = this.respawnX;
+		result.respawnY = this.respawnY;
+
 		result.inventory = this.inventory.saveData();
 
 		return result;
+	}
+
+	setRespawn(x, y) {
+		this.respawnX = x;
+		this.respawnY = y;
+	}
+
+	saveRespawnPos() {
+		this.respawnX = this.position.x;
+		this.respawnY = this.position.y;
+	}
+
+	gotoRespawn() {
+		this.position.x = this.respawnX;
+		this.position.y = this.respawnY;
 	}
 
 	allowMapHud() {
@@ -306,6 +332,16 @@ class Player {
 	}
 
 	deathEffect() {
+		this.playerEffect = new DeathEffect(this);
+	}
+
+	clearDeathEffect() {
+		this.playerEffect = null;
+		this.sprite.rotation = 0;
+		this.sprite.scale.set(1);
+		this.sprite.setBlendColor([0, 0, 0, 0]);
+
+		this.isKilled = false;
 	}
 
 	genericEffect(color, onMid = null) {
@@ -329,6 +365,10 @@ class Player {
 	}
 
 	update() {
+		if(this.isKilled) {
+			this.updateKilled();
+			return;
+		}
 		this.inventory.update();
 		if(this.playerEffect) {
 			this.playerEffect.update();
@@ -340,6 +380,12 @@ class Player {
 		this.updateItemInput();
 		this.updateBuffs();
 		this.updateInvincibility();
+	}
+
+	updateKilled() {
+		if(this.playerEffect) {
+			this.playerEffect.update();
+		}
 	}
 
 	enableTileCursorPlacement(b) {
@@ -572,25 +618,36 @@ class Player {
 		const materialId = this.inventory.hasShootableMaterial();
 		const materialData = MaterialTypes[materialId];
 		if(materialData) {
-			const projectile = ProjectileObjectPool.getObject(
-				this.position.x,
-				this.position.y,
-				TouchInput.worldX,
-				TouchInput.worldY,
-				materialId,
-				materialData.damage + this.calcExtraDamage(),
-				180,
-				{
-					directionRefreshAcc: this.calcProjectileAccuracy(),
-					rotateSpeed: this.calcProjectileRotationSpeed()
-				},
-				this
-			);
-			this._projectiles.push(projectile);
-			projectile.owner = this;
+			const cost = (materialData.shootCost ?? 1);
 
-			this.inventory.addMaterial(materialId, -(materialData.shootCost ?? 1));
+			if(this._pairkinesis) {
+				this._makeMaterialProjectile(materialId, materialData, -10, -10);
+				this._makeMaterialProjectile(materialId, materialData, 10, 10);
+				this.inventory.addMaterial(materialId, 2 * -cost);
+			} else {
+				this._makeMaterialProjectile(materialId, materialData);
+				this.inventory.addMaterial(materialId, -cost);
+			}
 		}
+	}
+
+	_makeMaterialProjectile(materialId, materialData, offsetX = 0, offsetY = 0) {
+		const projectile = ProjectileObjectPool.getObject(
+			this.position.x,
+			this.position.y,
+			TouchInput.worldX + offsetX,
+			TouchInput.worldY + offsetY,
+			materialId,
+			materialData.damage + this.calcExtraDamage(),
+			180,
+			{
+				directionRefreshAcc: this.calcProjectileAccuracy(),
+				rotateSpeed: this.calcProjectileRotationSpeed()
+			},
+			this
+		);
+		this._projectiles.push(projectile);
+		projectile.owner = this;
 	}
 
 	makeAndShootProjectile(options) {
@@ -819,6 +876,10 @@ class Player {
 		return this._invincibilityTime > 0;
 	}
 
+	setInvincible(time) {
+		this._invincibilityTime = time;
+	}
+
 	canTakeDamage() {
 		return !this.buffs[4];
 	}
@@ -830,7 +891,7 @@ class Player {
 				this.onKill();
 				this.deathEffect();
 			} else {
-				this._invincibilityTime = 64;
+				this.setInvincible(64);
 				this._damageTime = knockbackTime;
 				this._damageDirection = direction;
 				this._damageKnockback = knockbackSpeed;
@@ -840,9 +901,19 @@ class Player {
 	}
 
 	onKill() {
+		if(SceneManager._scene?.onPlayerKill) {
+			SceneManager._scene.onPlayerKill();
+		}
+		this.isKilled = true;
 	}
 
 	onDamageKnockbackComplete() {
+	}
+
+	onDeathEffectDone() {
+		if(SceneManager._scene?.startPlayerDeathTransition) {
+			SceneManager._scene.startPlayerDeathTransition();
+		}
 	}
 
 	collisionBox() {
@@ -1047,6 +1118,23 @@ class Player {
 	togglePairkinesis() {
 		this._pairkinesis = !this._pairkinesis;
 		this.refreshHotbarNumbers();
+	}
+
+	bedHealHp() {
+		let _hp = this.hp;
+		let _hunger = this.hunger;
+		if(this.maxHp - _hp < 50) {
+			_hp = this.maxHp;
+		}
+		while(_hunger > 0 && _hp < this.maxHp) {
+			_hunger -= 10;
+			_hp += 100;
+			if(_hp >= this.maxHp) {
+				_hp = this.maxHp;
+			}
+		}
+		this.setHp(Math.max(_hp, 30));
+		this.setHunger(_hunger);
 	}
 }
 

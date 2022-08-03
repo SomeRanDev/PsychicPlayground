@@ -190,31 +190,58 @@ class Chunk {
 		if(this.canSpawnEnemies() && $generation.shouldSpawnEnemies()) {
 			let x = Math.floor(Math.random() * 8);
 			let y = Math.floor(Math.random() * 8);
-			this.spawnEnemyAtLocalTile(x, y);
-			while(Math.random() < 0.3) {
+			const enemyType = this.getEnemyType();
+			const enemyId = enemyType[0];
+			const enemyFriendChance = enemyType[1];
+
+			this.spawnEnemyAtLocalTile(x, y, enemyId);
+			while(Math.random() < enemyFriendChance) {
 				x += 1;
 				y += 1 - Math.floor(Math.random() * 2);
-				this.spawnEnemyAtLocalTile(x + genOffset(), y + genOffset());
+				this.spawnEnemyAtLocalTile(x + genOffset(), y + genOffset(), enemyId);
 			}
-			while(Math.random() < 0.3) {
+			while(Math.random() < enemyFriendChance) {
 				x -= 1;
 				y += 1 - Math.floor(Math.random() * 2);
-				this.spawnEnemyAtLocalTile(x + genOffset(), y + genOffset());
+				this.spawnEnemyAtLocalTile(x + genOffset(), y + genOffset(), enemyId);
 			}
 		}
 	}
 
-	spawnEnemyAtLocalTile(localTileX, localTileY) {
+	getEnemyType() {
+		if(BiasRandom.get("GrassEnemy", 0.7, 0.1, true)) {
+			return [0, 0.3];
+		}
+		if(BiasRandom.get("Sheep", 0.5, 0.3, true)) {
+			return [2, 0.5];
+		}
+		return [1, 0];
+	}
+
+	spawnEnemyAtLocalTile(localTileX, localTileY, enemyId) {
 		const globalX = (GenerationManager.TILES_X * this.chunkX) + localTileX;
 		const globalY = (GenerationManager.TILES_Y * this.chunkY) + localTileY;
 		if(CollisionManager.canMoveToTile(globalX, globalY)) {
-			const enemy = new Chaser(globalX, globalY);
-			enemy.randomizeDir()
-			$generation.enemies.push(enemy);
+			const enemy = this.makeEnemy(globalX, globalY, enemyId);
+			if(enemy) {
+				enemy.randomizeDir()
+				$generation.enemies.push(enemy);
+			}
 			return true;
 		}
 		return false;
 	}
+
+	makeEnemy(globalX, globalY, enemyId) {
+		switch(enemyId) {
+			case 0: return new Chaser(globalX, globalY);
+			case 1: return new Blindor(globalX, globalY);
+			case 2: return new CrazySheep(globalX, globalY);
+		}
+		return null;
+	}
+
+	//
 
 	canSpawnEnemies() {
 		if(this.chunkY < -2) return true;

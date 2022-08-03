@@ -10,11 +10,10 @@ modify_Spriteset_Map = class {
 		PP.Spriteset_Map.initialize.apply(this, arguments);
 	}
 
-	createPPLayer() {
-		this._ppLayer = new Sprite();
-		this._ppLayer.z = 1;
-		this._tilemap.addChild(this._ppLayer);
-		SpriteManager.ppLayer = this._ppLayer;
+	createMainLayer() {
+		this._mainLayer = new Sprite();
+		this._mainLayer.z = 1;
+		this._tilemap.addChild(this._mainLayer);
 	}
 
 	createPPEntities() {
@@ -64,15 +63,22 @@ modify_Spriteset_Map = class {
 	createCharacters() {
 		PP.Spriteset_Map.createCharacters.apply(this, arguments);
 		this.clearChildrenSprites();
-		this.createPPLayer();
+
+		this.createMainLayer();
+
 		this.createChunksLayer();
 		this.belowEntities();
-		this.createPPEntities();
 		this.createMapCursor();
 		this.createMapCursorContainer();
+
+		this.createPPLayer();
+		this.createPPEntities();
+
 		this.createPauseDarken();
+		this.createDeathDarken();
 		this.createHUDContainer();
 		this.createUIContainer();
+		this.createDeathTransition();
 	}
 
 	clearChildrenSprites() {
@@ -82,28 +88,35 @@ modify_Spriteset_Map = class {
 		this._characterSprites = [];
 	}
 
-	belowEntities() {
-		this._belowLayer = new Sprite();
-		this._belowLayer.z = -80;
-		this._ppLayer.addChild(this._belowLayer);
-	}
-
 	createChunksLayer() {
 		this._chunkLayer = new Sprite();
 		this._chunkLayer.z = -100;
-		this._ppLayer.addChild(this._chunkLayer);
+		this._mainLayer.addChild(this._chunkLayer);
+	}
+
+	belowEntities() {
+		this._belowLayer = new Sprite();
+		this._belowLayer.z = -80;
+		this._mainLayer.addChild(this._belowLayer);
+	}
+
+	createPPLayer() {
+		this._ppLayer = new Sprite();
+		//this._ppLayer.z = 1;
+		this._mainLayer.addChild(this._ppLayer);
+		SpriteManager.ppLayer = this._ppLayer;
 	}
 
 	createMapCursor() {
 		this._mapCursor = new MouseCursor();
 		this._mapCursor.z = -10;
-		this._ppLayer.addChild(this._mapCursor);
+		this._mainLayer.addChild(this._mapCursor);
 	}
 
 	createMapCursorContainer() {
 		this._mapCursorContainer = new Sprite();
 		this._mapCursorContainer.z = -10;
-		this._ppLayer.addChild(this._mapCursorContainer);
+		this._mainLayer.addChild(this._mapCursorContainer);
 	}
 
 	createPauseDarken() {
@@ -112,13 +125,23 @@ modify_Spriteset_Map = class {
 		this._pauseDarken.anchor.set(0.5);
 		this._pauseDarken.alpha = 0;
 		SpriteManager.darken = this._pauseDarken;
-		this._ppLayer.addChild(this._pauseDarken);
+		this._mainLayer.addChild(this._pauseDarken);
+	}
+
+	createDeathDarken() {
+		this._deathDarken = new Sprite(ImageManager.loadPicture("ScreenOverlay"));
+		this._deathDarken.z = -5;
+		this._deathDarken.anchor.set(0.5);
+		this._deathDarken.alpha = 0;
+		this._deathDarken.visible = false;
+		SpriteManager.deathDarken = this._deathDarken;
+		this._mainLayer.addChild(this._deathDarken);
 	}
 
 	createHUDContainer() {
 		this._hudContainer = new Sprite();
 		this._hudContainer.z = 9999;
-		this._ppLayer.addChild(this._hudContainer);
+		this._mainLayer.addChild(this._hudContainer);
 		SpriteManager.hudContainer = this._hudContainer;
 		SpriteManager.processHudCache();
 	}
@@ -128,6 +151,16 @@ modify_Spriteset_Map = class {
 		this.addChild(this._uiContainer);
 		SpriteManager.uiContainer = this._uiContainer;
 		SpriteManager.processUiCache();
+	}
+
+	createDeathTransition() {
+		this._deathTransition = new Sprite(ImageManager.lUi("BlackCircle"));
+		this._deathTransition.anchor.set(0.5);
+		this._deathTransition.move(Graphics.width / 2, Graphics.height / 2);
+		this._deathTransition.scale.set(0);
+		this._deathTransition.visible = false;
+		SpriteManager.deathTransition = this._deathTransition;
+		this.addChild(this._deathTransition);
 	}
 
 	update() {
@@ -202,6 +235,8 @@ class SpriteManager {
 
 	static uiContainer = null;
 	static hudContainer = null;
+	static deathDarken = null
+	static deathTransition = null;
 
 	static clear() {
 		this.entities = [];
@@ -210,6 +245,8 @@ class SpriteManager {
 
 		this.uiContainer = null;
 		this.hudContainer = null;
+		this.deathDarken = null
+		this.deathTransition = null;
 	}
 
 	static onPause() {

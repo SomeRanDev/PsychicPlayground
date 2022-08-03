@@ -90,6 +90,7 @@ var $plugins =
 {"name":"enemies/EnemyBase","status":true,"description":"","parameters":{}},
 {"name":"enemies/TeleportDispenser","status":true,"description":"","parameters":{}},
 {"name":"enemies/Chaser","status":true,"description":"","parameters":{}},
+{"name":"enemies/Blindor","status":true,"description":"","parameters":{}},
 {"name":"---","status":false,"description":"","parameters":{}},
 {"name":"effects/GenericEffect","status":true,"description":"","parameters":{}},
 {"name":"effects/TeleportEffect","status":true,"description":"","parameters":{}},
@@ -97,6 +98,7 @@ var $plugins =
 {"name":"effects/BedLeaveEffect","status":true,"description":"","parameters":{}},
 {"name":"effects/DamageEffect","status":true,"description":"","parameters":{}},
 {"name":"effects/HealEffect","status":true,"description":"","parameters":{}},
+{"name":"effects/DeathEffect","status":true,"description":"","parameters":{}},
 {"name":"---","status":false,"description":"","parameters":{}},
 {"name":"structs/Struct_Base","status":true,"description":"","parameters":{}},
 {"name":"structs/Struct_CaveEntrance","status":true,"description":"","parameters":{}},
@@ -107,7 +109,9 @@ var $plugins =
 {"name":"other/DisableDefault","status":true,"description":"","parameters":{}},
 {"name":"other/Bitmap","status":true,"description":"","parameters":{}},
 {"name":"other/Sprite","status":true,"description":"","parameters":{}},
+{"name":"other/BiasRandom","status":true,"description":"","parameters":{}},
 {"name":"---","status":false,"description":"","parameters":{}},
 {"name":"Playtest","status":true,"description":"","parameters":{}},
-{"name":"PP_End","status":true,"description":"","parameters":{}}
+{"name":"PP_End","status":true,"description":"","parameters":{}},
+{"name":"enemies/CrazySheep","status":true,"description":"","parameters":{}}
 ];

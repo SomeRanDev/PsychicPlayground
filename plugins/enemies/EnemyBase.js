@@ -37,7 +37,7 @@ class EnemyBase {
 	}
 
 	randomizeDir() {
-		this.direction = Math.PI * 2 * Math.random();
+		this.direction = (Math.PI * 2 * Math.random()) - Math.PI;
 	}
 
 	setupCollisionRect() {
@@ -45,9 +45,18 @@ class EnemyBase {
 	}
 
 	setupAnimations() {
+		/*
 		this.idleAni = this.buildAnimation("Blump_IdleFront", "Blump_IdleBack", 12, 12);
 		this.walkAni = this.buildAnimation("Blump_WalkFront", "Blump_WalkBack", 2, 5);
 		this.damageAni = this.buildAnimation("Blump_DamageFront", "Blump_DamageBack", 1, 999);
+		*/
+		this._setupAnimationsFromName("Blump", 12, 12, 2, 5, 1, 999);
+	}
+
+	_setupAnimationsFromName(n, idleFrameCount, idleFrameSpeed, walkFrameCount, walkFrameSpeed, damageFrameCount, damageFrameSpeed) {
+		this.idleAni = this.buildAnimation(`${n}/${n}_IdleFront`, `${n}/${n}_IdleBack`, idleFrameCount, idleFrameSpeed);
+		this.walkAni = this.buildAnimation(`${n}/${n}_WalkFront`, `${n}/${n}_WalkBack`, walkFrameCount, walkFrameSpeed);
+		this.damageAni = this.buildAnimation(`${n}/${n}_DamageFront`, `${n}/${n}_DamageBack`, damageFrameCount, damageFrameSpeed);
 	}
 
 	buildAnimation(front, back, frameCount, speed) {
@@ -65,6 +74,7 @@ class EnemyBase {
 	destroy() {
 		SpriteManager.removeEntity(this);
 		$gameTemp.enemies.remove(this);
+		$generation.enemies.remove(this);
 	}
 
 	makeSprite() {
@@ -132,7 +142,7 @@ class EnemyBase {
 
 	onNoticeChanged() {
 		if(this.noticedPlayer) {
-			this.setEffect(new EnemyNotice_Effect(this.sprite));
+			this.setEffect(new EnemyNotice_Effect(this, this.sprite));
 			this.onNotice();
 		}
 	}
@@ -438,11 +448,15 @@ class EnemyBase {
 
 			const dir = Math.atan2($ppPlayer.position.y - this.y, $ppPlayer.position.x - this.x);
 			$ppPlayer.takeDamage(this.bodyDamage(), dir);
+			this.onHitPlayerWithBody();
 		}
 	}
 
 	bodyDamage() {
 		return 10;
+	}
+
+	onHitPlayerWithBody() {
 	}
 
 	collisionBox() {
@@ -464,11 +478,9 @@ class EnemyBase {
 	checkDespawn() {
 		if(Math.abs($ppPlayer.position.x - this.x) > 600) {
 			this.destroy();
-			$generation.enemies.remove(this);
 			return;
 		} else if(Math.abs($ppPlayer.position.y - this.y) > 600) {
 			this.destroy();
-			$generation.enemies.remove(this);
 			return;
 		}
 	}
@@ -634,12 +646,12 @@ class EnemyDeath_Effect {
 }
 
 class EnemyNotice_Effect {
-	constructor(sprite) {
+	constructor(enemy, sprite) {
 		this.sprite = sprite;
 
 		this.noticeSprite = new Sprite(ImageManager.lUi("Notice"));
 		this.noticeSprite.anchor.set(0.5, 1);
-		this.startY = -3;
+		this.startY = enemy._frameHeight ? (-enemy._frameHeight + 16) : 0;//-3;
 		this.noticeSprite.y = this.startY;
 		this.noticeSprite.alpha = 0;
 		this.sprite.addChild(this.noticeSprite);

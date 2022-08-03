@@ -151,7 +151,7 @@ class Scene_WorldLoad extends Scene_Base {
 			}
 			case 2: {
 				$ppPlayer.inventory.addActiveSkillFromName("Chaoskinesis");
-				$ppPlayer.inventory.addActiveSkillFromName("Vitakinesis");
+				$ppPlayer.inventory.addActiveSkillFromName("Biokinesis");
 				break;
 			}
 		}

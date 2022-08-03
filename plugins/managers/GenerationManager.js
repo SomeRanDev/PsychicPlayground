@@ -136,7 +136,9 @@ class GenerationManager {
 	}
 
 	isReady() {
-		return GenerationManager.GenerationMap.isReady() && GenerationManager.GenerationMapPath.isReady() && this.Structs?.length > 0;
+		return GenerationManager.GenerationMap.isReady() &&
+			GenerationManager.GenerationMapPath.isReady() &&
+			this.Structs?.length > 0;
 	}
 
 	onceReady(callback) {

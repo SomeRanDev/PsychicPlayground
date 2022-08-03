@@ -1,25 +1,21 @@
-class Chaser extends EnemyBase {
+class CrazySheep extends EnemyBase {
 	constructor(tileX, tileY, onDefeat = null) {
 		super(tileX, tileY, onDefeat);
 
 		this._continueBehavior = false;
-		this.generateIdleTime();
-	}
-
-	generateIdleTime() {
-		this._idleTime = 50 + Math.floor(Math.random() * 50);
+		this._hitPlayerKnockback = 0;
 	}
 
 	getMaxHp() {
-		return 12;
+		return 8;
 	}
 
 	bodyDamage() {
-		return 10;
+		return 2;
 	}
 
 	exp() {
-		return 10;
+		return 20;
 	}
 
 	noticeDistance() {
@@ -27,15 +23,17 @@ class Chaser extends EnemyBase {
 	}
 
 	setupCollisionRect() {
-		this.colRect = { left: 9, right: 9, top: 6, bottom: 9 };
+		this.colRect = { left: 9, right: 9, top: 18, bottom: 9 };
 	}
 
 	setupAnimations() {
-		/*this.idleAni = this.buildAnimation("Blump_IdleFront", "Blump_IdleBack", 12, 12);
-		this.walkAni = this.buildAnimation("Blump_WalkFront", "Blump_WalkBack", 2, 5);
-		this.damageAni = this.buildAnimation("Blump_DamageFront", "Blump_DamageBack", 1, 999);
+		/*const e = "CrazySheep";
+		this.idleAni = this.buildAnimation(e + "_IdleFront", e + "_IdleBack", 4, 12);
+		this.walkAni = this.buildAnimation(e + "_WalkFront", e + "_WalkBack", 2, 4);
+		this.damageAni = this.buildAnimation(e + "_DamageFront", e + "_DamageBack", 1, 999);
 		*/
-		this._setupAnimationsFromName("Blump", 12, 12, 2, 5, 1, 999);
+
+		this._setupAnimationsFromName("CrazySheep", 4, 16, 2, 6, 1, 999);
 	}
 
 	updateBehavior() {
@@ -50,29 +48,28 @@ class Chaser extends EnemyBase {
 	}
 
 	behaveAttack() {
-		if(this.time === 90) {
+		if(this.time % 5 === 0) {
 			this.setDirectionToPlayer(0.05);
-			this.speed = 4;
+			this.speed = 2;
 		}
-		if(this.time === 120) {
-			this.speed = 0;
-			this.time = 0;
-			if(!this.noticedPlayer) {
-				this._continueBehavior = false;
-			}
+		this.checkStopAttacking();
+	}
+
+	checkStopAttacking() {
+		if(!this.noticedPlayer) {
+			this._continueBehavior = false;
 		}
 	}
 
 	behaveIdle() {
-		if(this.time === this._idleTime) {
+		if(this.time === 90) {
 			this.randomizeDir();
-			this.speed = 2;
+			this.speed = 1.5;
 			this._final = 100 + Math.floor(Math.random() * 30);
 		}
 		if(this.time === this._final) {
 			this.speed = 0;
 			this.time = 0;
-			this.generateIdleTime();
 		}
 	}
 
@@ -91,5 +88,11 @@ class Chaser extends EnemyBase {
 	onDamageKnockbackComplete() {
 		this.time = 30;
 		this.speed = 0;
+	}
+
+	onHitPlayerWithBody() {
+		this._hitPlayerKnockback = 90;
+		this._hitPlayerDir = this.direction;
+		this.speed = -2;
 	}
 }
