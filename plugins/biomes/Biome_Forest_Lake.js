@@ -4,6 +4,10 @@ class Biome_Forest_Lake extends Biome_Base {
 		this.name = "Lake";
 	}
 
+	canSpawnEnemies() {
+		return false;
+	}
+
 	getUpperType(globalX, globalY, globalIndex) {
 		return 255;
 	}

@@ -123,6 +123,7 @@ class Scene_PlayerSetup extends Scene_Base {
 	createContinueButton() {
 		this.button = new Button("Save Character and Begin!", 320, 30);
 		this.button.move(Graphics.width * 0.75, Graphics.height + 30);
+		this.button.SuperSoundEffect = true;
 		this.addChild(this.button);
 		this.button.onClick = () => {
 			this.goToWorldLoad();

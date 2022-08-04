@@ -1,4 +1,4 @@
-class Chaser extends EnemyBase {
+class Mimic extends EnemyBase {
 	constructor(tileX, tileY, onDefeat = null) {
 		super(tileX, tileY, onDefeat);
 
@@ -15,27 +15,27 @@ class Chaser extends EnemyBase {
 	}
 
 	bodyDamage() {
-		return 10;
+		return 25;
 	}
 
 	exp() {
-		return 10;
+		return 30;
 	}
 
 	noticeDistance() {
-		return 120;
+		return 200;
+	}
+
+	forgetDistance() {
+		return 280;
 	}
 
 	setupCollisionRect() {
-		this.colRect = { left: 9, right: 9, top: 12, bottom: 9 };
+		this.colRect = { left: 9, right: 9, top: 20, bottom: 9 };
 	}
 
 	setupAnimations() {
-		/*this.idleAni = this.buildAnimation("Blump_IdleFront", "Blump_IdleBack", 12, 12);
-		this.walkAni = this.buildAnimation("Blump_WalkFront", "Blump_WalkBack", 2, 5);
-		this.damageAni = this.buildAnimation("Blump_DamageFront", "Blump_DamageBack", 1, 999);
-		*/
-		this._setupAnimationsFromName("Blump", 12, 12, 2, 5, 1, 999);
+		this._setupAnimationsFromName("Mimic", 6, 16, 2, 4, 1, 999);
 	}
 
 	updateBehavior() {
@@ -50,17 +50,26 @@ class Chaser extends EnemyBase {
 	}
 
 	behaveAttack() {
-		if(this.time === 90) {
+		if(this.time === 60) {
 			this.setDirectionToPlayer(0.05);
-			this.speed = 4;
+			this.speed = 2;
 			this.playAttackSe();
 		}
-		if(this.time > 90 && this.time % 10 === 0) {
+		if(this.time > 60 && this.time % 10 === 0) {
 			this.playAttackSe();
 		}
-		if(this.time === 120) {
+		if(this.time === 90) {
 			this.speed = 0;
 			this.time = 0;
+
+			const dir = this.getDirectionToPlayer();
+			//this.shootProjectile(dir);
+			for(let i = -3; i <= 3; i++) {
+				this.shootProjectile(dir + (Math.PI * 0.2 * (i / 3)));
+			}
+
+			this.playShootSe();
+
 			if(!this.noticedPlayer) {
 				this._continueBehavior = false;
 			}
@@ -68,15 +77,11 @@ class Chaser extends EnemyBase {
 	}
 
 	behaveIdle() {
-		if(this.time === this._idleTime) {
-			this.randomizeDir();
-			this.speed = 2;
-			this._final = 100 + Math.floor(Math.random() * 30);
-		}
-		if(this.time === this._final) {
-			this.speed = 0;
+		this.speed = 0;
+		//this.time = 0;
+		if(this.time === 10) {
+			this.checkDespawn();
 			this.time = 0;
-			this.generateIdleTime();
 		}
 	}
 

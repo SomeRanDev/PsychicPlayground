@@ -54,6 +54,8 @@ class Scene_WorldLoad extends Scene_Base {
 		this._genEnd = this._genWidth * this._genWidth;
 
 		$generation.beginGeneration();
+
+		AudioManager.fadeOutBgm(90);
 	}
 
 	update() {

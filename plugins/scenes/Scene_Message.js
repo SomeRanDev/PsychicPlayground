@@ -111,6 +111,24 @@ modify_Window_Message = class {
 		this.contents.fontSize = $gameSystem.mainFontSize() - 8;
 		this.resetTextColor();
 	}
+
+	updateInput() {
+		if (this.isAnySubWindowActive()) {
+			return true;
+		}
+		if (this.pause) {
+			if (this.isTriggered()) {
+				Input.update();
+				this.pause = false;
+				if (!this._textState) {
+					this.terminateMessage();
+					playFreqSe("Message2");
+				}
+			}
+			return true;
+		}
+		return false;
+	}
 }
 
 Window_Selectable.prototype.isOkTriggered = function() {

@@ -397,6 +397,45 @@ class GenerationManager {
 
 		// NPCs
 		AllStructs[10].addToData(2, 2);
+
+
+
+
+		/*
+		this.OFFSET_X = (this.CHUNKS_X / 2);
+		this.OFFSET_Y = (this.CHUNKS_Y / 2);
+
+		this.GLOBAL_WIDTH = this.CHUNKS_X * this.TILES_X;
+		this.GLOBAL_HEIGHT = this.CHUNKS_Y * this.TILES_Y;
+		this.JAIL_DISTANCE = (this.GLOBAL_WIDTH / 2) - (this.TILES_X * 2);*/
+
+
+		const freq = 28;
+		for(let x = 0; x < freq; x++) {
+			for(let y = 0; y < freq; y++) {
+
+				const xRatio = (x / freq) + ((1 / freq) * Math.random());;
+				const yRatio = (y / freq) + ((1 / freq) * Math.random());;
+
+				const globalTileX = Math.round(GenerationManager.GLOBAL_WIDTH * xRatio);
+				const globalTileY = Math.round(GenerationManager.GLOBAL_HEIGHT * yRatio);
+
+				const relX = globalTileX - (GenerationManager.GLOBAL_WIDTH / 2);
+				const relY = globalTileY - (GenerationManager.GLOBAL_HEIGHT / 2);
+
+				const dist = Math.sqrt(Math.pow(relY, 2) + Math.pow(relX, 2));
+
+				if(dist < GenerationManager.JAIL_DISTANCE - 10 && dist > 12) {
+					const globalIndex = (globalTileY * GenerationManager.GLOBAL_WIDTH) + globalTileX;
+					const tile = this.getTileGlobal(globalTileX, globalTileY, globalIndex);
+
+					AllStructs[8].addToData(relX, relY);
+				}
+			}
+		}
+
+		//const sections = 
+
 	}
 
 	addCarpet(x, y) {

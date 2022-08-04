@@ -70,12 +70,12 @@ modify_Spriteset_Map = class {
 		this.belowEntities();
 		this.createMapCursor();
 		this.createMapCursorContainer();
+		this.createDeathDarken();
 
 		this.createPPLayer();
 		this.createPPEntities();
 
 		this.createPauseDarken();
-		this.createDeathDarken();
 		this.createHUDContainer();
 		this.createUIContainer();
 		this.createDeathTransition();

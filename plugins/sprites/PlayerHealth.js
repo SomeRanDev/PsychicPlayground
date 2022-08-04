@@ -122,7 +122,7 @@ class PlayerHealth extends Sprite {
 	}
 
 	heartCount() {
-		return Math.floor($ppPlayer.maxHp / 10);
+		return Math.ceil($ppPlayer.maxHp / 10);
 	}
 
 	refreshHeartSprites() {
@@ -145,7 +145,7 @@ class PlayerHealth extends Sprite {
 	}
 
 	hungerCount() {
-		return Math.floor($ppPlayer.maxHunger / 10);
+		return Math.ceil($ppPlayer.maxHunger / 10);
 	}
 
 	refreshHungerSprites() {

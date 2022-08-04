@@ -82,6 +82,9 @@ class Mineable {
 
 		const blockData = MineableTypes[blockId];
 
+		this.mineSound = blockData.mineSound ?? ["Mine", 90];
+		this.breakSound = blockData.breakSound ?? ["Break", 20];
+
 		this.hitBox = blockData.hitBox ?? [0, 0, 0, 0];
 
 		if(this.noChunkGen) {
@@ -102,7 +105,7 @@ class Mineable {
 		
 
 		this.hp = blockData.hp ?? 5;
-		this.res = blockData.res ?? 0;
+		this.skillRequire = blockData.skillRequire ?? -1;
 		this.hpIcon = blockData.hpIcon ?? "Heart";
 
 		this.refreshPosition();
@@ -162,9 +165,11 @@ class Mineable {
 	}
 
 	update() {
-		this.updateSelection();
-		this.updatePressed();
-		this.updatePressAnimation();
+		if(this.skillRequire === -1 || $ppPlayer.inventory.hasActiveSkill(this.skillRequire)) {
+			this.updateSelection();
+			this.updatePressed();
+			this.updatePressAnimation();
+		}
 		this.updateSpawnAnimation();
 		this.updateHeartContainer();
 		this.updateTint();
@@ -200,6 +205,7 @@ class Mineable {
 			if(this._mineAnimation < 0.5) {
 				if(!this._mined) {
 					this.mine();
+					
 					this._mined = true;
 				}
 				const r = this._mineAnimation / 0.5;
@@ -240,6 +246,8 @@ class Mineable {
 		}
 	}
 
+	static lastMineTime = -999;
+
 	mine() {
 		this.makeHearts();
 		this.hp -= 1;
@@ -248,6 +256,12 @@ class Mineable {
 			const baa = new BreakAndAbsorb(this.baseSprite, this.blockId);
 			SpriteManager.ppLayer.addChild(baa);
 			this.chunkParent.removeMineable(this);
+			playFreqSe(this.breakSound[0], 70, 130, this.breakSound[1]);
+		} else {
+			if(Graphics.frameCount - Mineable.lastMineTime > 10) {
+				playFreqSe(this.mineSound[0], 70, 130, this.mineSound[1]);
+				Mineable.lastMineTime = Graphics.frameCount;
+			}
 		}
 	}
 

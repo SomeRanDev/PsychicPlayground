@@ -36,6 +36,28 @@ class CollisionManager {
 		this.setTriggers(colId, globalTileX, globalTileY, left, right, up, down);
 	}
 
+	static addCommonEventTrigger(globalTileX, globalTileY, commonEventId, left = 0, right = 0, up = 0, down = 0) {
+		const triggerData = {
+			type: 2,
+			commonEventId
+		};
+		this.responseData.push(triggerData);
+
+		const colId = this.responseData.length;
+		this.setTriggers(colId, globalTileX, globalTileY, left, right, up, down);
+	}
+
+	static addCallbackTrigger(globalTileX, globalTileY, callback, left = 0, right = 0, up = 0, down = 0) {
+		const triggerData = {
+			type: 3,
+			callback
+		};
+		this.responseData.push(triggerData);
+
+		const colId = this.responseData.length;
+		this.setTriggers(colId, globalTileX, globalTileY, left, right, up, down);
+	}
+
 	static setTriggers(colId, globalTileX, globalTileY, left = 0, right = 0, up = 0, down = 0) {
 		for(let x = globalTileX - left; x <= (globalTileX + right); x++) {
 			for(let y = globalTileY - up; y <= (globalTileY + down); y++) {
@@ -59,6 +81,9 @@ class CollisionManager {
 					if(data.overworld) {
 						data.x = $ppPlayer._lastOverworldX;
 						data.y = $ppPlayer._lastOverworldY;
+						playSe("TransferOutside", 70);
+					} else {
+						playSe("TransferInside", 30);
 					}
 					$gamePlayer.reserveTransfer(data.id, data.x, data.y, data.dir, data.fadeType);
 					$gamePlayer._setPPPlayerPos = true;
@@ -70,6 +95,14 @@ class CollisionManager {
 						return false;
 					}
 					break;
+				}
+				case 2: {
+					$gameTemp.reserveCommonEvent(data.commonEventId);
+					return false;
+				}
+				case 3: {
+					data.callback();
+					return false;
 				}
 			}
 		}
@@ -180,6 +213,58 @@ class CollisionManager {
 	}
 
 	static processMovementX(currentX, currentY, shiftX) {
+		currentX = (currentX);
+		currentY = Math.floor(currentY);
+
+		if(this.canMoveTo(Math.floor(currentX + shiftX), currentY)) {
+			CollisionManager.MoveSuccessful = true;
+			return currentX + shiftX;
+		}
+		CollisionManager.MoveSuccessful = false;
+		if(shiftX > 0) {
+			for(let i = currentX + shiftX - 1; i >= currentX + 1; i--) {
+				if(this.canMoveTo(Math.floor(i), currentY)) {
+					return i;
+				}
+			}
+		} else if(shiftX < 0) {
+			for(let i = currentX + shiftX + 1; i <= currentX - 1; i++) {
+				if(this.canMoveTo(Math.floor(i), currentY)) {
+					return i;
+				}
+			}
+		}
+		return currentX;
+	}
+
+	static processMovementY(currentX, currentY, shiftY) {
+		currentX = Math.floor(currentX);
+		currentY = (currentY);
+
+		if(this.canMoveTo(currentX, Math.floor(currentY + shiftY))) {
+			CollisionManager.MoveSuccessful = true;
+			return currentY + shiftY;
+		}
+		CollisionManager.MoveSuccessful = false;
+		if(shiftY > 0) {
+			for(let i = currentY + shiftY - 1; i >= currentY + 1; i--) {
+				if(this.canMoveTo(currentX, Math.floor(i))) {
+					return i;
+				}
+			}
+		} else if(shiftY < 0) {
+			for(let i = currentY + shiftY + 1; i <= currentY - 1; i++) {
+				if(this.canMoveTo(currentX, Math.floor(i))) {
+					return i;
+				}
+			}
+		}
+		return currentY;
+	}
+
+	// alt?
+
+	static processMovementXAlt(currentX, currentY, shiftX) {
 		currentX = Math.floor(currentX);
 		currentY = Math.floor(currentY);
 
@@ -204,7 +289,7 @@ class CollisionManager {
 		return currentX;
 	}
 
-	static processMovementY(currentX, currentY, shiftY) {
+	static processMovementYAlt(currentX, currentY, shiftY) {
 		currentX = Math.floor(currentX);
 		currentY = Math.floor(currentY);
 

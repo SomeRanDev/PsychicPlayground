@@ -476,8 +476,8 @@ class Player {
 				sx += colRect.right;
 			}
 			if(inputX !== 0) {
-				const newPosX = CollisionManager.processMovementX(sx, sy + colRect.bottom, (speed * inputX));
-				const newPosX2 = CollisionManager.processMovementX(sx, sy - colRect.top, (speed * inputX));
+				const newPosX = CollisionManager.processMovementXAlt(Math.floor(sx), Math.floor(sy + colRect.bottom), (speed * inputX));
+				const newPosX2 = CollisionManager.processMovementXAlt(Math.floor(sx), Math.floor(sy - colRect.top), (speed * inputX));
 				const finalX = inputX < 0 ? (Math.max(newPosX, newPosX2) + colRect.left) : (Math.min(newPosX, newPosX2) - colRect.left);
 				this.position.x = Math.round(finalX);
 			}
@@ -489,15 +489,19 @@ class Player {
 				sy += colRect.bottom;
 			}
 			if(inputY !== 0) {
-				const newPosY = CollisionManager.processMovementY(sx - colRect.left, sy, (speed * inputY));
-				const newPosY2 = CollisionManager.processMovementY(sx + colRect.right, sy, (speed * inputY));
+				const newPosY = CollisionManager.processMovementYAlt(Math.floor(sx - colRect.left), Math.floor(sy), (speed * inputY));
+				const newPosY2 = CollisionManager.processMovementYAlt(Math.floor(sx + colRect.right), Math.floor(sy), (speed * inputY));
 				const finalY = inputY < 0 ? (Math.max(newPosY, newPosY2) + colRect.top) : (Math.min(newPosY, newPosY2) - colRect.bottom);
 				this.position.y = Math.round(finalY);
 			}
 
 			const tileX = Math.floor(this.position.x / TS);
 			const tileY = Math.floor(this.position.y / TS);
-			if(CollisionManager.checkForResponse(tileX, tileY)) {
+
+			if((Math.abs(tileX) >= (GenerationManager.GLOBAL_WIDTH / 2) - 2) ||
+				(Math.abs(tileY) >= (GenerationManager.GLOBAL_HEIGHT / 2) - 2)) {
+				$gameTemp.reserveCommonEvent(14);
+			} else if(CollisionManager.checkForResponse(tileX, tileY)) {
 				if($gameMap.isGenerated()) {
 					this._lastOverworldX = tileX;
 					this._lastOverworldY = tileY;
@@ -628,7 +632,35 @@ class Player {
 				this._makeMaterialProjectile(materialId, materialData);
 				this.inventory.addMaterial(materialId, -cost);
 			}
+
+			this.playShootSe();
 		}
+	}
+
+	playShootSe() {
+		playFreqSe("Shoot", 80, 120, 30);
+	}
+
+	playMultiShootSe() {
+		if(Graphics.frameCount % 6 === 0) {
+			playFreqSe("MultiShoot2", 80, 120, 30);
+		}
+	}
+
+	playBuffSe() {
+		playSe("PowerUp", 20);
+	}
+
+	playActivateSe() {
+		playSe("ActivateAbility", 160);
+	}
+
+	playDeactivateSe() {
+		playSe("DeactivateAbility", 160);
+	}
+
+	playHpAbilitySe() {
+		playSe("HpAbility", 30);
 	}
 
 	_makeMaterialProjectile(materialId, materialData, offsetX = 0, offsetY = 0) {
@@ -678,6 +710,14 @@ class Player {
 				i--;
 				len--;
 			}
+		}
+	}
+
+	destroyAllProjectiles() {
+		while(this._projectiles.length > 0) {
+			const p = this._projectiles[0];
+			this._projectiles.splice(0, 1);
+			ProjectileObjectPool.removeObject(p);
 		}
 	}
 
@@ -890,12 +930,14 @@ class Player {
 			if(this.hp === 0) {
 				this.onKill();
 				this.deathEffect();
+				playSe("PlayerDeath", 70);
 			} else {
 				this.setInvincible(64);
 				this._damageTime = knockbackTime;
 				this._damageDirection = direction;
 				this._damageKnockback = knockbackSpeed;
 				this.damageEffect();
+				playSe("PlayerDamage", 50);
 			}
 		}
 	}
@@ -907,12 +949,20 @@ class Player {
 		this.isKilled = true;
 	}
 
+	whenKilled(callback) {
+		this._whenKilledCallback = callback;
+	}
+
 	onDamageKnockbackComplete() {
 	}
 
 	onDeathEffectDone() {
 		if(SceneManager._scene?.startPlayerDeathTransition) {
 			SceneManager._scene.startPlayerDeathTransition();
+		}
+		if(this._whenKilledCallback) {
+			this._whenKilledCallback();
+			this._whenKilledCallback = null;
 		}
 	}
 
@@ -1019,6 +1069,7 @@ class Player {
 		if(levelsGained > 0) {
 			const lvlText = "+" + levelsGained + " Level" + (levelsGained === 1 ? "" : "s");
 			this.showPopupEx(lvlText, 0xbbddff);
+			playSe("LevelUp");
 		}
 	}
 
@@ -1038,13 +1089,13 @@ class Player {
 	maxExp(level) {
 		level = level ?? this.level;
 		if(level <= 5) {
-			return 20;
-		} else if(level <= 10) {
 			return 50;
+		} else if(level <= 10) {
+			return 100;
 		} else if(level <= 15) {
-			return 75;
+			return 150;
 		}
-		return 100;
+		return 200;
 	}
 
 	onExpChange() {

@@ -28,6 +28,7 @@ class Crystal {
 			this._animationRatio = 0;
 			this._crystalOutline.bitmap = this._crystalBreakBitmap;
 			this.startPos = { x: this.sprite.x, y: this.sprite.y };
+			playSe("CrystalBreak");
 			$gameMap.removeProjectileReactor(this);
 			$gameScreen.startShake(3, 6, 10);
 			this.setAnimationFrame(0);

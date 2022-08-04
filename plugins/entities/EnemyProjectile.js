@@ -7,6 +7,8 @@ class EnemyProjectile {
 
 		this.damage = 10;
 
+		this.lifetime = 0;
+
 		this.radius = 5;
 
 		SpriteManager.addEntity(this);
@@ -31,6 +33,8 @@ class EnemyProjectile {
 
 		// init fields
 		this.speed = 3;
+
+		this.lifetime = 120;
 
 		this._collided = false;
 		this._collidedAni = 0;
@@ -146,13 +150,13 @@ class EnemyProjectile {
 	}
 
 	updateMovement() {
-		const rads = this.direction * (Math.PI / 180);
-		const xSpd = -this.speed * Math.cos(rads);
+		const rads = this.direction;// * (Math.PI / 180);
+		const xSpd = this.speed * Math.cos(rads);
 		const ySpd = this.speed * Math.sin(rads);
 
 		CollisionManager.setProjectileCollisionCheck();
 
-		this.x = Math.round(CollisionManager.processMovementX(this.x, this.y, xSpd));
+		this.x = (CollisionManager.processMovementX(this.x, this.y, xSpd));
 		this.sprite.x = this.x;
 
 		if(!CollisionManager.MoveSuccessful) {
@@ -160,7 +164,7 @@ class EnemyProjectile {
 			return false;
 		}
 
-		this.y = Math.round(CollisionManager.processMovementY(this.x, this.y, ySpd));
+		this.y = (CollisionManager.processMovementY(this.x, this.y, ySpd));
 		this.sprite.y = this.y;
 
 		if(!CollisionManager.MoveSuccessful) {
@@ -186,6 +190,11 @@ class EnemyProjectile {
 
 		this.time++;
 		this.lifetime--;
+
+		if(this.lifetime < 8) {
+			this.sprite.alpha = this.lifetime / 8;
+		}
+
 		return this.lifetime <= 0;
 	}
 }

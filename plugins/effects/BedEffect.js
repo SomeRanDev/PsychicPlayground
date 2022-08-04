@@ -12,6 +12,7 @@ class BedEffect {
 		};
 
 		this._time = 0;
+		this._playedSoundEffect = false;
 
 		$gameTemp.forceWait = true;
 	}
@@ -29,6 +30,10 @@ class BedEffect {
 			this.holder.spriteOffsetY = (this.targetPos.y - 30) + (30 * b.cubicOut());
 		} else {
 			this.sprite.setSleep();
+			if(!this._playedSoundEffect) {
+				playSe("Bed", 30);
+				this._playedSoundEffect = true;
+			}
 			if(r < 0.8) {
 				const c = ((r - 0.6) / 0.2).cubicOut();
 				this.sprite.scale.set(1 + (c * 0.4), 1 - (c * 0.4));

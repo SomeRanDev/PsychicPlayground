@@ -21,6 +21,8 @@ class BedLeaveEffect {
 			if(this.holder.isMoving()) {
 				this._started = true;
 
+				playSe("Bed", 30);
+
 				if(this._wasdKey) {
 					this._wasdKey.removeSelf();
 				}

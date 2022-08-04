@@ -364,6 +364,7 @@ class Inventory {
 		for(let i = 0; i < this.activeSkills.length; i++) {
 			if(this.activeSkills[i] === -1) {
 				this.activeSkills[i] = skillId;
+				this.sortSkills();
 				return true;
 			}
 		}
@@ -381,8 +382,25 @@ class Inventory {
 		return false;
 	}
 
+	removeActiveSkill(skillId) {
+		if(this.hasActiveSkill(skillId)) {
+			this.activeSkills[this.activeSkills.indexOf(skillId)] = -1;
+			this.sortSkills();
+			return true;
+		}
+		return false;
+	}
+
 	hasActiveSkill(skillId) {
 		return this.activeSkills.includes(skillId);
+	}
+
+	sortSkills() {
+		this.activeSkills.sort((a, b) => {
+			if(a === -1) return 1;
+			else if(b === -1) return -1;
+			return a - b;
+		});
 	}
 
 	addMaterial(materialId, amount = 1) {
@@ -533,13 +551,24 @@ class Inventory {
 		if(this.activeSkills.includes(-1)) {
 			const unknownSkills = [];
 			for(let i = 3; i < AbilityTypes.length; i++) {
-				if(!this.activeSkills.includes(i)) {
+				if(!this.activeSkills.includes(i) && AbilityTypes[i]?.name) {
 					unknownSkills.push(i);
 				}
 			}
 			if(unknownSkills.length > 0) {
-				return unknownSkills[Math.floor(Math.random() * unknownSkills.length)];
+				const skillId = unknownSkills[Math.floor(Math.random() * unknownSkills.length)];
+				$gameTemp._randomlyGainedSkillName = AbilityTypes[skillId].name;
+				return skillId;
 			}
+		}
+		return -1;
+	}
+
+	gainRandomNewSkill() {
+		const skill = this.getRandomNewSkill();
+		if(skill !== -1) {
+			this.addActiveSkill(skill);
+			return skill;
 		}
 		return -1;
 	}

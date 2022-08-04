@@ -10,6 +10,8 @@ class TeleportEffect {
 		this.moved = false;
 
 		this._time = 0;
+
+		playSe("TeleportOut", 70);
 	}
 
 	update() {
@@ -21,6 +23,7 @@ class TeleportEffect {
 		if(!this.moved && this._time >= 0.5) {
 			this.moved = true;
 			this.holder.moveTo(TS * this.targetPos.x, TS * this.targetPos.y);
+			playSe("TeleportIn", 10);
 		}
 
 		if(this._time >= 1) {

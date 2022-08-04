@@ -18,13 +18,13 @@ class EnemyBase {
 		this.hp = this.getMaxHp();
 		this.maxHp = this.hp;
 
+		this._damageNotice = false;
+
 		this._damageTime = 0;
 		this._damageDirection = 0;
 		this._damageKnockback = 4;
 
 		this._enemyHpBarAppear = 0;
-
-		this._projectiles = [];
 
 		this.setupCollisionRect();
 
@@ -102,7 +102,6 @@ class EnemyBase {
 			this.updateNoticedPlayer();
 			this.updateBehavior();
 			this.updatePosition();
-			this.updateProjectiles();
 			this.updatePlayerTouch();
 		}
 		this.updateSprite();
@@ -133,17 +132,24 @@ class EnemyBase {
 		);
 	}
 
-	setNoticedPlayer(n) {
+	setNoticedPlayer(n, playSoundEffect = true) {
 		if(this.noticedPlayer !== n) {
 			this.noticedPlayer = n;
+			if(playSoundEffect) {
+				playSe("EnemyNotice", 50);
+			}
 			this.onNoticeChanged();
 		}
 	}
 
 	onNoticeChanged() {
 		if(this.noticedPlayer) {
-			this.setEffect(new EnemyNotice_Effect(this, this.sprite));
+			if(!this._effect) {
+				this.setEffect(new EnemyNotice_Effect(this, this.sprite));
+			}
 			this.onNotice();
+		} else {
+			this._damageNotice = false;
 		}
 	}
 
@@ -153,7 +159,7 @@ class EnemyBase {
 	updateNoticedPlayer() {
 		const dist = this.getDistanceToPlayer();
 		if(this.noticedPlayer) {
-			if(dist > this.forgetDistance()) {
+			if(dist > this.calcForgetDistance()) {
 				this.setNoticedPlayer(false);
 			}
 		} else {
@@ -161,6 +167,14 @@ class EnemyBase {
 				this.setNoticedPlayer(true);
 			}
 		}
+	}
+
+	calcForgetDistance() {
+		let result = this.forgetDistance();
+		if(this._damageNotice) {
+			result *= 5;
+		}
+		return result;
 	}
 
 	noticeDistance() {
@@ -235,6 +249,7 @@ class EnemyBase {
 			if(this.sprite.bitmap.isReady()) {
 				this._frameWidth = this.sprite.bitmap.width / this._frameCount;
 				this._frameHeight = this.sprite.bitmap.height;
+				this.hpBar.y = -this._frameHeight - 3;
 				this.refreshFrame();
 			} else {
 				return;
@@ -346,8 +361,12 @@ class EnemyBase {
 		this._effect = e;
 	}
 
+	getDirectionToPlayer() {
+		return Math.atan2($ppPlayer.position.y - this.y, $ppPlayer.position.x - this.x);
+	}
+
 	setDirectionToPlayer(rand = 0) {
-		this.direction = Math.atan2($ppPlayer.position.y - this.y, $ppPlayer.position.x - this.x);
+		this.direction = this.getDirectionToPlayer();
 		if(rand > 0) {
 			const v = Math.PI * 2 * rand;
 			this.direction += (v / -2) + (Math.random() * v);
@@ -362,19 +381,22 @@ class EnemyBase {
 				this._enemyHpBarAppear = 0;
 				this.onKill();
 				this.deathEffect();
+				playSe("EnemyDefeat", 70);
 			} else {
 				this._damageTime = knockbackTime;
 				this._damageDirection = direction;
 				this._damageKnockback = knockbackSpeed;
 				this._enemyHpBarAppear = 300;
 				this.damageEffect(amount !== 0);
+				playFreqSe("EnemyDamage", 60, 100, 50);
 				this.onDamage();
 			}
 		}
 	}
 
 	onDamage() {
-		this.setNoticedPlayer(true);
+		this._damageNotice = true;
+		this.setNoticedPlayer(true, false);
 	}
 
 	onDamageKnockbackComplete() {
@@ -414,24 +436,11 @@ class EnemyBase {
 
 	shootProjectile(dir, img = "Attack", x = 0, y = 0) {
 		const p = EnemyProjectileObjectPool.getObject(this.x + x, this.y + y, dir, img);
-		this._projectiles.push(p);
+		$gameTemp.enemyProjectiles.push(p);
 		p.onPlayerHit = (player) => {
 			player.takeDamage(p.damage, p.direction);
 		};
 		return p;
-	}
-
-	updateProjectiles() {
-		let len = this._projectiles.length;
-		for(let i = 0; i < len; i++) {
-			if(this._projectiles[i].update()) {
-				const p = this._projectiles[i];
-				this._projectiles.splice(i, 1);
-				EnemyProjectileObjectPool.removeObject(p);
-				i--;
-				len--;
-			}
-		}
 	}
 
 	updatePlayerTouch() {
@@ -484,6 +493,18 @@ class EnemyBase {
 			return;
 		}
 	}
+
+	playDashSe() {
+		playSe("EnemyDash", 15);
+	}
+
+	playAttackSe() {
+		playSe("EnemyAttack", 4);
+	}
+
+	playShootSe() {
+		playSe("EnemyShoot", 20);
+	}
 }
 
 class EnemyTeleport_Effect {
@@ -505,6 +526,7 @@ class EnemyTeleport_Effect {
 		this._isTeleporting = true;
 		this._reverseTeleport = true;
 		this._intTeleAni = 1;
+		playSe("TeleportIn", 10);
 	}
 
 	endTeleport() {

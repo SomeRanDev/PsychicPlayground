@@ -122,6 +122,9 @@ class Map extends Sprite {
 		} else {
 			this._isReady = false;
 		}
+
+		this.removeChild(this.cursor);
+		this.addChild(this.cursor);
 	}
 
 	updatePauseInflate() {
@@ -179,11 +182,10 @@ class Map extends Sprite {
 
 					if(block === 99) {
 						col = 0x000000;
-					/*} else if(block === 0) {
+					} else if(block === 0) {
 						col = 0x9c805d;
-						this.bitmap.fillRect(x, y - 1, 1, 1, "#9c805d");
+						//this.bitmap.fillRect(x, y - 1, 1, 1, "#9c805d");
 						alpha = 0.7;
-					} */
 					} else if(block === 1) {
 						col = 0x57404e;
 						if(block === 1 && this.bitmap.getPixelNumber(x, y - 1) !== 0) {

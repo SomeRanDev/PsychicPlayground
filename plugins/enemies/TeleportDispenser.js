@@ -4,6 +4,9 @@ window.TeleportDispenser = class TeleportDispenser {
 		this.y = y;
 		this._projectiles = [];
 
+		this._direction = Math.PI * 0.5;
+		this._lifetime = 120;
+
 		this._teleportPos = teleportPos;
 
 		this._shootFreq = 0;
@@ -15,7 +18,8 @@ window.TeleportDispenser = class TeleportDispenser {
 		this._shootFreq++;
 		if(this._shootFreq > 10) {
 			this._shootFreq = 0;
-			const p = EnemyProjectileObjectPool.getObject(this.x, this.y, 90, "Teleport");
+			const p = EnemyProjectileObjectPool.getObject(this.x, this.y, this._direction, "Teleport");
+			p.lifetime = this._lifetime;
 			this._projectiles.push(p);
 			p.onPlayerHit = (player) => {
 				player.teleport(this._teleportPos);
@@ -32,5 +36,8 @@ window.TeleportDispenser = class TeleportDispenser {
 				len--;
 			}
 		}
+	}
+
+	checkProjectile() {
 	}
 }

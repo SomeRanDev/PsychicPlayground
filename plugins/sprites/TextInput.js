@@ -200,7 +200,11 @@ class TextInput extends Sprite {
 		}
 
 		if(SceneManager._scene.isActive() && TouchInput.isTriggered()) {
+			const wasClicked = this._isClicked;
 			this._isClicked = this._isHovered;
+			if(!wasClicked && this._isClicked) {
+				playSe("Confirm", 50);
+			}
 		}
 	}
 

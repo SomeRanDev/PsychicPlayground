@@ -110,6 +110,8 @@ class ChoiceInput extends Sprite {
 			}
 
 			this._shiftDir = dir;
+
+			playSe("TitleButtonChange");
 		}
 
 		if(this._shiftAni > 0) {

@@ -79,6 +79,13 @@ class Chunk {
 			}
 		}
 
+		{
+			const x = startX + (GenerationManager.TILES_X * GenerationManager.OFFSET_X);
+			const y = startY + (GenerationManager.TILES_Y * GenerationManager.OFFSET_Y);
+			this.biome = $generation.getBiome(x, y);
+			this.biomeType = $generation._getBiomeType(x, y);
+		}
+
 		if(this.structs) {
 			for(const s of this.structs) {
 				s.destroy();
@@ -151,11 +158,13 @@ class Chunk {
 				const sId = s[2];
 				if(AllStructs[sId]) {
 					const structEntity = AllStructs[sId].spawn(this, s[0], s[1]);
-					if(structEntity.makeBackgroundSprite) {
-						const backSprite = structEntity.makeBackgroundSprite();
-						SpriteManager.belowLayer().addChild(backSprite);
+					if(structEntity) {
+						if(structEntity.makeBackgroundSprite) {
+							const backSprite = structEntity.makeBackgroundSprite();
+							SpriteManager.belowLayer().addChild(backSprite);
+						}
+						this.structs.push(structEntity);
 					}
-					this.structs.push(structEntity);
 				}
 			}
 		}
@@ -187,11 +196,17 @@ class Chunk {
 			return -0.3 + (Math.random() * 0.6);
 		}
 
+		this.globalPlayerTileX = Math.floor($ppPlayer.position.x / TS);
+		this.globalPlayerTileY = Math.floor($ppPlayer.position.y / TS);
+
 		if(this.canSpawnEnemies() && $generation.shouldSpawnEnemies()) {
 			let x = Math.floor(Math.random() * 8);
 			let y = Math.floor(Math.random() * 8);
 			const enemyType = this.getEnemyType();
 			const enemyId = enemyType[0];
+			if(enemyId === -1) {
+				return;
+			}
 			const enemyFriendChance = enemyType[1];
 
 			this.spawnEnemyAtLocalTile(x, y, enemyId);
@@ -209,19 +224,37 @@ class Chunk {
 	}
 
 	getEnemyType() {
-		if(BiasRandom.get("GrassEnemy", 0.7, 0.1, true)) {
-			return [0, 0.3];
+		switch(this.biomeType) {
+			case 0: {
+				if(BiasRandom.get("GrassEnemy", 0.7, 0.1, true)) {
+					return [0, 0.3];
+				}
+				if(BiasRandom.get("Sheep", 0.5, 0.3, true)) {
+					return [2, 0.5];
+				}
+				return [1, 0];
+			}
+			case 1: {}
+			case 2: {}
+			case 3: {
+				if(BiasRandom.get("Mimic", 0.5, 0.1, true)) {
+					return [3, 0.1];
+				}
+				return [4, 0.3];
+			}
 		}
-		if(BiasRandom.get("Sheep", 0.5, 0.3, true)) {
-			return [2, 0.5];
-		}
-		return [1, 0];
+		return [-1, 0];
 	}
 
 	spawnEnemyAtLocalTile(localTileX, localTileY, enemyId) {
 		const globalX = (GenerationManager.TILES_X * this.chunkX) + localTileX;
 		const globalY = (GenerationManager.TILES_Y * this.chunkY) + localTileY;
 		if(CollisionManager.canMoveToTile(globalX, globalY)) {
+
+			if(Math.abs(this.globalPlayerTileX - globalX) < 16 && Math.abs(this.globalPlayerTileY - globalY) < 7) {
+				return false;
+			}
+
 			const enemy = this.makeEnemy(globalX, globalY, enemyId);
 			if(enemy) {
 				enemy.randomizeDir()
@@ -237,6 +270,10 @@ class Chunk {
 			case 0: return new Chaser(globalX, globalY);
 			case 1: return new Blindor(globalX, globalY);
 			case 2: return new CrazySheep(globalX, globalY);
+
+			case 3: return new Mimic(globalX, globalY);
+
+			case 4: return new Omom(globalX, globalY);
 		}
 		return null;
 	}
@@ -244,7 +281,12 @@ class Chunk {
 	//
 
 	canSpawnEnemies() {
-		if(this.chunkY < -2) return true;
+		if(this.biome && !this.biome.canSpawnEnemies()) {
+			return false;
+		}
+		if(this.chunkY < -2) {
+			return true;
+		}
 		return Math.abs(this.chunkX * this.chunkY) > 9;
 	}
 

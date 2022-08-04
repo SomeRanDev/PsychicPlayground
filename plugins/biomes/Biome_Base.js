@@ -4,6 +4,10 @@ class Biome_Base {
 		this.name = "Plains";
 	}
 
+	canSpawnEnemies() {
+		return true;
+	}
+
 	checkPath(globalX, globalY) {
 		return $generation.GetPathAt(globalX, globalY);
 	}

@@ -49,7 +49,14 @@ class Button extends Sprite {
 			if(isTouching && TouchInput.isTriggered()) {
 				this._isPressed = true;
 			} else if(isTouching && TouchInput.isReleased()) {
-				if(this.onClick) this.onClick();
+				if(this.onClick) {
+					if(this.SuperSoundEffect) {
+						playSe("ButtonPressSuper", 200);
+					} else {
+						playSe("ButtonPress", 200);
+					}
+					this.onClick();
+				}
 			} 
 		}
 		if(!isTouching || !TouchInput.isPressed()) {

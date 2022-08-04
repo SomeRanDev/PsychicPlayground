@@ -43,11 +43,13 @@ const AbilityTypes = [
 			if($ppPlayer.inventory.addSkillCooldown(3, -3)) {
 				$ppPlayer.makeAndShootProjectile({
 					icon: "Pyrokinesis",
-					setDamage: 0.1,
+					setDamage: 0.2 + ($ppPlayer.calcExtraDamage() / 10),
 					lifetime: 30,
 					targetX: TouchInput.worldX - 25 + Math.floor(Math.random() * 50),
 					targetY: TouchInput.worldY - 25 + Math.floor(Math.random() * 50)
 				});
+
+				$ppPlayer.playMultiShootSe();
 			}
 			return true;
 		}
@@ -68,6 +70,7 @@ const AbilityTypes = [
 				targetX: TouchInput.worldX,
 				targetY: TouchInput.worldY
 			});
+			$ppPlayer.playShootSe();
 		}
 	},
 	{
@@ -86,6 +89,8 @@ const AbilityTypes = [
 					targetX: TouchInput.worldX - 25 + Math.floor(Math.random() * 50),
 					targetY: TouchInput.worldY - 25 + Math.floor(Math.random() * 50)
 				});
+
+				$ppPlayer.playMultiShootSe();
 			}
 			return true;
 		}
@@ -113,6 +118,8 @@ const AbilityTypes = [
 					targetY: coords[1]
 				});
 			}
+
+			$ppPlayer.playShootSe();
 		}
 	},
 	{
@@ -135,6 +142,8 @@ const AbilityTypes = [
 					targetY: coords[1]
 				});
 			}
+
+			$ppPlayer.playShootSe();
 		}
 	},
 	{
@@ -154,6 +163,8 @@ const AbilityTypes = [
 						targetX: TouchInput.worldX - 10 + Math.floor(Math.random() * 20),
 						targetY: TouchInput.worldY - 10 + Math.floor(Math.random() * 20)
 					});
+
+					$ppPlayer.playShootSe();
 				}
 			}
 			return true;
@@ -176,6 +187,8 @@ const AbilityTypes = [
 					targetX: coords[0],
 					targetY: coords[1]
 				});
+
+				$ppPlayer.playMultiShootSe();
 			}
 			return true;
 		}
@@ -203,6 +216,8 @@ const AbilityTypes = [
 					targetY: coords[1]
 				});
 			}
+
+			$ppPlayer.playShootSe();
 		}
 	},
 	{
@@ -222,6 +237,8 @@ const AbilityTypes = [
 				targetX: TouchInput.worldX,
 				targetY: TouchInput.worldY
 			});
+
+			$ppPlayer.playShootSe();
 		}
 	},
 	{
@@ -248,6 +265,8 @@ const AbilityTypes = [
 						targetX: coords[0],
 						targetY: coords[1]
 					});
+
+					$ppPlayer.playMultiShootSe();
 				}
 			} else {
 				return true;
@@ -276,6 +295,8 @@ const AbilityTypes = [
 						targetX: coords[0],
 						targetY: coords[1]
 					});
+
+					$ppPlayer.playMultiShootSe();
 				}
 			} else {
 				return true;
@@ -299,6 +320,8 @@ const AbilityTypes = [
 					targetX: coords[0],
 					targetY: coords[1]
 				});
+
+				$ppPlayer.playMultiShootSe();
 			}
 			return true;
 		}
@@ -324,6 +347,8 @@ const AbilityTypes = [
 					targetX: coords[0],
 					targetY: coords[1]
 				});
+
+				$ppPlayer.playMultiShootSe();
 			}
 			return true;
 		}
@@ -354,6 +379,7 @@ const AbilityTypes = [
 		requireNoCooldown: true,
 		behavior: function() {
 			$ppPlayer.addTelekineticBuff();
+			$ppPlayer.playBuffSe();
 		}
 	},
 	{
@@ -366,6 +392,7 @@ const AbilityTypes = [
 		requireNoCooldown: true,
 		behavior: function() {
 			$ppPlayer.addSpeedBuff();
+			$ppPlayer.playBuffSe();
 		}
 	},
 	{
@@ -378,6 +405,7 @@ const AbilityTypes = [
 		requireNoCooldown: true,
 		behavior: function() {
 			$ppPlayer.addBreakingBuff();
+			$ppPlayer.playBuffSe();
 		}
 	},
 	{
@@ -390,6 +418,7 @@ const AbilityTypes = [
 		requireNoCooldown: true,
 		behavior: function() {
 			$ppPlayer.addHeatArmor();
+			$ppPlayer.playBuffSe();
 		}
 	},
 	{
@@ -402,6 +431,7 @@ const AbilityTypes = [
 		requireNoCooldown: true,
 		behavior: function() {
 			$ppPlayer.addFastShield();
+			$ppPlayer.playBuffSe();
 		}
 	},
 	{
@@ -420,6 +450,11 @@ const AbilityTypes = [
 			if(!$ppPlayer._boolAbilityActive) {
 				$ppPlayer._boolAbilityActive = true;
 				$ppPlayer.togglePairkinesis();
+				if($ppPlayer._pairkinesis) {
+					$ppPlayer.playActivateSe();
+				} else {
+					$ppPlayer.playDeactivateSe();
+				}
 				$ppPlayer.showPopupEx("Pairkinesis " + ($ppPlayer.getPairkinesis() ? "Activated" : "Deactivated"), 0xffffff);
 				$ppPlayer.genericEffect([180, 180, 180, 180], function() {
 					$ppPlayer._boolAbilityActive = false;
@@ -454,6 +489,7 @@ const AbilityTypes = [
 		behavior: function() {
 			if($ppPlayer.hp < $ppPlayer.maxHp) {
 				$ppPlayer.addHpFromItem(30);
+				$ppPlayer.playHpAbilitySe();
 			} else {
 				return true;
 			}
@@ -473,6 +509,7 @@ const AbilityTypes = [
 			if(hp === 0) hp = 10;
 			$ppPlayer.addHpFromItem(hp);
 			$ppPlayer.addHungerFromItem(hunger);
+			$ppPlayer.playHpAbilitySe();
 		}
 	},
 ];

@@ -107,11 +107,14 @@ class PlayerStatMenu extends Sprite {
 
 		this.updateLevelCount();
 		this.updateStatCount();
+
+		this.initialStatPoints = $ppPlayer.statPoints;
 	}
 
 	applyStatInputs() {
 		$ppPlayer.setAllStats(this.statInputs.map(s => s.getNumber()));
 		$ppPlayer.statPoints = this.statInputs[0].pointsRemaining();
+		return this.initialStatPoints !== $ppPlayer.statPoints;
 	}
 
 	updateLevelCount() {

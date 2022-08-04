@@ -41,7 +41,11 @@ class Struct_Base {
 			}
 		}
 
-		this.setupCustomCollisionResponses(globalX, globalY);
+		const result = this.setupCustomCollisionResponses(globalX, globalY);
+
+		if(result === true) {
+			return null;
+		}
 
 		return new StructEntity(chunk, localTileX, localTileY, this.imgPath(), this.backImgPath(), this.backOffset());
 	}

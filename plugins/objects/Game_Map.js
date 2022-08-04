@@ -10,6 +10,7 @@ modify_Game_Map = class {
 		$gameTemp.updateEntityNames = {};
 		$gameTemp.triggerEntities = {};
 		$gameTemp.enemies = [];
+		$gameTemp.enemyProjectiles = [];
 	}
 
 	maxCameraX() {
@@ -114,7 +115,7 @@ modify_Game_Map = class {
 				event.erase();
 			}
 
-			if(m.Spikes && event.meetsConditions(data.pages[0])) {
+			if(m.Spikes && event.meetsConditions(data.pages[0]) && (!m.NoSwitch || !$gameSwitches.value(parseInt(m.NoSwitch)))) {
 				const s = new Spikes(data.x, data.y);
 				s._name = data.name;
 				$gameTemp.updateEntities.push(s);
@@ -154,6 +155,15 @@ modify_Game_Map = class {
 
 			if(m.Bed) {
 				const i = new Bed(data.x, data.y);
+				i._name = data.name;
+				$gameTemp.updateEntities.push(i);
+				$gameTemp.updateEntityNames[i._name] = i;
+
+				event.erase();
+			}
+
+			if(m.GoldenBed && GoldenBed.canExist()) {
+				const i = new GoldenBed(data.x, data.y);
 				i._name = data.name;
 				$gameTemp.updateEntities.push(i);
 				$gameTemp.updateEntityNames[i._name] = i;
@@ -217,6 +227,9 @@ modify_Game_Map = class {
 		if(m.NoAnimation) {
 			i.setNoAnimation();
 		}
+		if(m.TileAlign) {
+			i.addPosition(0.5, 0.5);
+		}
 		i._name = data.name;
 		$gameTemp.updateEntities.push(i);
 		$gameTemp.updateEntityNames[i._name] = i;
@@ -236,11 +249,14 @@ modify_Game_Map = class {
 		$gameTemp.updateEntityNames = {};
 		$gameTemp.projectileReactors = null;
 		$gameTemp.enemies = [];
+		$gameTemp.enemyProjectiles = [];
 	}
 
 	removeEntity(e) {
-		$gameTemp.updateEntities.remove(e);
-		delete $gameTemp.updateEntityNames[e._name];
+		if($gameTemp.updateEntities.contains(e)) {
+			$gameTemp.updateEntities.remove(e);
+			delete $gameTemp.updateEntityNames[e._name];
+		}
 	}
 
 	addSpikes(x, y) {
@@ -281,6 +297,25 @@ modify_Game_Map = class {
 
 		for(const enemy of $gameTemp.enemies) {
 			enemy.update();
+		}
+
+		let len = $gameTemp.enemyProjectiles.length;
+		for(let i = 0; i < len; i++) {
+			if($gameTemp.enemyProjectiles[i].update()) {
+				const p = $gameTemp.enemyProjectiles[i];
+				$gameTemp.enemyProjectiles.splice(i, 1);
+				EnemyProjectileObjectPool.removeObject(p);
+				i--;
+				len--;
+			}
+		}
+	}
+
+	destroyAllEnemyProjectiles() {
+		while($gameTemp.enemyProjectiles.length > 0) {
+			const p = $gameTemp.enemyProjectiles[0];
+			$gameTemp.enemyProjectiles.splice(0, 1);
+			EnemyProjectileObjectPool.removeObject(p);
 		}
 	}
 

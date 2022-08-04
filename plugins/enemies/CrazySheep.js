@@ -11,7 +11,7 @@ class CrazySheep extends EnemyBase {
 	}
 
 	bodyDamage() {
-		return 2;
+		return 5;
 	}
 
 	exp() {
@@ -19,7 +19,7 @@ class CrazySheep extends EnemyBase {
 	}
 
 	noticeDistance() {
-		return 120;
+		return 180;
 	}
 
 	setupCollisionRect() {
@@ -40,6 +40,10 @@ class CrazySheep extends EnemyBase {
 		if(this.time === 1) {
 			this.checkDespawn();
 		}
+		if(this._rest > 0) {
+			this._rest--;
+			return;
+		}
 		if(this._continueBehavior) {
 			this.behaveAttack();
 		} else {
@@ -50,7 +54,11 @@ class CrazySheep extends EnemyBase {
 	behaveAttack() {
 		if(this.time % 5 === 0) {
 			this.setDirectionToPlayer(0.05);
-			this.speed = 2;
+			this.speed = 4;
+			if(this.getDistanceToPlayer() < 15) {
+				this._rest = 90;
+				this.speed = 2;
+			}
 		}
 		this.checkStopAttacking();
 	}
@@ -77,10 +85,12 @@ class CrazySheep extends EnemyBase {
 		this._continueBehavior = true;
 		this.time = 60;
 		this.speed = 0;
+		this.playDashSe();
 		this.setDirectionToPlayer();
 	}
 
 	onDamage() {
+		super.onDamage();
 		this.time = 0;
 		this.speed = 0;
 	}
@@ -91,8 +101,7 @@ class CrazySheep extends EnemyBase {
 	}
 
 	onHitPlayerWithBody() {
-		this._hitPlayerKnockback = 90;
-		this._hitPlayerDir = this.direction;
-		this.speed = -2;
+		this._rest = 90;
+		this.speed = 2;
 	}
 }

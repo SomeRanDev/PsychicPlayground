@@ -2,6 +2,9 @@ modify_Scene_Title = class {
 	create() {
 		PP.Scene_Title.create.apply(this, arguments);
 
+		this._rotationSpeed = 0;
+		this._speedUpRotation = true;
+
 		this._grassFloorHolder = new Sprite();
 		this._grassFloorHolder.move(Graphics.width / 2, 200);
 		this._grassFloorHolder.anchor.set(0.5);
@@ -142,7 +145,18 @@ modify_Scene_Title = class {
 	update() {
 		Scene_Base.prototype.update.call(this);
 
-		this._grassFloor.rotation += 0.004;
+		this._grassFloor.rotation += this._rotationSpeed;
+		if(this._speedUpRotation && this._rotationSpeed < 0.01) {
+			this._rotationSpeed += 0.00001;
+			if(this._rotationSpeed >= 0.01) {
+				this._speedUpRotation = false;
+			}
+		} else if(!this._speedUpRotation && this._rotationSpeed > -0.01) {
+			this._rotationSpeed -= 0.00001;
+			if(this._rotationSpeed <= -0.01) {
+				this._speedUpRotation = true;
+			}
+		}
 
 		for(const obj of this.entData) {
 			obj[0].x = this._midPoint[0] + (Math.cos(this._grassFloor.rotation + obj[1]) * obj[2] * this._xScale);

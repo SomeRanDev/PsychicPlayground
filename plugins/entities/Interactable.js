@@ -118,12 +118,14 @@ class Interactable {
 	teleport() {
 		this._isTeleporting = true;
 		$gameTemp.forceWait = true;
+		playSe("TeleportOut", 70);
 	}
 
 	teleportIn() {
 		this._isTeleporting = true;
 		this._reverseTeleport = true;
 		this._intTeleAni = 1;
+		playSe("TeleportIn", 10);
 	}
 
 	endTeleport() {
@@ -188,7 +190,12 @@ class Interactable {
 	updateInput() {
 		if(this._isClose && !this.currentExists() && (this._eventsList || this._commonEventId) && Input.isTriggeredEx("space")) {
 			this.startEvent();
+			this.interactSound();
 		}
+	}
+
+	interactSound() {
+		playSe("NPCInteract2", 60);
 	}
 
 	isCloseToPlayer() {

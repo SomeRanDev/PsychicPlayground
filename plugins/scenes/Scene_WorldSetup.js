@@ -82,4 +82,12 @@ class Scene_WorldSetup extends Scene_Base {
 
 	terminate() {
 	}
+
+	fadeOutAll() {
+		const time = this.slowFadeSpeed() / 60;
+		//AudioManager.fadeOutBgm(time);
+		//AudioManager.fadeOutBgs(time);
+		//AudioManager.fadeOutMe(time);
+		this.startFadeOut(this.slowFadeSpeed());
+	};
 }

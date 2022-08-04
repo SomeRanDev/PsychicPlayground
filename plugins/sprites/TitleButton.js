@@ -102,6 +102,7 @@ class TitleButton extends Sprite {
 	setSelected(v) {
 		if(this._selected !== v) {
 			this._selected = v;
+			playSe("TitleButtonChange", 80);
 		}
 	}
 
@@ -119,6 +120,8 @@ class TitleButton extends Sprite {
 
 		this._startY = this.y;
 		this._endY = (Graphics.height / 2);
+
+		playSe("TitleButtonConfirm", 30);
 	}
 
 	isBeingTouched() {

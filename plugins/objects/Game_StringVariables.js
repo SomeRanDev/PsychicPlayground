@@ -30,4 +30,12 @@ class Game_StringVariables {
 	setOff(key) {
 		this.data[key] = false;
 	}
+
+	getData(key) {
+		return this.data[key];
+	}
+
+	setData(key, data) {
+		this.data[key] = data;
+	}
 }

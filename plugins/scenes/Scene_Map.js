@@ -109,6 +109,10 @@ modify_Scene_Map = class {
 
 				}
 			} else {
+				if(this._pauseType === 10) {
+					PP.Scene_Map.updateMain.apply(this, arguments);
+					PP.Scene_Map.updateChildren.apply(this, arguments);
+				}
 				this.normalCursor();
 				this.updateCameraPos();
 				this._spriteset.updateUiOnly();
@@ -194,12 +198,15 @@ modify_Scene_Map = class {
 		if(Input.isTriggeredEx("e")) {
 			this.setPaused(true, 0);
 			$gameMap.CameraOffsetY = 60;
+			playSe($ppPlayer.statPoints ? "InventoryOpenLevelUp" : "InventoryOpen", 200);
 		} else if($ppPlayer.allowMapHud() && Input.isTriggeredEx("m")) {
 			this.setPaused(true, 1);
+			playSe("MapOpen", 200);
 		} else if(Input.isTriggeredEx("esc")) {
 			this.setPaused(true, 2);
 			this._escMenu = new Scene_EscMenu(() => this.unpauseEscMenu());
 			this.addChild(this._escMenu);
+			playSe("EscOpen", 200);
 		}
 	}
 
@@ -451,6 +458,9 @@ modify_Scene_Map = class {
 				count++;
 			}
 		}
+		if(count > 0) {
+			playSe("Make", 10);
+		}
 		$ppPlayer.inventory.onBuild(count);
 		this.onBuildCanceled();
 		SpriteManager.sort();
@@ -560,12 +570,14 @@ modify_Scene_Map = class {
 		}
 
 		if(oldSelection !== finalObject) {
+			let wait = 0;
 			if(oldSelection) {
+				wait = 1;
 				oldSelection.setSelected(false);
 			}
 			if(finalObject) {
 				this._selectedObject = finalObject;
-				finalObject.setSelected(true);
+				finalObject.setSelected(true, wait);
 			} else {
 				this._selectedObject = null;
 			}
@@ -632,6 +644,7 @@ modify_Scene_Map = class {
 	updateMapPause() {
 		if(Input.isTriggeredEx("m")) {
 			this.setPaused(false);
+			playSe("MapClose", 200);
 		}
 	}
 
@@ -639,6 +652,7 @@ modify_Scene_Map = class {
 		this._escMenu.update();
 		if(Input.isTriggeredEx("esc")) {
 			this.unpauseEscMenu();
+			playSe("EscClose", 200);
 		}
 	}
 
@@ -698,10 +712,19 @@ modify_Scene_Map = class {
 		$ppPlayer.clearDeathEffect();
 		$ppPlayer.bedHealHp();
 		$ppPlayer.setInvincible(128);
+		$ppPlayer.destroyAllProjectiles();
+
+		$gameMap.destroyAllEnemyProjectiles();
+
+		if($generation.enemies) {
+			while($generation.enemies.length > 0) {
+				$generation.enemies[0].destroy();
+			}
+		}
 
 		this.playerKilled = false;
 
-		this.startFadeIn(90, false);
+		this.startFadeIn(180, false);
 
 		SpriteManager.deathDarken.visible = false;
 		SpriteManager.deathDarken.alpha = 0;

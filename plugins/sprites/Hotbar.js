@@ -258,15 +258,17 @@ class Hotbar extends Sprite {
 	onMenuOpen() {
 		this._showStatMenu = $ppPlayer.statPoints > 0;
 		if(this._showStatMenu) {
-			this.statMenu.refreshStatInputs();
+			this.statMenu.refreshStatInputs()
 		}
 
 		this.refreshInventoryListSlots();
 	}
 
 	onMenuClose() {
-		if(this._showStatMenu) {
-			this.statMenu.applyStatInputs();
+		if(this._showStatMenu && this.statMenu.applyStatInputs()) {
+			playSe("LevelsSpent", 200);
+		} else {
+			playSe("InventoryClose", 200);
 		}
 
 		this.closeAllToolTips();
@@ -550,6 +552,7 @@ class Hotbar extends Sprite {
 					this.updateDragItemPosition();
 				} else if(xHoverIndex !== -1) {
 					$ppPlayer.inventory.clearHotbarIndex(xHoverIndex);
+					playSe("HotbarRemove");
 					this.refreshHotbar();
 				}
 			}
@@ -606,6 +609,7 @@ class Hotbar extends Sprite {
 
 					const hotbarIndex = (this._dragItem._hotbarIndex * 3) + (index + 1);
 					$ppPlayer.inventory.setHotbarIndex(hotbarIndex, this._dragItem._dataId);
+					playSe("HotbarAdd");
 					this.refreshHotbar();
 				}
 			}
