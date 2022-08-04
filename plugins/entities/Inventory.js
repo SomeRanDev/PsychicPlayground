@@ -269,12 +269,23 @@ class Inventory {
 		return -1;
 	}
 
+	_updateCursor() {
+		if(SceneManager._scene.updateCursorSkillBar) {
+			SceneManager._scene.updateCursorSkillBar();
+		}
+		if(SceneManager._scene.updateCursorQuantity) {
+			SceneManager._scene.updateCursorQuantity();
+		}
+	}
+
 	updateHotbarInput() {
 		if(!$ppPlayer.canMove()) return;
 		if(TouchInput.wheelScrolled > 0) {
 			this.incrementHotbarIndex();
+			this._updateCursor();
 		} else if(TouchInput.wheelScrolled < 0) {
 			this.decrementHotbarIndex();
+			this._updateCursor();
 		} else {
 			for(let i = 1; i <= 9; i++) {
 				if(Input.isTriggeredEx("" + i)) {

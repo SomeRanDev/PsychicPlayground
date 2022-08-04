@@ -205,8 +205,6 @@ class Player {
 
 		result.fastTravelSpots = this.fastTravelSpots;
 
-		result.fastTravelSpots = [];
-
 		result.powerStat = this.powerStat;
 		result.speedStat = this.speedStat;
 		result.aimingStat = this.aimingStat;

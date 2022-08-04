@@ -139,6 +139,8 @@ class GenerationManager {
 		this.seed = data[6];
 		this.hash = data[7];
 
+		GenerationManager.hyperFastNoise.SetupNoise(this.hash);
+
 		this.isMapGenerated = data[8] ?? false;
 		this.redTarget = data[9] ?? [0, 0];
 		this.greenTarget = data[10] ?? [0, 0];
