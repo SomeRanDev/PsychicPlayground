@@ -234,8 +234,24 @@ class Chunk {
 				}
 				return [1, 0];
 			}
-			case 1: {}
-			case 2: {}
+			case 2: {
+				if(BiasRandom.get("Slime", 0.4, 0.1, true)) {
+					return [5, 0];
+				}
+				if(BiasRandom.get("Sheep2", 0.3, 0.1, true)) {
+					return [2, 0.5];
+				}
+				return [0, 0.2];
+			}
+			case 1: {
+				if(BiasRandom.get("Firehead", 0.4, 0.1, true)) {
+					return [6, 0];
+				}
+				if(BiasRandom.get("Blindor", 0.3, 0.1, true)) {
+					return [1, 0.2];
+				}
+				return [0, 0.2];
+			}
 			case 3: {
 				if(BiasRandom.get("Mimic", 0.5, 0.1, true)) {
 					return [3, 0.1];
@@ -274,6 +290,9 @@ class Chunk {
 			case 3: return new Mimic(globalX, globalY);
 
 			case 4: return new Omom(globalX, globalY);
+
+			case 5: return new Slime(globalX, globalY);
+			case 6: return new Firehead(globalX, globalY);
 		}
 		return null;
 	}

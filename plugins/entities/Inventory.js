@@ -16,7 +16,7 @@ class Inventory {
 
 		this.passiveSkills.fill(-1);
 		this.activeSkills.fill(-1);
-		this.materials.fill(-1);
+		this.materials.fill(0);
 		this.items.fill(-1);
 
 		this.activeSkillAmmo = new Float32Array(AbilityTypes.length);
@@ -110,6 +110,9 @@ class Inventory {
 		}
 		if(changed) {
 			$ppPlayer.refreshHotbarNumbers();
+			if(SceneManager._scene.updateCursorSkillBar) {
+				SceneManager._scene.updateCursorSkillBar();
+			}
 		}
 	}
 
@@ -196,6 +199,23 @@ class Inventory {
 			}
 		}
 		return null;
+	}
+
+	getMaterialCount() {
+		if(this.hotbarIndex >= 3 && this.hotbarIndex <= 5) {
+			const matId = this.hotbar[this.hotbarIndex];
+			if(matId >= 0) {
+				return this.materials[matId];
+			}
+		}
+		return 0;
+	}
+
+	getSkillCount() {
+		if(this.hotbarIndex <= 2) {
+			return this.getSlotNumber(this.hotbarIndex);
+		}
+		return "";
 	}
 
 	maxBuildAmount() {
@@ -403,6 +423,16 @@ class Inventory {
 		});
 	}
 
+	getAbilityCooldown() {
+		if(this.hotbarIndex <= 2) {
+			const skillId = this.hotbar[this.hotbarIndex];
+			if(skillId >= 0) {
+				return this.activeSkillAmmo[skillId];
+			}
+		}
+		return -1;
+	}
+
 	addMaterial(materialId, amount = 1) {
 		const old = this.materials[materialId];
 		this.materials[materialId] += amount;
@@ -419,6 +449,9 @@ class Inventory {
 		}
 		if($ppPlayer && !ImageManager.IsTwitter) {
 			$ppPlayer.refreshHotbarNumbers();
+			if(SceneManager._scene.updateCursorQuantity) {
+				SceneManager._scene.updateCursorQuantity();
+			}
 		}
 		return this.materials[materialId] !== old;
 	}

@@ -55,10 +55,10 @@ class CrazySheep extends EnemyBase {
 		if(this.time % 5 === 0) {
 			this.setDirectionToPlayer(0.05);
 			this.speed = 4;
-			if(this.getDistanceToPlayer() < 15) {
-				this._rest = 90;
-				this.speed = 2;
-			}
+		}
+		if(this.getDistanceToPlayer() < 20) {
+			this._rest = 90;
+			this.speed = 2;
 		}
 		this.checkStopAttacking();
 	}
@@ -102,6 +102,6 @@ class CrazySheep extends EnemyBase {
 
 	onHitPlayerWithBody() {
 		this._rest = 90;
-		this.speed = 2;
+		this.speed = 0.5;
 	}
 }

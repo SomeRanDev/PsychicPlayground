@@ -10,13 +10,14 @@ window.TeleportDispenser = class TeleportDispenser {
 		this._teleportPos = teleportPos;
 
 		this._shootFreq = 0;
+		this._shootTime = 10;
 
 		$gameTemp.enemies.push(this);
 	}
 
 	update() {
 		this._shootFreq++;
-		if(this._shootFreq > 10) {
+		if(this._shootFreq > this._shootTime) {
 			this._shootFreq = 0;
 			const p = EnemyProjectileObjectPool.getObject(this.x, this.y, this._direction, "Teleport");
 			p.lifetime = this._lifetime;

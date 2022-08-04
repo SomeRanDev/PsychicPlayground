@@ -78,6 +78,11 @@ class Interactable {
 		return this.sprite;
 	}
 
+	setMyBitmap(path) {
+		this._imgPath = path;
+		this.sprite.bitmap = (ImageManager.lEntities(this._imgPath));
+	}
+
 	setAnimationFrame(f) {
 		if(this.sprite && this.sprite.bitmap.isReady() && f >= 0 && f < this._frames) {
 			if(!this._frameWidth) {

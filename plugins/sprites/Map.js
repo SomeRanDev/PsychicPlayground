@@ -3,7 +3,7 @@
 class Map extends Sprite {
 	constructor(width, height) {
 		const b = new Bitmap(width, height);
-		b.smooth = true;
+		b.smooth = false;
 		super(b);
 
 		this.anchor.set(0.5);
@@ -141,7 +141,7 @@ class Map extends Sprite {
 
 			const r = isPaused ? newRatio.cubicOut() : newRatio.cubicIn();
 			this.move(PP.lerp(720, (Graphics.width / 2), r), PP.lerpEx(66, (Graphics.height / 2), r));
-			this.setScale(0.3 + (1.2 * r));
+			this.setScale(0.3 + (0.7 * r));
 		}
 	}
 

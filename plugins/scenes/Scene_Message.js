@@ -122,7 +122,7 @@ modify_Window_Message = class {
 				this.pause = false;
 				if (!this._textState) {
 					this.terminateMessage();
-					playFreqSe("Message2");
+					playFreqSe("Message2", 90, 130, 70);
 				}
 			}
 			return true;

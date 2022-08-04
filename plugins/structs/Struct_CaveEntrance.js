@@ -54,7 +54,7 @@ class Struct_CaveEntrance_RedOrb extends Struct_CaveEntrance {
 	setupCustomCollisionResponses(globalX, globalY) {
 		CollisionManager.clearStructCollision(globalX, globalY);
 		CollisionManager.addTransfer(globalX, globalY, {
-			id: 8, x: 17, y: 1, dir: 8, fadeType: 0
+			id: 8, x: 14, y: 22, dir: 2, fadeType: 0
 		});
 	}
 }
@@ -67,7 +67,7 @@ class Struct_CaveEntrance_GreenOrb extends Struct_CaveEntrance {
 	setupCustomCollisionResponses(globalX, globalY) {
 		CollisionManager.clearStructCollision(globalX, globalY);
 		CollisionManager.addTransfer(globalX, globalY, {
-			id: 9, x: 17, y: 1, dir: 8, fadeType: 0
+			id: 9, x: 13, y: 25, dir: 2, fadeType: 0
 		});
 	}
 }
@@ -80,7 +80,7 @@ class Struct_CaveEntrance_BlueOrb extends Struct_CaveEntrance {
 	setupCustomCollisionResponses(globalX, globalY) {
 		CollisionManager.clearStructCollision(globalX, globalY);
 		CollisionManager.addTransfer(globalX, globalY, {
-			id: 10, x: 17, y: 1, dir: 8, fadeType: 0
+			id: 10, x: 12, y: 30, dir: 2, fadeType: 0
 		});
 	}
 }
@@ -95,13 +95,47 @@ class Struct_CaveEntrance_FastTravel extends Struct_CaveEntrance {
 	}
 
 	clearSize() {
-		return [-2, -3, 5, 5];
+		return [-3, -3, 7, 7];
 	}
 
 	setupCustomCollisionResponses(globalX, globalY) {
 		CollisionManager.clearStructCollision(globalX, globalY);
 		CollisionManager.addTransfer(globalX, globalY, {
 			id: 13, x: 13, y: 19, dir: 2, fadeType: 0
+		});
+	}
+}
+
+class Struct_CaveEntrance_HealBuilding extends Struct_CaveEntrance {
+	constructor(id) {
+		super(id, "HealBuilding_Front", "HealBuilding_Back");
+	}
+
+	clearSize() {
+		return [-3, -3, 7, 7];
+	}
+
+	setupCustomCollisionResponses(globalX, globalY) {
+		CollisionManager.clearStructCollision(globalX, globalY);
+		CollisionManager.addTransfer(globalX, globalY, {
+			id: 31, x: 14, y: 19, dir: 2, fadeType: 0
+		});
+	}
+}
+
+class Struct_CaveEntrance_GambleBuilding extends Struct_CaveEntrance {
+	constructor(id) {
+		super(id, "GambleBuilding_Front", "GambleBuilding_Back");
+	}
+
+	clearSize() {
+		return [-3, -3, 7, 7];
+	}
+
+	setupCustomCollisionResponses(globalX, globalY) {
+		CollisionManager.clearStructCollision(globalX, globalY);
+		CollisionManager.addTransfer(globalX, globalY, {
+			id: 32, x: 14, y: 19, dir: 2, fadeType: 0
 		});
 	}
 }
@@ -119,6 +153,42 @@ class Struct_CaveEntrance_RandomChallenge extends Struct_CaveEntrance {
 				"RandomChallenge3_Back"
 			)
 		);*/
+	}
+
+	clearArea(globalTileX, globalTileY) {
+		//const globalTileXPos = globalTileX + (GenerationManager.OFFSET_X * GenerationManager.TILES_X);
+		//const globalTileYPos = globalTileY + (GenerationManager.OFFSET_Y * GenerationManager.TILES_Y);
+
+		const globalIndex = (globalTileY * GenerationManager.GLOBAL_WIDTH) + globalTileX;
+		const type = $generation.getRandomNumber(globalIndex) < 0.5 ? true : false;
+
+		const s = this.clearSize();
+		const xStart = s[0];
+		const yStart = s[1];
+		const width = xStart + s[2];
+		const height = yStart + s[3];
+		for(let x = xStart; x < width; x++) {
+			for(let y = yStart; y < height; y++) {
+				if(x > -3 && x < 3) {
+					if(type) {
+						$generation.setPlatformTile(globalTileX + x, globalTileY + y);
+					} else {
+						$generation.setAltCarpetTile(globalTileX + x, globalTileY + y);
+					}
+				} else {
+					$generation.clearTile(globalTileX + x, globalTileY + y);
+				}
+				
+			}
+		}
+	}
+
+	size() {
+		return [-1, -2, 3, 3];
+	}
+
+	clearSize() {
+		return [-3, -3, 7, 5];
 	}
 
 	spawn(chunk, localTileX, localTileY) {
@@ -174,8 +244,6 @@ class Struct_CaveEntrance_RandomChallenge extends Struct_CaveEntrance {
 		const front = fronts[Math.floor($generation.getRandomNumber(globalIndex) * fronts.length)];
 		const back = backs[Math.floor($generation.getRandomNumber(globalIndex) * backs.length)];
 
-
-
 		return new StructEntity(chunk, localTileX, localTileY, front, back, this.backOffset());
 	}
 
@@ -184,11 +252,32 @@ class Struct_CaveEntrance_RandomChallenge extends Struct_CaveEntrance {
 	}
 
 	getValidMapIds() {
-		return [
+		let usedRc = $keyVars.getData("Used_RC");
+		if(!usedRc) {
+			usedRc = [];
+			$keyVars.setData("Used_RC", usedRc);
+		}
+
+		const result = [
 			[17, 15, 34],
 			[16, 17, 25],
-			[18, 17, 35]
+			[18, 17, 35],
+
+			[21, 15, 34],
+			[22, 13, 44],
+			[23, 13, 44],
+
+			[24, 17, 55],
+			[25, 17, 25],
+			[26, 27, 41],
+			[27, 19, 64],
+
+			[28, 17, 32], // 10
+			[29, 17, 32], // 11
 		];
+
+
+		return result;
 	}
 
 	setupCustomCollisionResponses(globalX, globalY) {
@@ -221,13 +310,34 @@ class Struct_CaveEntrance_RandomChallenge extends Struct_CaveEntrance {
 				if(!$keyVars.getData(key)) {
 					if(usedRc.length >= validMapIds.length) {
 					} else {
-						let id = Math.floor(Math.random() * 3);
-						while(usedRc.contains(id)) {
-							id = Math.floor(Math.random() * validMapIds.length);
+						let allowedIds = [];
+						for(let i = 0; i < validMapIds.length; i++) {
+							if(!usedRc.contains(i)) {
+
+								if(i >= 3 || i <= 5) {
+									if(i === 3 && !usedRc.contains(0)) {
+										continue;
+									} else if(i > 3 && !usedRc.contains(i - 1)) {
+										continue;
+									}
+								} else if(i >= 10 && i <= 12) {
+									if(i === 10 && !usedRc.contains(2)) {
+										continue;
+									} else if(i > 10 && !usedRc.contains(i - 1)) {
+										continue;
+									}
+								}
+
+								allowedIds.push(i);
+							}
 						}
 
-						usedRc.push(id);
-						$keyVars.setData(key, validMapIds[id]);
+						if(allowedIds.length > 0) {
+							let id = allowedIds[Math.floor(Math.random() * allowedIds.length)];
+
+							usedRc.push(id);
+							$keyVars.setData(key, validMapIds[id]);
+						}
 					}
 				}
 

@@ -25,7 +25,7 @@ const MaterialTypes = {
 		max: 256,
 		icon: "Rock",
 		desc: "Make rock pillars.",
-		mineable: 0,
+		mineable: 6,
 		buildCost: 16,
 		shootCost: 1
 	},

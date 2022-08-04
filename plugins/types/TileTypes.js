@@ -72,5 +72,29 @@ const TileTypes = {
 	220: {
 		name: "Path",
 		renderBelow: true
-	}
+	},
+	221: {
+		name: ["Carpet1", "Carpet2"],
+		renderBelow: false
+	},
+	222: {
+		name: ["WoodTile1", "WoodTile2"],
+		renderBelow: false
+	},
+	223: {
+		name: ["HWoodTile1", "HWoodTile2"],
+		renderBelow: false
+	},
+	224: {
+		name: ["AltCarpet1", "AltCarpet2"],
+		renderBelow: false
+	},
+	225: {
+		name: ["EvilGrassDecor1", "EvilGrassDecor2", "EvilGrassDecor3", "EvilGrassDecor4"],
+		renderBelow: false
+	},
+	226: {
+		name: ["EvilGrassRocks1", "EvilGrassRocks2", "EvilGrassRocks3", "EvilGrassRocks4"],
+		renderBelow: false
+	},
 };

@@ -60,6 +60,9 @@ modify_Game_Map = class {
 	}
 
 	buildEntities() {
+		$ppPlayer.destroyAllProjectiles();
+		this.destroyAllEnemyProjectiles();		
+
 		for(const event of this.events()) {
 			const data = event.event();
 			const m = data.meta;
@@ -330,5 +333,16 @@ modify_Game_Map = class {
 		if($gameTemp.projectileReactors) {
 			$gameTemp.projectileReactors.remove(entity);
 		}
+	}
+
+	spawnGambleChest(x, y, index) {
+		const name = "GambleChest" + index;
+		const c = new Chest(x, y, "GambleChest" + index, CheckRewards.None, -1, 1);
+		c.teleportIn();
+		//rewardType = CheckRewards.None, rewardId = -1, rewardQuantity = 1
+
+		c._name = name;
+		$gameTemp.updateEntities.push(c);
+		$gameTemp.updateEntityNames[c._name] = c;
 	}
 }

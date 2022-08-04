@@ -37,6 +37,16 @@ class Chest extends Interactable {
 		this._chestOpenBitmap = ImageManager.lEntities("ChestOpen");
 	}
 
+	setCallback(c) {
+		this._openCallback = c;
+	}
+
+	runCallback() {
+		if(this._openCallback) {
+			this._openCallback(this);
+		}
+	}
+
 	update() {
 		if(!this.active) {
 			this.updateAnimation();
@@ -59,6 +69,8 @@ class Chest extends Interactable {
 		this.sprite.scale.set(2);
 
 		this.sprite.bitmap = this._chestOpenBitmap;
+
+		playSe("ChestOpen2", 70);
 	}
 
 	showRewardIcon() {
@@ -127,7 +139,8 @@ class Chest extends Interactable {
 				}
 				case CheckRewards.Upgrade: {
 					this.rewardQuantity = 1;
-					this.rewardType = CheckRewards.None;
+					this.rewardId = Math.random() < 0.5 ? 0 : 1;
+					this.rewardType = CheckRewards.Upgrade;
 					break;
 				}
 			}
@@ -156,7 +169,7 @@ class Chest extends Interactable {
 				break;
 			}
 			case CheckRewards.Upgrade: {
-				path = "HeartUpgrade" ?? "HungerUpgrade";
+				path = (this.rewardId === 0 ? "HeartUpgrade" : "HungerUpgrade");
 				break;
 			}
 		}

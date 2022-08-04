@@ -23,6 +23,9 @@ class Biome_Forest_Clearing extends Biome_Base {
 	}
 
 	getBlockType(globalX, globalY, globalIndex, low, mid, total) {
+		if(GenerationManager.getPerlinNoise((globalX * 90) + 1234, (globalY * 90) + 1234, globalIndex) >= 0.6) {
+			return 5;
+		}
 		return 255;
 	}
 }

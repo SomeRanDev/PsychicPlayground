@@ -38,6 +38,10 @@ class Biome_Base {
 			return 1;
 		}
 
+		if(GenerationManager.getPerlinNoise((globalX * 90) + 1234, (globalY * 90) + 1234, globalIndex) >= 0.7) {
+			return 5;
+		}
+
 		return 255;
 	}
 

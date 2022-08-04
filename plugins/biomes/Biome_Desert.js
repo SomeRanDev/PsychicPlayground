@@ -43,8 +43,14 @@ class Biome_Desert extends Biome_Base {
 		if(this.checkPath(globalX, globalY)) {
 			return 255;
 		}
-		if(GenerationManager.getPerlinNoise((globalX * 20) + 2000, (globalY * 20) + 2000, globalIndex) >= 0.4) {
+		if(GenerationManager.getPerlinNoise((globalX * 20) + 2000, (globalY * 20) + 2000, globalIndex) >= 0.5) {
 			return 0;
+		}
+		if(GenerationManager.getPerlinNoise((globalX * 80) + 4000, (globalY * 80) + 4000, globalIndex) >= 0.7) {
+			return 7;
+		}
+		if(GenerationManager.getPerlinNoise((globalX * 40) + 1234, (globalY * 40) + 1234, globalIndex) >= 0.5) {
+			return 5;
 		}
 		return 255;
 	}

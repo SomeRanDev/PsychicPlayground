@@ -54,6 +54,9 @@ modify_Scene_Map = class {
 		this._freeChunks = [];
 		this._chunkExists = {};
 
+		$ppPlayer.destroyAllProjectiles();
+		$gameMap.destroyAllEnemyProjectiles();
+
 		$gameMap.clearUpdateEntities();
 
 		Chunk.TextureRef = [];
@@ -153,6 +156,9 @@ modify_Scene_Map = class {
 
 			//CursorManager.showNormal();
 			this.cursor.visible = false;
+			if(this.quantityText) {
+				this.quantityText.visible = false;
+			}
 			switch(type) {
 				case 0:
 					this.cursor.bitmap = ImageManager.lCursor("Basic");
@@ -170,13 +176,27 @@ modify_Scene_Map = class {
 					this.cursor.bitmap = ImageManager.lCursor("Skill");
 					this.cursor.visible = true;
 					this.cursor.anchor.set(0.5);
+
+					if(!this.skillCooldownBar) {
+						this.skillCooldownBar = PP.makeText("", 14);
+						this.skillCooldownBar.y = 28;
+						this.cursor.addChild(this.skillCooldownBar);
+					}
+					this.updateCursorSkillBar();
+
 					//CursorManager.showSkill();
 					break;
 				case 3:
 					this.cursor.bitmap = ImageManager.lCursor("Aim");
 					this.cursor.visible = true;
 					this.cursor.anchor.set(0.5);
-					//CursorManager.showAim();
+
+					if(!this.quantityText) {
+						this.quantityText = PP.makeText("", 14);
+						this.quantityText.y = 28;
+						this.cursor.addChild(this.quantityText);
+					}
+					this.updateCursorQuantity();
 					break;
 				case 4:
 					this.cursor.bitmap = ImageManager.lCursor("Food");
@@ -186,6 +206,20 @@ modify_Scene_Map = class {
 					break;
 			}
 		}
+	}
+
+	updateCursorQuantity() {
+		if(!this.quantityText) return;
+		const count = $ppPlayer.inventory.getMaterialCount();
+		this.quantityText.visible = count > 0;
+		this.quantityText.text = "" + count;
+	}
+
+	updateCursorSkillBar() { //getAbilityNumber
+		if(!this.skillCooldownBar) return;
+		const count = $ppPlayer.inventory.getSkillCount();
+		this.skillCooldownBar.visible = !!count;
+		this.skillCooldownBar.text = count;
 	}
 
 	normalCursor() {

@@ -1,4 +1,4 @@
-class Mimic extends EnemyBase {
+class Firehead extends EnemyBase {
 	constructor(tileX, tileY, onDefeat = null) {
 		super(tileX, tileY, onDefeat);
 
@@ -11,23 +11,23 @@ class Mimic extends EnemyBase {
 	}
 
 	getMaxHp() {
-		return 50;
+		return 150;
 	}
 
 	bodyDamage() {
-		return 25;
-	}
-
-	exp() {
 		return 30;
 	}
 
+	exp() {
+		return 120;
+	}
+
 	noticeDistance() {
-		return 200;
+		return 260;
 	}
 
 	forgetDistance() {
-		return 280;
+		return 300;
 	}
 
 	setupCollisionRect() {
@@ -35,7 +35,7 @@ class Mimic extends EnemyBase {
 	}
 
 	setupAnimations() {
-		this._setupAnimationsFromName("Mimic", 6, 16, 2, 4, 1, 999);
+		this._setupAnimationsFromName("Firehead", 3, 8, 4, 5, 1, 999);
 	}
 
 	updateBehavior() {
@@ -50,25 +50,26 @@ class Mimic extends EnemyBase {
 	}
 
 	behaveAttack() {
-		if(this.time === 60) {
+		if(this.time === 50) {
 			this.setDirectionToPlayer(0.05);
-			this.speed = 2;
+			this.speed = 1;
+			//this.playAttackSe();
+		}
+		if(this.time > 50 && this.time < 100 && this.time % 10 === 0) {
 			this.playAttackSe();
 		}
-		if(this.time > 60 && this.time % 10 === 0) {
-			this.playAttackSe();
-		}
-		if(this.time === 90) {
-			this.speed = 0;
-			this.time = 0;
-
-			const dir = this.getDirectionToPlayer();
-			//this.shootProjectile(dir);
-			for(let i = -3; i <= 3; i++) {
-				this.shootProjectile(dir + (Math.PI * 0.2 * (i / 3)));
-			}
+		if(this.time > 50 && this.time < 100 && this.time % 4 === 0) {
+			const dir = this.getDirectionToPlayer() + ((this.time - 75) / 25) * Math.PI * 0.2;
+			this.shootProjectile(dir);
 
 			this.playShootSe();
+		}
+		if(this.time > 140) {
+			this.speed = 0;
+			if(this.time === 180) {
+				this.time = 0;
+				this.checkDespawn();
+			}
 
 			if(!this.noticedPlayer) {
 				this._continueBehavior = false;
@@ -77,10 +78,11 @@ class Mimic extends EnemyBase {
 	}
 
 	behaveIdle() {
-		this.speed = 0;
+		this.speed = 2;
 		//this.time = 0;
-		if(this.time === 10) {
+		if(this.time === 5) {
 			this.checkDespawn();
+			this.direction += (Math.PI * (-0.2 + (Math.random() * 0.4)));
 			this.time = 0;
 		}
 	}
@@ -94,7 +96,7 @@ class Mimic extends EnemyBase {
 
 	onDamage() {
 		super.onDamage();
-		this.time = 0;
+		this.time = 40;
 		this.speed = 0;
 	}
 

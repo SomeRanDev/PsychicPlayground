@@ -59,6 +59,26 @@ const MineableTypes = {
 		materialGainMax: 5,
 		mineSound: ["MineRock", 80]
 	},
+	6: {
+		name: "RockPillar",
+		hitBox: [0.5, 0.5, 2, 1],
+		hp: 18,
+		hpIcon: "Rock",
+		material: 2,
+		materialGainMin: 8,
+		materialGainMax: 12,
+		mineSound: ["MineRock", 80]
+	},
+	7: {
+		name: "TropicalTree",
+		hitBox: [1, 1, 1, 1],
+		hp: 12,
+		hpIcon: "Stick",
+		material: 3,
+		materialGainMin: 20,
+		materialGainMax: 26,
+		mineSound: ["MineTree", 10]
+	},
 	99: {
 		name: "GodColumn",
 		hitBox: [0.5, 0.5, 1, 1],

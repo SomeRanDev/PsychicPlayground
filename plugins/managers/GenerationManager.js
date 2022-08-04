@@ -87,10 +87,18 @@ class GenerationManager {
 	}
 
 	save() {
+
+		const structObj = {};
+		for(let i = 0; i < this.Structs.length; i++) {
+			if(this.Structs[i]) {
+				structObj[i] = this.Structs[i];
+			}
+		}
+
 		return JSON.stringify([
 			Array.from(this.HasTileData),
 			Array.from(this.AllTileData),
-			this.Structs,
+			JSON.stringify(structObj),
 			this.ReadRotation,
 			this.GenerationMapString,
 			this.GenerationMapPathString,
@@ -112,7 +120,17 @@ class GenerationManager {
 		this.HasTileData = Int8Array.from(data[0]);
 		this.AllTileData = Uint32Array.from(data[1]);
 
-		this.Structs = data[2];
+		const structObj = JSON.parse(data[2]);
+		const structKeys = Object.keys(structObj);
+		for(let i = 0; i < structKeys.length; i++) {
+			const index = structKeys[i];
+			while(this.Structs.length < index) {
+				this.Structs.push(null);
+			}
+			this.Structs[index] = structObj[index];
+		}
+
+		this.LoadedStructs = true;
 
 		this.ReadRotation = data[3];
 		this.GenerationMapString = data[4];
@@ -166,6 +184,8 @@ class GenerationManager {
 		}
 
 		$generation = this;
+
+		this.LoadedStructs = false;
 
 		this.seed = seed;
 		if(!seed || seed.length <= 0) {
@@ -237,8 +257,10 @@ class GenerationManager {
 		this.Structs = [];
 
 		this.ReadRotation = Math.PI * 2 * ((this.hash % 1000) / 1000);
-		this.GenerationMapString = "Map1";
-		this.GenerationMapPathString = "Map1Path";
+		const mapType = Math.floor(this.getRandomNumber(1000) * 3);
+		const mapTypePath = Math.floor(this.getRandomNumber(1001) * 3);
+		this.GenerationMapString = "Map" + mapType;
+		this.GenerationMapPathString = "Map" + mapTypePath + "Path";
 
 		GenerationManager.GenerationMap = null;
 		GenerationManager.GenerationMapPath = null;
@@ -265,6 +287,10 @@ class GenerationManager {
 	}
 
 	onGeneratorReady() {
+		if(this.LoadedStructs) {
+			return;
+		}
+
 		this.Structs = [];
 
 		AllStructs[0].addToData(0, 0);
@@ -410,7 +436,9 @@ class GenerationManager {
 		this.JAIL_DISTANCE = (this.GLOBAL_WIDTH / 2) - (this.TILES_X * 2);*/
 
 
-		const freq = 28;
+		const freq = 40;
+		let lastOption = -1;
+		let fastTravels = [];
 		for(let x = 0; x < freq; x++) {
 			for(let y = 0; y < freq; y++) {
 
@@ -425,11 +453,55 @@ class GenerationManager {
 
 				const dist = Math.sqrt(Math.pow(relY, 2) + Math.pow(relX, 2));
 
-				if(dist < GenerationManager.JAIL_DISTANCE - 10 && dist > 12) {
+				if(dist < GenerationManager.JAIL_DISTANCE - 10 && dist > 12 && (relX > 25 || relX < -25 || relY < -10 || relY > 30)) {
 					const globalIndex = (globalTileY * GenerationManager.GLOBAL_WIDTH) + globalTileX;
 					const tile = this.getTileGlobal(globalTileX, globalTileY, globalIndex);
 
-					AllStructs[8].addToData(relX, relY);
+					const mid = (tile >> 8) & 255;
+					const low = tile & 255;
+
+					if(mid !== 201 && mid !== 203 && low !== 201 && low !== 203) {
+						let option = lastOption;
+						let index = 0;
+						while(lastOption === option) {
+							let rand = this.getRandomNumber((globalIndex * 2) + (index++));
+							if(rand < 0.3) {
+								option = 8;
+							} else if(rand < 0.4) {
+								option = 7;
+							} else if(rand < 0.5) {
+								option = 9;
+							} else if(rand < 0.65) {
+								option = 14;
+							} else if(rand < 0.75) {
+								option = 16;
+							} else if(rand < 1) {
+								option = 15;
+							}
+						}
+
+						if(option === 7) {
+							let allowed = true;
+							const len = fastTravels.length;
+							for(let i = 0; i < len; i++) {
+								if(Math.abs(relX - fastTravels[i][0]) < 50 || Math.abs(relY - fastTravels[i][1]) < 50) {
+									allowed = false;
+									break;
+								}
+							}
+							if(!allowed) {
+								option = 8;
+							} else {
+								fastTravels.push([relX, relY]);
+							}
+						}
+
+						lastOption = option;
+
+						if(AllStructs[option]) {
+							AllStructs[option].addToData(relX, relY);
+						}
+					}
 				}
 			}
 		}
@@ -591,6 +663,8 @@ class GenerationManager {
 	}
 
 	getLocationName(globalTileX, globalTileY) {
+		globalTileX += GenerationManager.OFFSET_X * GenerationManager.TILES_X;
+		globalTileY += GenerationManager.OFFSET_Y * GenerationManager.TILES_Y;
 		const type = this._getBiomeType(globalTileX, globalTileY);
 
 		let biomes = null;
@@ -759,6 +833,45 @@ class GenerationManager {
 		const globalTileYPos = globalTileY + (GenerationManager.OFFSET_Y * GenerationManager.TILES_Y);
 		const globalIndex = (globalTileYPos * GenerationManager.GLOBAL_WIDTH) + globalTileXPos;
 		this.setData(globalIndex, this.getDefaultTile(globalTileXPos, globalTileYPos));
+	}
+
+	setPlatformTile(globalTileX, globalTileY) {
+		const globalTileXPos = globalTileX + (GenerationManager.OFFSET_X * GenerationManager.TILES_X);
+		const globalTileYPos = globalTileY + (GenerationManager.OFFSET_Y * GenerationManager.TILES_Y);
+		const globalIndex = (globalTileYPos * GenerationManager.GLOBAL_WIDTH) + globalTileXPos;
+		this.setData(globalIndex, this.makeTile(255, 222, 4, 200));
+	}
+
+	setCarpetTile(globalTileX, globalTileY) {
+		const globalTileXPos = globalTileX + (GenerationManager.OFFSET_X * GenerationManager.TILES_X);
+		const globalTileYPos = globalTileY + (GenerationManager.OFFSET_Y * GenerationManager.TILES_Y);
+		const globalIndex = (globalTileYPos * GenerationManager.GLOBAL_WIDTH) + globalTileXPos;
+		this.setData(globalIndex, this.makeTile(255, 221, 4, 200));
+	}
+
+	setAltCarpetTile(globalTileX, globalTileY) {
+		const globalTileXPos = globalTileX + (GenerationManager.OFFSET_X * GenerationManager.TILES_X);
+		const globalTileYPos = globalTileY + (GenerationManager.OFFSET_Y * GenerationManager.TILES_Y);
+		const globalIndex = (globalTileYPos * GenerationManager.GLOBAL_WIDTH) + globalTileXPos;
+		this.setData(globalIndex, this.makeTile(255, 224, 4, 200));
+	}
+
+	setCustomTile(globalTileX, globalTileY, tile) {
+		const globalTileXPos = globalTileX + (GenerationManager.OFFSET_X * GenerationManager.TILES_X);
+		const globalTileYPos = globalTileY + (GenerationManager.OFFSET_Y * GenerationManager.TILES_Y);
+		const globalIndex = (globalTileYPos * GenerationManager.GLOBAL_WIDTH) + globalTileXPos;
+		this.setData(globalIndex, tile);
+	}
+
+	setCustomBlock(globalTileX, globalTileY, blockId) {
+		const globalTileXPos = globalTileX + (GenerationManager.OFFSET_X * GenerationManager.TILES_X);
+		const globalTileYPos = globalTileY + (GenerationManager.OFFSET_Y * GenerationManager.TILES_Y);
+		const globalIndex = (globalTileYPos * GenerationManager.GLOBAL_WIDTH) + globalTileXPos;
+
+		let data = this.getTileGlobal(globalTileXPos, globalTileYPos, globalIndex);
+		data = (data & ((255 << 16) | (255 << 8) | 255)) | (blockId << 24);
+
+		this.setData(globalIndex, data);
 	}
 
 	hasData(index) {

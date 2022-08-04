@@ -1,13 +1,6 @@
-class Struct_NPC extends Struct_Base {
-	constructor(id, imgPath, frameCount, animationSpeed, commonEvent, offsetHalfX = false) {
+class Struct_Chest extends Struct_Base {
+	constructor(id) {
 		super(id);
-
-		this.imgPath = imgPath;
-		this.frameCount = frameCount;
-		this.animationSpeed = animationSpeed;
-		this.commonEvent = commonEvent;
-
-		this.offsetHalfX = offsetHalfX;
 	}
 
 	addToData(globalTileX, globalTileY) {
@@ -16,14 +9,14 @@ class Struct_NPC extends Struct_Base {
 	}
 
 	clearArea(globalTileX, globalTileY) {
-		const s = [-2, -2, 5, 5];
+		const s = [-1, -1, 3, 3];
 		const xStart = s[0];
 		const yStart = s[1];
 		const width = xStart + s[2];
 		const height = yStart + s[3];
 		for(let x = xStart; x < width; x++) {
 			for(let y = yStart; y < height; y++) {
-				$generation.clearTile(globalTileX + x, globalTileY + y);
+				$generation.setPlatformTile(globalTileX + x, globalTileY + y);
 			}
 		}
 	}
@@ -34,17 +27,26 @@ class Struct_NPC extends Struct_Base {
 		const globalX = (chunk.chunkX * GenerationManager.TILES_X) + localTileX;
 		const globalY = (chunk.chunkY * GenerationManager.TILES_Y) + localTileY;
 
-		const name = "NPC_" + chunk.chunkX + "_" + chunk.chunkY + "_" + localTileX + "_" + localTileY;
-		const i = new Interactable(globalX, globalY, {
-			_realX: globalX,
-			_realY: globalY
-		}, this.imgPath, this.frameCount, this.animationSpeed, this.commonEvent);
+		const s = this.size();
+		const xStart = s[0];
+		const yStart = s[1];
+		const width = xStart + s[2];
+		const height = yStart + s[3];
+		for(let x = xStart; x < width; x++) {
+			for(let y = yStart; y < height; y++) {
+				console.log(globalX + x, globalY + y);
+				CollisionManager.registerStructCollision(globalX + width2 + x, globalY + height2 + y);
+			}
+		}
+
+		const name = "Chest_" + chunk.chunkX + "_" + chunk.chunkY + "_" + localTileX + "_" + localTileY;
+		const i = new Chest(globalX, globalY, "", CheckRewards.Random);
 
 		i._name = name;
 		$gameTemp.updateEntities.push(i);
 		$gameTemp.updateEntityNames[i._name] = i;
 
-		return new StructEntity_NPC(i, name, this.offsetHalfX);
+		return new StructEntity_Chest(i, name);
 	}
 
 	imgPath() {
@@ -56,17 +58,15 @@ class Struct_NPC extends Struct_Base {
 	}
 
 	size() {
-		return [0, 0, 0, 0];
+		return [0, 0, 1, 1];
 	}
 }
 
-class StructEntity_NPC {
+class StructEntity_Chest {
 	constructor(interactable, name, offsetHalfX) {
 		this.interactable = interactable;
 		this.name = name;
-		if(offsetHalfX) {
-			this.interactable.addPosition(0.5, 0);
-		}
+		this.interactable.addPosition(0.5, 0.5);
 	}
 
 	destroy() {

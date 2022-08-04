@@ -166,7 +166,8 @@ class CollisionManager {
 	}
 
 	static emptyMineablePos(globalTileX, globalTileY) {
-		return (this.canMoveToGlobalTile(globalTileX, globalTileY) & 1) !== 0;
+		this.setPlayerCollisionCheck();
+		return this.canMoveToGlobalTile(globalTileX, globalTileY);
 	}
 
 	static emptyMineableChunkPos(chunkX, chunkY, localTileX, localTileY) {

@@ -253,13 +253,13 @@ const AbilityTypes = [
 			if($ppPlayer.hp > 10) {
 				const dir = GetTouchDir();
 
-				$ppPlayer.takeDamage(10, 0, 0, 0);
+				$ppPlayer.takeDamage(5, 0, 0, 0);
 
 				for(let i = -1; i <= 1; i++) {
 					const coords = MakeNewPoint(20, dir + (Math.PI * 0.1 * i));
 					$ppPlayer.makeAndShootProjectile({
 						icon: "Hemokinesis",
-						damage: 20,
+						damage: 25,
 						lifetime: 120,
 						speed: 6,
 						targetX: coords[0],
@@ -289,7 +289,7 @@ const AbilityTypes = [
 					const coords = MakeNewPoint(10, (Math.PI * 0.2 * i));
 					$ppPlayer.makeAndShootProjectile({
 						icon: "Toxikinesis",
-						damage: 25,
+						damage: 30,
 						lifetime: 60,
 						speed: 4,
 						targetX: coords[0],

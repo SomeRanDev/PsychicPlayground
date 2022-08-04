@@ -2,12 +2,26 @@ class Biome_Dark extends Biome_Base {
 		constructor() {
 		super();
 		this.name = "Darkland";
+		this.plainDarkId = (255 << 24) | (30 << 8) | 203;
 	}
 
-	getUpperType(globalX, globalY, globalIndex) {
+	getUpperType(globalX, globalY, globalIndex, low, mid, block, total) {
 		if(this.generatePath(globalX, globalY, globalIndex)) {
 			return 220;
 		}
+
+		if(total !== this.plainDarkId) {
+			return 255;
+		}
+
+		if(GenerationManager.getPerlinNoise((globalX * 80) + 2000, (globalY * 80) + 2000, globalIndex) >= 0.6) {
+			return 225;
+		}
+
+		if(GenerationManager.getPerlinNoise((globalX * 80) - 3000, (globalY * 80) - 3000, globalIndex) >= 0.6) {
+			return 226;
+		}
+
 		return 255;
 	}
 
@@ -15,6 +29,7 @@ class Biome_Dark extends Biome_Base {
 		if(GenerationManager.getPerlinNoise(globalX * 20, globalY * 20, globalIndex) < 0.55) {
 			return 2;
 		}
+
 		return 255;
 	}
 

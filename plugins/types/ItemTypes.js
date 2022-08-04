@@ -24,6 +24,7 @@ const ItemTypes = {
 			if(hp === 0) hp = 10;
 			$ppPlayer.addHpFromItem(hp);
 			$ppPlayer.addHungerFromItem(hunger);
+			$ppPlayer.playHpAbilitySe();
 		}
 	},
 	2: {
@@ -35,6 +36,7 @@ const ItemTypes = {
 		allowChestFind: true,
 		behavior: function() {
 			$ppPlayer.addHpFromItem(40);
+			$ppPlayer.playHpAbilitySe();
 		}
 	},
 	3: {
@@ -46,6 +48,7 @@ const ItemTypes = {
 		allowChestFind: true,
 		behavior: function() {
 			$ppPlayer.addHpFromItem(60);
+			$ppPlayer.playHpAbilitySe();
 		}
 	}
 };

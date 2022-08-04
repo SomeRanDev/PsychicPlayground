@@ -37,7 +37,7 @@ class PlayerSprite extends Sprite {
 		this._healthHud = new PlayerHealth();
 		this._hotbar = new Hotbar();
 
-		this._map = new Map(256, 256);
+		this._map = new Map(300, 300);
 		this._map.setupCorner();
 		this._map.visible = $ppPlayer.allowMapHud();
 
@@ -147,6 +147,20 @@ class PlayerSprite extends Sprite {
 
 		this.x = $ppPlayer.position.x + $ppPlayer.spriteOffsetX;
 		this.y = $ppPlayer.position.y + $ppPlayer.spriteOffsetY;
+
+		if(this.currentAni === this.walk) {
+			if(this.__lastCurrentFrame !== this.currentAni._currentFrame) {
+				this.__lastCurrentFrame = this.currentAni._currentFrame;
+				if(this.__lastCurrentFrame === 0 || this.__lastCurrentFrame === 2) {
+					AudioManager.playSe({
+						name: "Footstep2",
+						volume: 10 + (Math.random() * 40),
+						pitch: 75 + (Math.random() * 50),
+						pan: 0
+					});
+				}
+			}
+		}
 
 		//this._coords.text = Math.round($ppPlayer.position.x / TS) + ", " + Math.round($ppPlayer.position.y / TS);
 

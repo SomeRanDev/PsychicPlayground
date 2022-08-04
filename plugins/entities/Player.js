@@ -393,6 +393,9 @@ class Player {
 	}
 
 	canMove() {
+		if(this.isKilled) {
+			return false;
+		}
 		return !($gameMap.isEventRunning() || $gameMessage.isBusy() || $gamePlayer.isTransferring() || this.playerEffect?.disallowMovement);
 	}
 
@@ -1122,8 +1125,12 @@ class Player {
 			canAdd = !exists;
 		}
 
-		if(canAdd)  {
-			this.fastTravelSpots.push([newX, newY, $generation.getLocationName(newX, newY)]);
+		if(canAdd) {
+			let name = $generation.getLocationName(newX, newY);
+			if(newX === -4 && newY === 15) {
+				name = "Town of Origin";
+			}
+			this.fastTravelSpots.push([newX, newY, name]);
 			return true;
 		}
 

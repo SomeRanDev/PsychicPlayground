@@ -7,7 +7,7 @@ class Omom extends EnemyBase {
 	}
 
 	getMaxHp() {
-		return 10;
+		return 30;
 	}
 
 	bodyDamage() {

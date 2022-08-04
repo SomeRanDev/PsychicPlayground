@@ -1,4 +1,4 @@
-class Mimic extends EnemyBase {
+class Slime extends EnemyBase {
 	constructor(tileX, tileY, onDefeat = null) {
 		super(tileX, tileY, onDefeat);
 
@@ -11,23 +11,23 @@ class Mimic extends EnemyBase {
 	}
 
 	getMaxHp() {
-		return 50;
+		return 100;
 	}
 
 	bodyDamage() {
-		return 25;
-	}
-
-	exp() {
 		return 30;
 	}
 
+	exp() {
+		return 70;
+	}
+
 	noticeDistance() {
-		return 200;
+		return 160;
 	}
 
 	forgetDistance() {
-		return 280;
+		return 240;
 	}
 
 	setupCollisionRect() {
@@ -35,7 +35,7 @@ class Mimic extends EnemyBase {
 	}
 
 	setupAnimations() {
-		this._setupAnimationsFromName("Mimic", 6, 16, 2, 4, 1, 999);
+		this._setupAnimationsFromName("Slime", 3, 12, 3, 7, 1, 999);
 	}
 
 	updateBehavior() {
@@ -50,25 +50,25 @@ class Mimic extends EnemyBase {
 	}
 
 	behaveAttack() {
-		if(this.time === 60) {
+		if(this.time === 80) {
 			this.setDirectionToPlayer(0.05);
-			this.speed = 2;
+			this.speed = 4;
 			this.playAttackSe();
 		}
-		if(this.time > 60 && this.time % 10 === 0) {
+		if(this.time > 80 && this.time < 140 && this.time % 10 === 0) {
 			this.playAttackSe();
 		}
-		if(this.time === 90) {
-			this.speed = 0;
-			this.time = 0;
-
+		if(this.time > 80 && this.time < 140 && this.time % 18 === 0) {
 			const dir = this.getDirectionToPlayer();
-			//this.shootProjectile(dir);
-			for(let i = -3; i <= 3; i++) {
-				this.shootProjectile(dir + (Math.PI * 0.2 * (i / 3)));
+			for(let i = -8; i <= 8; i++) {
+				this.shootProjectile(dir + (Math.PI * 0.5 * (i / 8)));
 			}
 
 			this.playShootSe();
+		}
+		if(this.time > 140) {
+			this.speed = 0;
+			if(this.time === 160) this.time = 0;
 
 			if(!this.noticedPlayer) {
 				this._continueBehavior = false;
@@ -77,10 +77,11 @@ class Mimic extends EnemyBase {
 	}
 
 	behaveIdle() {
-		this.speed = 0;
+		this.speed = 2;
 		//this.time = 0;
-		if(this.time === 10) {
+		if(this.time === 5) {
 			this.checkDespawn();
+			this.direction += (Math.PI * (-0.2 + (Math.random() * 0.4)));
 			this.time = 0;
 		}
 	}
@@ -94,7 +95,7 @@ class Mimic extends EnemyBase {
 
 	onDamage() {
 		super.onDamage();
-		this.time = 0;
+		this.time = 70;
 		this.speed = 0;
 	}
 
