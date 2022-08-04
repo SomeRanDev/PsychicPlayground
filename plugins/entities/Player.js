@@ -1163,7 +1163,11 @@ class Player {
 		$gameMessage.setChoiceBackground(0);
 		$gameMessage.setChoicePositionType(3);
 		$gameMessage.setChoiceCallback(n => {
-			$ppPlayer.setFastTravelIndex(n);
+			if(n >= 0) {
+				$ppPlayer.setFastTravelIndex(n);
+			} else {
+				$gameTemp._canceledFastTravel = true;
+			}
 		});
 
 		interpreter.setWaitMode("message");

@@ -34,7 +34,6 @@ class Struct_Chest extends Struct_Base {
 		const height = yStart + s[3];
 		for(let x = xStart; x < width; x++) {
 			for(let y = yStart; y < height; y++) {
-				console.log(globalX + x, globalY + y);
 				CollisionManager.registerStructCollision(globalX + width2 + x, globalY + height2 + y);
 			}
 		}

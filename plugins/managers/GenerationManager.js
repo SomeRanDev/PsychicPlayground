@@ -438,6 +438,7 @@ class GenerationManager {
 
 		const freq = 40;
 		let lastOption = -1;
+		let lastOption2 = -1;
 		let fastTravels = [];
 		for(let x = 0; x < freq; x++) {
 			for(let y = 0; y < freq; y++) {
@@ -463,17 +464,17 @@ class GenerationManager {
 					if(mid !== 201 && mid !== 203 && low !== 201 && low !== 203) {
 						let option = lastOption;
 						let index = 0;
-						while(lastOption === option) {
+						while(lastOption === option || lastOption2 === option) {
 							let rand = this.getRandomNumber((globalIndex * 2) + (index++));
-							if(rand < 0.3) {
+							if(rand < 0.4) {
 								option = 8;
-							} else if(rand < 0.4) {
-								option = 7;
 							} else if(rand < 0.5) {
+								option = 7;
+							} else if(rand < 0.6) {
 								option = 9;
-							} else if(rand < 0.65) {
-								option = 14;
 							} else if(rand < 0.75) {
+								option = 14;
+							} else if(rand < 0.9) {
 								option = 16;
 							} else if(rand < 1) {
 								option = 15;
@@ -496,6 +497,7 @@ class GenerationManager {
 							}
 						}
 
+						lastOption2 = lastOption;
 						lastOption = option;
 
 						if(AllStructs[option]) {

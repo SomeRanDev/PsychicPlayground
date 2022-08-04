@@ -18,8 +18,8 @@ modify_Scene_Title = class {
 		this._entities = new Sprite();
 		this.entData = [];
 
-		const possibleImages = ["Tree", "SmallTree", "SandPillar"];
-		for(let i = 0; i < 7; i++) {
+		const possibleImages = ["Tree", "SmallTree", "SandPillar", "Rock"];
+		for(let i = 0; i < 9; i++) {
 			const img = possibleImages[Math.floor(Math.random() * possibleImages.length)];
 
 			const baseDist = 20 + Math.floor(70 * Math.random());
@@ -114,6 +114,13 @@ modify_Scene_Title = class {
 		}
 		this.addChild(quitGame);
 		this._titleButtons.push(quitGame);
+
+
+
+		this._versionText = PP.makeText("v1.0", 18);
+		this._versionText.move(Graphics.width - 20, 20);
+		this.addChild(this._versionText);
+
 
 		this._overlay = new Sprite(new Bitmap(Graphics.width, Graphics.height));
 		this._overlay.bitmap.fillAll("#000000");

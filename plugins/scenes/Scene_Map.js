@@ -159,6 +159,9 @@ modify_Scene_Map = class {
 			if(this.quantityText) {
 				this.quantityText.visible = false;
 			}
+			if(this.skillCooldownBar) {
+				this.skillCooldownBar.visible = false;
+			}
 			switch(type) {
 				case 0:
 					this.cursor.bitmap = ImageManager.lCursor("Basic");
@@ -215,7 +218,7 @@ modify_Scene_Map = class {
 		this.quantityText.text = "" + count;
 	}
 
-	updateCursorSkillBar() { //getAbilityNumber
+	updateCursorSkillBar() {
 		if(!this.skillCooldownBar) return;
 		const count = $ppPlayer.inventory.getSkillCount();
 		this.skillCooldownBar.visible = !!count;

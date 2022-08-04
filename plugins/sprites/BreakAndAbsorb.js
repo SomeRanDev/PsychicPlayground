@@ -12,6 +12,8 @@ class BreakAndAbsorb extends Sprite {
 		this._update = false;
 		this._spritesToMove = 0;
 
+		this._thresholdTime = 240;
+
 		spr.bitmap.addLoadListener(this.onBitmapReady.bind(this));
 	}
 
@@ -73,7 +75,12 @@ class BreakAndAbsorb extends Sprite {
 					}
 				}
 			}
-			if(complete === this.sprites.length) {
+
+			if(this._thresholdTime > 0) {
+				this._thresholdTime--;
+			}
+
+			if(complete === this.sprites.length || this._thresholdTime <= 0) {
 				for(const s of this.sprites) {
 					s.bitmap = null;
 				}

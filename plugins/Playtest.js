@@ -1,5 +1,7 @@
 if(Utils.isOptionValid("test")) {
 
+/*
+
 Scene_Boot.prototype.startNormalGame = function() {
 	this.checkPlayerLocation();
 	DataManager.setupNewGame();
@@ -8,7 +10,7 @@ Scene_Boot.prototype.startNormalGame = function() {
 	Window_TitleCommand.initCommandPosition();
 	$gameTemp._isNewGame = false;
 };
-
+*/
 
 /*
 Scene_Boot.prototype.startNormalGame = function() {
