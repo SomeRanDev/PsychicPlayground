@@ -417,6 +417,7 @@ class Inventory {
 		if(this.hasActiveSkill(skillId)) {
 			this.activeSkills[this.activeSkills.indexOf(skillId)] = -1;
 			this.sortSkills();
+			this.refreshAllHotbar();
 			return true;
 		}
 		return false;

@@ -12,7 +12,7 @@ class BreakAndAbsorb extends Sprite {
 		this._update = false;
 		this._spritesToMove = 0;
 
-		this._thresholdTime = 90;
+		this._thresholdTime = 50;
 
 		spr.bitmap.addLoadListener(this.onBitmapReady.bind(this));
 	}

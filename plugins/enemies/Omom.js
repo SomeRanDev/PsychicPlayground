@@ -34,6 +34,10 @@ class Omom extends EnemyBase {
 		if(this.time === 1) {
 			this.checkDespawn();
 		}
+		if(this._rest > 0) {
+			this._rest--;
+			return;
+		}
 		if(this._continueBehavior) {
 			this.behaveAttack();
 		} else {
@@ -84,6 +88,6 @@ class Omom extends EnemyBase {
 
 	onHitPlayerWithBody() {
 		this._rest = 90;
-		this.speed = 2;
+		this.speed = 0;
 	}
 }

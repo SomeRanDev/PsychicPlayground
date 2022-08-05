@@ -503,7 +503,7 @@ class Player {
 				(Math.abs(tileY) >= (GenerationManager.GLOBAL_HEIGHT / 2) - 2)) {
 				$gameTemp.reserveCommonEvent(14);
 			} else if(CollisionManager.checkForResponse(tileX, tileY)) {
-				if($gameMap.isGenerated()) {
+				if($gameMap.isGenerated() && !CollisionManager.responseCouldExist(tileX, tileY)) {
 					this._lastOverworldX = tileX;
 					this._lastOverworldY = tileY;
 				}

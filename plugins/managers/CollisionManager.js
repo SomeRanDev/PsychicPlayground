@@ -67,6 +67,15 @@ class CollisionManager {
 		}
 	}
 
+	static responseCouldExist(globalTileX, globalTileY) {
+		if($gameMap.isGenerated()) {
+			globalTileX += GenerationManager.OFFSET_X * GenerationManager.TILES_X;
+			globalTileY += GenerationManager.OFFSET_Y * GenerationManager.TILES_Y;
+		}
+		const globalIndex = this._getIndex(globalTileX, globalTileY);
+		return (this.triggers[globalIndex] > 0);
+	}
+
 	static checkForResponse(globalTileX, globalTileY) {
 		if($gameMap.isGenerated()) {
 			globalTileX += GenerationManager.OFFSET_X * GenerationManager.TILES_X;
